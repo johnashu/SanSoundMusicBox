@@ -20,7 +20,7 @@ contract SanSoundPremiumNFT is Ownable, ERC1155("") {
     ISanOrigin public sanOriginSoulBound =
         ISanOrigin(address(0x33333333333371718A3C2bB63E5F3b94C9bC13bE));
 
-    enum SoulboundState {
+    enum AccessLevel {
         Unbound,
         Citizen,
         Defiant,
@@ -28,69 +28,122 @@ contract SanSoundPremiumNFT is Ownable, ERC1155("") {
         The33
     }
 
+    uint8 TOKENS_REQUIRED_TO_MINT = 3;
+    uint16 currentTokenId;
+
     struct User {
         bool isBound;
         uint16[] SanOriginTokenIds;
-        SoulboundState currentAccessLevel;
+        AccessLevel currentAccessLevel;
     }
-    mapping(address => SoulboundState) public soulboundState;
+    mapping(address => AccessLevel) public accessLevel;
     mapping(address => mapping(uint => bool)) public ownedTokens;
 
     constructor() {}
 
-    function checkAccess(
+    function checkUserOwnsTokens(
+        uint16[] memory tokenIds,
         address _address
-    ) public view returns (SoulboundState) {
-        return soulboundState[_address];
-    }
-
-    function mint(address _address, uint _tokenId) public {
+    ) public view notZeroAddress(_address) returns (bool) {
         require(
-            ownedTokens[_address][_tokenId] == false,
-            "This address already owns this token."
+            tokenIds.length == TOKENS_REQUIRED_TO_MINT,
+            "SP: Must be 3 NFTs"
         );
-        SoulboundState _state = getSoulBoundState(_address);
-        ownedTokens[_address][_tokenId] = true;
-        soulboundState[_address] = _state;
-        _mint(_address, _tokenId, 1, "");
+        for (uint8 i = 0; i < TOKENS_REQUIRED_TO_MINT; i++) {
+            require(
+                ownedTokens[_address][tokenIds[i]] == false,
+                "SP: Token already used"
+            );
+            require(
+                sanOriginSoulBound.ownerOf(tokenIds[i]) == _address,
+                "SP: !Owner"
+            );
+        }
+        return true;
     }
 
-    function getSoulBoundState(
-        address _address
-    ) public pure returns (SoulboundState) {
-        uint stateFromSanOrigin = uint(1);
+    function checkOriginTokensBind(
+        uint16[] memory tokenIds
+    ) public view returns (bool) {
+        require(
+            tokenIds.length == TOKENS_REQUIRED_TO_MINT,
+            "SP: Must be 3 NFTs"
+        );
+        for (uint8 i = 0; i < TOKENS_REQUIRED_TO_MINT; i++) {
+            uint tokenLevel = sanOriginSoulBound.tokenLevel(tokenIds[i]);
+            require(tokenLevel != 0, "SP: !Bound");
+        }
+        return true;
+    }
 
-        unchecked {
-            for (uint8 i = 0; i < 5; i++) {
-                if (SoulboundState(stateFromSanOrigin) == SoulboundState(i)) {
-                    return SoulboundState(i);
-                }
-            }
+    function checkAccessLevel(
+        address _address
+    ) public view returns (AccessLevel) {
+        return accessLevel[_address];
+    }
+
+    function getTokenId() public view returns (uint) {
+        return currentTokenId;
+    }
+
+    function mint(
+        address _address,
+        uint16[] memory tokenIds
+    ) public notZeroAddress(_address) returns (bool) {
+        checkUserOwnsTokens(tokenIds, _address);
+        checkOriginTokensBind(tokenIds);
+        require(
+            checkAccessLevel(_address) == AccessLevel.Unbound,
+            "SP: Address has access"
+        );
+
+        // Pass checks, map the id.
+        for (uint i = 0; i < tokenIds.length; i++) {
+            ownedTokens[_address][tokenIds[i]] = true;
         }
 
-        return SoulboundState(0);
+        accessLevel[_address] = AccessLevel.Citizen;
+
+        _mint(_address, getTokenId(), 1, ""); // Check security..
+        return true;
     }
 
-    function getUserMintedOrigin(
-        address _address
-    ) external view returns (uint) {
-        uint stateFromSanOrigin = sanOriginSoulBound.userMinted(_address);
-        return stateFromSanOrigin;
-    }
+    // function getAccessLevel(
+    //     address _address
+    // ) public pure returns (AccessLevel) {
+    //     uint stateFromSanOrigin = uint(4);
 
-    function getBalanceOfOrigin(address _address) external view returns (uint) {
-        uint balance = sanOriginSoulBound.balanceOf(_address);
-        return balance;
-    }
+    //     unchecked {
+    //         for (uint8 i = 0; i < 5; i++) {
+    //             if (AccessLevel(stateFromSanOrigin) == AccessLevel(i)) {
+    //                 return AccessLevel(i);
+    //             }
+    //         }
+    //     }
 
-    function getUserSoulbindCreditsOrigin(
-        address _address
-    ) external view returns (uint) {
-        uint balance = sanOriginSoulBound.userSoulbindCredits(_address);
-        return balance;
-    }
+    //     return AccessLevel(0);
+    // }
 
-    modifier isValid(address _address) {
+    // function getUserMintedOrigin(
+    //     address _address
+    // ) external view returns (uint) {
+    //     uint stateFromSanOrigin = sanOriginSoulBound.userMinted(_address);
+    //     return stateFromSanOrigin;
+    // }
+
+    // function getBalanceOfOrigin(address _address) external view returns (uint) {
+    //     uint balance = sanOriginSoulBound.balanceOf(_address);
+    //     return balance;
+    // }
+
+    // function getUserSoulbindCreditsOrigin(
+    //     address _address
+    // ) external view returns (uint) {
+    //     uint balance = sanOriginSoulBound.userSoulbindCredits(_address);
+    //     return balance;
+    // }
+
+    modifier notZeroAddress(address _address) {
         require(_address != address(0), "0x0 addr");
         _;
     }
