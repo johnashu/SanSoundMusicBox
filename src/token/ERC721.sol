@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
-import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
-import "lib/openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
-import "lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol";
-import "../utils/Context.sol";
-import "../utils/Address.sol";
+import "src/interfaces/ERC721/IERC721.sol";
+import "src/interfaces/ERC721/IERC721Receiver.sol";
+import "src/interfaces/ERC721/extensions/IERC721Metadata.sol";
+import "src/utils/Strings.sol";
+import "src/utils/introspection/ERC165.sol";
+import "src/utils/Context.sol";
+import "src/utils/Address.sol";
 
 abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     using Address for address;

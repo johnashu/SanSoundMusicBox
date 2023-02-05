@@ -12,13 +12,7 @@ import "./token/TokenRescuer.sol";
  * @title SAN721
  * @author Aaron Hanson <coffee.becomes.code@gmail.com> @CoffeeConverter
  */
-abstract contract SAN721 is
-    ISAN721,
-    Ownable,
-    ERC721Enumerable,
-    ERC2981ContractWideRoyalties,
-    TokenRescuer
-{
+abstract contract SAN721 is ISAN721, Ownable, ERC721Enumerable, ERC2981ContractWideRoyalties, TokenRescuer {
     /// The maximum token supply.
     uint256 public constant MAX_SUPPLY = 10000;
 
@@ -64,9 +58,7 @@ abstract contract SAN721 is
         address _couponSigner,
         string memory _contractURI,
         string memory _baseURI
-    )
-        ERC721(_name, _symbol, _startingTokenID)
-    {
+    ) ERC721(_name, _symbol, _startingTokenID) {
         couponSigner = _couponSigner;
         contractURI = _contractURI;
         baseURI = _baseURI;
@@ -78,38 +70,26 @@ abstract contract SAN721 is
      * @param _userMaxWhitelist The max tokens this user can mint in whitelist.
      * @param _signature The signature to be validated.
      */
-    function mintWhitelist(
-        uint256 _mintAmount,
-        uint256 _userMaxWhitelist,
-        bytes calldata _signature
-    )
+    function mintWhitelist(uint256 _mintAmount, uint256 _userMaxWhitelist, bytes calldata _signature)
         external
         onlyInSaleState(SaleState.Whitelist)
     {
-        if (!isValidSignature(
-            _signature,
-            _msgSender(),
-            block.chainid,
-            address(this),
-            _userMaxWhitelist
-        )) revert InvalidSignature();
+        if (!isValidSignature(_signature, _msgSender(), block.chainid, address(this), _userMaxWhitelist)) {
+            revert InvalidSignature();
+        }
 
         _mint(_mintAmount);
 
-        if (userMinted[_msgSender()] > _userMaxWhitelist)
+        if (userMinted[_msgSender()] > _userMaxWhitelist) {
             revert ExceedsMintAllocation();
+        }
     }
 
     /**
      * @notice Mints `_mintAmount` tokens if the signature is valid.
      * @param _mintAmount The number of tokens to mint.
      */
-    function mintPublic(
-        uint256 _mintAmount
-    )
-        external
-        onlyInSaleState(SaleState.Public)
-    {
+    function mintPublic(uint256 _mintAmount) external onlyInSaleState(SaleState.Public) {
         _cappedMint(_mintAmount);
     }
 
@@ -117,12 +97,7 @@ abstract contract SAN721 is
      * @notice (only owner) Mints `_mintAmount` tokens to the caller.
      * @param _mintAmount The number of tokens to mint.
      */
-    function mintPromo(
-        uint256 _mintAmount
-    )
-        external
-        onlyOwner
-    {
+    function mintPromo(uint256 _mintAmount) external onlyOwner {
         _mint(_mintAmount);
     }
 
@@ -131,12 +106,7 @@ abstract contract SAN721 is
      * @param _newSaleState The new sale state
      * (0=Paused, 1=Whitelist, 2=Public).
      */
-    function setSaleState(
-        SaleState _newSaleState
-    )
-        external
-        onlyOwner
-    {
+    function setSaleState(SaleState _newSaleState) external onlyOwner {
         saleState = _newSaleState;
         emit SaleStateChanged(_newSaleState);
     }
@@ -145,12 +115,7 @@ abstract contract SAN721 is
      * @notice (only owner) Sets the coupon signer address.
      * @param _newCouponSigner The new coupon signer address.
      */
-    function setCouponSigner(
-        address _newCouponSigner
-    )
-        external
-        onlyOwner
-    {
+    function setCouponSigner(address _newCouponSigner) external onlyOwner {
         couponSigner = _newCouponSigner;
     }
 
@@ -158,12 +123,7 @@ abstract contract SAN721 is
      * @notice (only owner) Sets the contract URI for contract metadata.
      * @param _newContractURI The new contract URI.
      */
-    function setContractURI(
-        string calldata _newContractURI
-    )
-        external
-        onlyOwner
-    {
+    function setContractURI(string calldata _newContractURI) external onlyOwner {
         contractURI = _newContractURI;
     }
 
@@ -172,13 +132,7 @@ abstract contract SAN721 is
      * @param _newBaseURI The new base URI.
      * @param _doReveal If true, this reveals the full tokenURIs.
      */
-    function setBaseURI(
-        string calldata _newBaseURI,
-        bool _doReveal
-    )
-        external
-        onlyOwner
-    {
+    function setBaseURI(string calldata _newBaseURI, bool _doReveal) external onlyOwner {
         baseURI = _newBaseURI;
         isRevealed = _doReveal;
     }
@@ -186,10 +140,7 @@ abstract contract SAN721 is
     /**
      * @notice (only owner) Withdraws all ether to the caller.
      */
-    function withdrawAll()
-        external
-        onlyOwner
-    {
+    function withdrawAll() external onlyOwner {
         withdraw(address(this).balance);
     }
 
@@ -197,13 +148,8 @@ abstract contract SAN721 is
      * @notice (only owner) Withdraws `_weiAmount` wei to the caller.
      * @param _weiAmount The amount of ether (in wei) to withdraw.
      */
-    function withdraw(
-        uint256 _weiAmount
-    )
-        public
-        onlyOwner
-    {
-        (bool success, ) = payable(_msgSender()).call{value: _weiAmount}("");
+    function withdraw(uint256 _weiAmount) public onlyOwner {
+        (bool success,) = payable(_msgSender()).call{value: _weiAmount}("");
         if (!success) revert FailedToWithdraw();
     }
 
@@ -212,19 +158,10 @@ abstract contract SAN721 is
      * @param _recipient The address to which to send royalties.
      * @param _value The royalties percentage (two decimals, e.g. 1000 = 10%).
      */
-    function setRoyalties(
-        address _recipient,
-        uint256 _value
-    )
-        external
-        onlyOwner
-    {
+    function setRoyalties(address _recipient, uint256 _value) external onlyOwner {
         if (_value > MAX_ROYALTIES_PCT) revert ExceedsMaxRoyaltiesPercentage();
 
-        _setRoyalties(
-            _recipient,
-            _value
-        );
+        _setRoyalties(_recipient, _value);
     }
 
     /**
@@ -233,13 +170,7 @@ abstract contract SAN721 is
      * @param _to The address to which to transfer tokens.
      * @param _tokenIDs An array of token IDs to transfer.
      */
-    function batchTransferFrom(
-        address _from,
-        address _to,
-        uint256[] calldata _tokenIDs
-    )
-        external
-    {
+    function batchTransferFrom(address _from, address _to, uint256[] calldata _tokenIDs) external {
         unchecked {
             for (uint256 i = 0; i < _tokenIDs.length; i++) {
                 transferFrom(_from, _to, _tokenIDs[i]);
@@ -253,12 +184,7 @@ abstract contract SAN721 is
      * @param _to The address to which to transfer tokens.
      * @param _tokenIDs An array of token IDs to transfer.
      */
-    function batchSafeTransferFrom(
-        address _from,
-        address _to,
-        uint256[] calldata _tokenIDs,
-        bytes calldata _data
-    )
+    function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIDs, bytes calldata _data)
         external
     {
         unchecked {
@@ -274,18 +200,12 @@ abstract contract SAN721 is
      * @param _tokenIDs An array of token IDs to be checked for ownership.
      * @return True if `_account` owns all token IDs `_tokenIDs`, else false.
      */
-    function isOwnerOf(
-        address _account,
-        uint256[] calldata _tokenIDs
-    )
-        external
-        view
-        returns (bool)
-    {
+    function isOwnerOf(address _account, uint256[] calldata _tokenIDs) external view returns (bool) {
         unchecked {
             for (uint256 i; i < _tokenIDs.length; ++i) {
-                if (ownerOf(_tokenIDs[i]) != _account)
+                if (ownerOf(_tokenIDs[i]) != _account) {
                     return false;
+                }
             }
         }
 
@@ -297,13 +217,7 @@ abstract contract SAN721 is
      * @param _owner The address for which to return all owned token IDs.
      * @return An array of all token IDs owned by `_owner`.
      */
-    function walletOfOwner(
-        address _owner
-    )
-        public
-        view
-        returns (uint256[] memory)
-    {
+    function walletOfOwner(address _owner) public view returns (uint256[] memory) {
         uint256 tokenCount = balanceOf(_owner);
         if (tokenCount == 0) return new uint256[](0);
 
@@ -330,69 +244,45 @@ abstract contract SAN721 is
         uint256 _chainId,
         address _contract,
         uint256 _userMaxWhitelist
-    )
-        public
-        view
-        returns (bool)
-    {
-        bytes32 hash = ECDSA.toEthSignedMessageHash(
-            keccak256(
-                abi.encodePacked(
-                    _sender,
-                    _chainId,
-                    _contract,
-                    _userMaxWhitelist
-                )
-            )
-        );
+    ) public view returns (bool) {
+        bytes32 hash =
+            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_sender, _chainId, _contract, _userMaxWhitelist)));
         return couponSigner == ECDSA.recover(hash, _signature);
     }
 
     /**
      * @inheritdoc ERC165
      */
-    function supportsInterface(
-        bytes4 _interfaceId
-    )
+    function supportsInterface(bytes4 _interfaceId)
         public
         view
-        override (ERC721Enumerable, ERC2981Base)
+        override(ERC721Enumerable, ERC2981Base)
         returns (bool)
     {
         return super.supportsInterface(_interfaceId);
     }
 
-    function _cappedMint(
-        uint256 _mintAmount
-    )
-        private
-    {
+    function _cappedMint(uint256 _mintAmount) private {
         _mint(_mintAmount);
 
-        if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS)
+        if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) {
             revert ExceedsMaxMintPerAddress();
+        }
     }
 
     /**
      * @notice Mints `_mintAmount` tokens to caller, emits actual token IDs.
      */
-    function _mint(
-        uint256 _mintAmount
-    )
-        private
-    {
+    function _mint(uint256 _mintAmount) private {
         uint256 totalSupply = _owners.length;
         unchecked {
-            if (totalSupply + _mintAmount > MAX_SUPPLY)
+            if (totalSupply + _mintAmount > MAX_SUPPLY) {
                 revert ExceedsMaxSupply();
+            }
             userMinted[_msgSender()] += _mintAmount;
             for (uint256 i; i < _mintAmount; i++) {
                 _owners.push(_msgSender());
-                emit Transfer(
-                    address(0),
-                    _msgSender(),
-                    _startingTokenID + totalSupply + i
-                );
+                emit Transfer(address(0), _msgSender(), _startingTokenID + totalSupply + i);
             }
         }
     }
