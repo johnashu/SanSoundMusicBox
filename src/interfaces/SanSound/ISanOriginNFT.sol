@@ -2,14 +2,6 @@
 pragma solidity ^0.8.18;
 
 interface ISanOriginNFT {
-    enum SoulboundLevel {
-        Unbound,
-        One,
-        Two,
-        Three,
-        Four
-    }
-
     function tokenLevel(uint256) external view returns (uint256);
 
     function ownerOf(uint256 _tokenId) external view returns (address);

@@ -242,7 +242,8 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!_exists(tokenId), "ERC721: token already minted");
 
-        _beforeTokenTransfer(address(0), to, tokenId);
+        // _beforeTokenTransfer(address(0), to, tokenId);
+        // Disabled as Mint is the only time we can transfer the token.
         _owners.push(to);
 
         emit Transfer(address(0), to, tokenId);

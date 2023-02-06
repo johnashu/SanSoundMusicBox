@@ -8,16 +8,12 @@ pragma solidity ^0.8.18;
 
 interface SANSoulbindable {
     enum SoulboundLevel {
+        Unbound,
         Merged,
         Citizen,
         Defiant,
         Hanzoku,
         The33
-    }
-
-    struct TokenData {
-        uint256[] SanOriginTokenIds;
-        SoulboundLevel tokenSoulboundLevel;
     }
 
     event SoulBound(
@@ -27,10 +23,8 @@ interface SANSoulbindable {
         SoulboundLevel previousLevel
     );
 
-    error MintAmountTokensIncorrect();
-
-    error CannotApproveSoulboundToken();
-    error CannotTransferSoulboundToken();
+    error CannotApproveSoulboundToken(address to, uint256 tokenId);
+    error CannotTransferSoulboundToken(address from, address to, uint256 tokenId);
 
     error InvalidNumberOfLevelPrices();
     error InvalidSoulbindCredit();

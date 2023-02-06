@@ -1,10 +1,11 @@
---chain-id
 
---no-storage-caching --fork-retry-backoff 5 
+9,748 Unbound Origin Tokens
+divided by 3 = 3249.3333
+MAX_SUPPLY = 3249
+Remaining NFTs = 1
 
---fork-block-number
 
-Takes aaprox 20 mins first time (use a block otherwise it will sync each time!)
+Takes approx 20 mins first time (use a block otherwise it will sync each time!)
 
 forge test -f https://eth-mainnet.g.alchemy.com/v2/<API KEY> --chain-id 1 -vvvvv --fork-block-number 16507661
 
