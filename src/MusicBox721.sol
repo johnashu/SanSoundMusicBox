@@ -2,14 +2,13 @@
 pragma solidity ^0.8.18;
 
 import "src/interfaces/MusicBox/IMusicBox721.sol";
-// import "src/utils/Ownable.sol"; // inherited via TokenRescuer
 import "src/token/ERC721/ERC721Enumerable.sol";
 import "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
-import "src/interfaces/SanSound/IMusicBox.sol";
+import "src/interfaces/MusicBox/IMusicBox.sol";
 import "src/token/rescue/TokenRescuer.sol";
 
 /**
- * @title SanSound MusicBox
+ * @title SanSound MusicBox721
  * @author Maffaz
  */
 
@@ -43,9 +42,6 @@ abstract contract MusicBox721 is
     // Current Token Id. Init at 0 but first mint will be Id = 1.
     uint256 public currentTokenId;
 
-    // Balance of the contract in fees to withdraw.
-    uint256 contractBalance;
-
     /**
      * @notice The total tokens minted by an address.
      */
@@ -63,15 +59,15 @@ abstract contract MusicBox721 is
     }
 
     /**
-     * @notice Determines whether `_account` owns all token IDs `_tokenIDs`.
+     * @notice Determines whether `_account` owns all token IDs `_tokenIds`.
      * @param _account The account to be checked for token ownership.
-     * @param _tokenIDs An array of token IDs to be checked for ownership.
-     * @return True if `_account` owns all token IDs `_tokenIDs`, else false.
+     * @param _tokenIds An array of token IDs to be checked for ownership.
+     * @return True if `_account` owns all token IDs `_tokenIds`, else false.
      */
-    function isOwnerOf(address _account, uint256[MAX_MINT_PER_ADDRESS] calldata _tokenIDs) public view returns (bool) {
+    function isOwnerOf(address _account, uint256[MAX_MINT_PER_ADDRESS] calldata _tokenIds) public view returns (bool) {
         unchecked {
             for (uint256 i; i < MAX_MINT_PER_ADDRESS; ++i) {
-                if (ownerOf(_tokenIDs[i]) != _account) {
+                if (ownerOf(_tokenIds[i]) != _account) {
                     return false;
                 }
             }
@@ -88,13 +84,13 @@ abstract contract MusicBox721 is
         uint256 tokenCount = balanceOf(_owner);
         if (tokenCount == 0) return new uint256[](0);
 
-        uint256[] memory tokenIDs = new uint256[](tokenCount);
+        uint256[] memory tokenIds = new uint256[](tokenCount);
         unchecked {
             for (uint256 i; i < tokenCount; i++) {
-                tokenIDs[i] = tokenOfOwnerByIndex(_owner, i);
+                tokenIds[i] = tokenOfOwnerByIndex(_owner, i);
             }
         }
-        return tokenIDs;
+        return tokenIds;
     }
 
     /**
@@ -115,6 +111,7 @@ abstract contract MusicBox721 is
 
     /**
      * @notice (only owner) Withdraws all ether to the caller.
+     * @dev Reverts if empty.
      */
     function safeWithdrawAll() external onlyOwner {
         uint256 balance = address(this).balance;
@@ -146,12 +143,12 @@ abstract contract MusicBox721 is
      * @notice Transfers multiple tokens from `_from` to `_to`.
      * @param _from The address from which to transfer tokens.
      * @param _to The address to which to transfer tokens.
-     * @param _tokenIDs An array of token IDs to transfer.
+     * @param _tokenIds An array of token IDs to transfer.
      */
-    function batchTransferFrom(address _from, address _to, uint256[] calldata _tokenIDs) external {
+    function batchTransferFrom(address _from, address _to, uint256[] calldata _tokenIds) external {
         unchecked {
-            for (uint256 i = 0; i < _tokenIDs.length; i++) {
-                transferFrom(_from, _to, _tokenIDs[i]);
+            for (uint256 i = 0; i < _tokenIds.length; i++) {
+                transferFrom(_from, _to, _tokenIds[i]);
             }
         }
     }
@@ -160,14 +157,14 @@ abstract contract MusicBox721 is
      * @notice Safely transfers multiple tokens from `_from` to `_to`.
      * @param _from The address from which to transfer tokens.
      * @param _to The address to which to transfer tokens.
-     * @param _tokenIDs An array of token IDs to transfer.
+     * @param _tokenIds An array of token IDs to transfer.
      */
-    function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIDs, bytes calldata _data)
+    function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIds, bytes calldata _data)
         external
     {
         unchecked {
-            for (uint256 i = 0; i < _tokenIDs.length; i++) {
-                safeTransferFrom(_from, _to, _tokenIDs[i], _data);
+            for (uint256 i = 0; i < _tokenIds.length; i++) {
+                safeTransferFrom(_from, _to, _tokenIds[i], _data);
             }
         }
     }
@@ -184,11 +181,4 @@ abstract contract MusicBox721 is
         return super.supportsInterface(_interfaceId);
     }
 
-    function _cappedMint(uint256 _mintAmount) private {
-        _mint(_mintAmount);
-
-        if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) {
-            revert ExceedsMaxMintPerAddress();
-        }
-    }
 }
