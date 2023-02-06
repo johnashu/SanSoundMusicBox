@@ -25,7 +25,7 @@ contract MusicBox is MusicBox721 {
     mapping(SoulboundLevel soulboundLevel => uint256 price) public levelPrice;
     mapping(uint256 tokenId => SoulboundLevel soulboundLevel) public currentTokenLevel;
     mapping(uint originTokenId => bool isUsed) public usedOriginTokens;
-    mapping(uint tokenId => uint256[TOKENS_REQUIRED_TO_MINT] sanOriginTokenIds) public tokensMergedFrom;
+    mapping(uint tokenId => uint256[MAX_TOKENS_REQUIRED_TO_MINT] sanOriginTokenIds) public tokensMergedFrom;
 
     constructor(
         string memory _name,
@@ -44,14 +44,13 @@ contract MusicBox is MusicBox721 {
         levelPrice[SoulboundLevel.The33] = _levelPrices[5];
     }
 
-    function _checkUserOwnsTokens(uint256[TOKENS_REQUIRED_TO_MINT] memory tokenIds)
+    function _checkUserOwnsTokens(uint256[] memory tokenIds)
         private
         view
-        notZeroAddress(_address)
         returns (bool)
     {
         unchecked {
-            for (uint256 i = 0; i < TOKENS_REQUIRED_TO_MINT; i++) {
+            for (uint256 i = 0; i < tokenIds.length; i++) {
                 if (usedOriginTokens[tokenIds[i]] != false) revert TokenAlreadyUsed();
                 if (sanOriginNFT.ownerOf(tokenIds[i]) != _msgSender()) revert TokenNotOwned();
             }
@@ -59,9 +58,9 @@ contract MusicBox is MusicBox721 {
         return true;
     }
 
-    function _checkOriginTokensNotBound(uint256[TOKENS_REQUIRED_TO_MINT] memory tokenIds) private view returns (bool) {
+    function _checkOriginTokensNotBound(uint256[] memory tokenIds) private view returns (bool) {
         unchecked {
-            for (uint256 i = 0; i < TOKENS_REQUIRED_TO_MINT; i++) {
+            for (uint256 i = 0; i < tokenIds.length; i++) {
                 uint256 tokenLevel = sanOriginNFT.tokenLevel(tokenIds[i]);
                 if (tokenLevel != 0) revert TokenAlreadyBoundInOrigin();
             }
@@ -71,7 +70,7 @@ contract MusicBox is MusicBox721 {
 
 
     function _checkMintConstraints(uint[] memory tokenIds )  private {
-        if (tokenIds.length != TOKENS_REQUIRED_TO_MINT) revert MintAmountTokensIncorrect();
+        if (tokenIds.length > MAX_TOKENS_REQUIRED_TO_MINT) revert MintAmountTokensIncorrect();
         if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
         if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
         
@@ -79,7 +78,7 @@ contract MusicBox is MusicBox721 {
 
     function _addToUsedIds(uint[] memory tokenIds )  private {
         unchecked {
-            for (uint256 i = 0; i < TOKENS_REQUIRED_TO_MINT; i++) {
+            for (uint256 i = 0; i < tokenIds.length; i++) {
                 usedOriginTokens[tokenIds[i]] = true;
             }
         }
@@ -92,15 +91,16 @@ contract MusicBox is MusicBox721 {
         tokensMergedFrom[newTokenId] = tokenIds;
         currentTokenLevel[newTokenId] = _newLevel;
     }
-    function mergeTokens(uint256[TOKENS_REQUIRED_TO_MINT] memory tokenIds, SoulboundLevel _newLevel)
+    function mergeTokens(uint256[MAX_TOKENS_REQUIRED_TO_MINT] memory tokenIds, SoulboundLevel _newLevel)
         public
         payable
         returns (bool)
     {
         // Checks
+        _checkMintConstraints(tokenIds);
         _checkUserOwnsTokens(tokenIds);
         _checkOriginTokensNotBound(tokenIds);
-        _checkMintConstraints(tokenIds);
+        
         
         // Effects
         // Pass checks, map the ids so they cannot be used again.
@@ -188,10 +188,6 @@ contract MusicBox is MusicBox721 {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
-    modifier notZeroAddress(address _address) {
-        if (_address == address(0)) revert ZeroAddress();
-        _;
-    }
 
     modifier tokenOwned(uint256 _tokenID) {
         if (ownerOf(_tokenID) != _msgSender()) revert TokenNotOwned();

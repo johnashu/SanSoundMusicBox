@@ -11,7 +11,7 @@ import "src/token/rescue/TokenRescuer.sol";
 
 abstract contract MusicBox721 is TokenRescuer, ERC721Enumerable, IMusicBox721, ERC-2981: NFT Royalty Standard , SANSoulbindable {
     // number of tokens to mint
-    uint8 public constant TOKENS_REQUIRED_TO_MINT = 3;
+    uint8 public constant MAX_TOKENS_REQUIRED_TO_MINT = 3;
 
     /// The maximum number of mints per address
     uint256 public constant MAX_MINT_PER_ADDRESS = 3;
