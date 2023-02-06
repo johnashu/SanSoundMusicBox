@@ -36,11 +36,11 @@
 //         uint256 tokenLevel = sanOriginNFT.tokenLevel(notBoundTokens[0]);
 //         emit log_uint(tokenLevel);
 //         vm.prank(user);
-//         assertTrue(musicBox.mergeTokens(notBoundTokens, SANSoulbindable.SoulboundLevel(0)));
+//         assertTrue(musicBox.mergeTokens(notBoundTokens, IMusicBox.SoulboundLevel(0)));
 //         // try again, this time with revert
 //         vm.prank(user);
 //         vm.expectRevert();
-//         assertTrue(musicBox.mergeTokens(notBoundTokens, SANSoulbindable.SoulboundLevel(0)));
+//         assertTrue(musicBox.mergeTokens(notBoundTokens, IMusicBox.SoulboundLevel(0)));
 //     }
 
 //     function testFailMintNotBound() public {
@@ -51,7 +51,7 @@
 //         isBoundTokens[2] = 3829;
 //         vm.expectRevert();
 //         vm.prank(user);
-//         assertTrue(musicBox.mergeTokens(isBoundTokens, SANSoulbindable.SoulboundLevel(0)));
+//         assertTrue(musicBox.mergeTokens(isBoundTokens, IMusicBox.SoulboundLevel(0)));
 //     }
 
 //     function testFailMintNotOwned() public {
@@ -62,7 +62,7 @@
 
 //         vm.expectRevert();
 //         vm.prank(user);
-//         assertTrue(musicBox.mergeTokens(notBoundTokens, SANSoulbindable.SoulboundLevel(0)));
+//         assertTrue(musicBox.mergeTokens(notBoundTokens, IMusicBox.SoulboundLevel(0)));
 //     }
 
 //     // function testGetAllUnboundTokens() public returns (uint256[] memory) {

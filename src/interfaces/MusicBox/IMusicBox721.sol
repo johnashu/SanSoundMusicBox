@@ -11,4 +11,5 @@ interface IMusicBox721 {
     error FailedToWithdraw();
     error NothingToWithdraw();
     error ZeroAddress();
+    error ExceedsMaxRoyaltiesPercentage();
 }

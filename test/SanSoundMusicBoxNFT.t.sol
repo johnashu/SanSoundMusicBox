@@ -40,12 +40,12 @@ contract TestMusicBox is Test {
         uint256 tokenLevel = sanOriginNFT.tokenLevel(notBoundTokens[0]);
         emit log_uint(tokenLevel);
         vm.prank(user);
-        assertTrue(musicBox.mergeTokens(notBoundTokens, SANSoulbindable.SoulboundLevel(0)));
+        assertTrue(musicBox.mergeTokens(notBoundTokens, IMusicBox.SoulboundLevel(0)));
 
         // try again, this time with revert
         vm.expectRevert();
         vm.prank(user);
-        musicBox.mergeTokens(notBoundTokens, SANSoulbindable.SoulboundLevel(0));
+        musicBox.mergeTokens(notBoundTokens, IMusicBox.SoulboundLevel(0));
     }
 
     function testFailMintNotBound() public {
@@ -55,7 +55,7 @@ contract TestMusicBox is Test {
         isBoundTokens[1] = 1055;
         isBoundTokens[2] = 3829;
         vm.prank(user);
-        assertTrue(musicBox.mergeTokens(isBoundTokens, SANSoulbindable.SoulboundLevel(0)));
+        assertTrue(musicBox.mergeTokens(isBoundTokens, IMusicBox.SoulboundLevel(0)));
     }
 
     function testFailMintNotOwned() public {
@@ -65,6 +65,6 @@ contract TestMusicBox is Test {
         notBoundTokens[2] = 6222;
 
         vm.prank(user);
-        assertTrue(musicBox.mergeTokens(notBoundTokens, SANSoulbindable.SoulboundLevel(0)));
+        assertTrue(musicBox.mergeTokens(notBoundTokens, IMusicBox.SoulboundLevel(0)));
     }
 }

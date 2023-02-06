@@ -2,11 +2,11 @@
 pragma solidity ^0.8.18;
 
 /**
- * @title SanSoundMusicBox
+ * @title SanSound MusicBox
  * @author Maffaz
  */
 
-interface SANSoulbindable {
+interface IMusicBox {
     enum SoulboundLevel {
         Unbound,
         Merged,
@@ -31,4 +31,5 @@ interface SANSoulbindable {
     error LevelPricesNotIncreasing();
     error TokenAlreadyUsed();
     error TokenAlreadyBoundInOrigin();
+    error contractAddressNotValid();
 }

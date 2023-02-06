@@ -5,20 +5,33 @@ import "src/interfaces/MusicBox/IMusicBox721.sol";
 // import "src/utils/Ownable.sol"; // inherited via TokenRescuer
 import "src/token/ERC721/ERC721Enumerable.sol";
 import "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
-import "src/interfaces/SanSound/SANSoulbindable.sol";
+import "src/interfaces/SanSound/IMusicBox.sol";
 import "src/token/rescue/TokenRescuer.sol";
 
+/**
+ * @title SanSound MusicBox
+ * @author Maffaz
+ */
 
-abstract contract MusicBox721 is TokenRescuer, ERC721Enumerable, IMusicBox721, ERC-2981: NFT Royalty Standard , SANSoulbindable {
+abstract contract MusicBox721 is
+    TokenRescuer,
+    ERC721Enumerable,
+    IMusicBox721,
+    ERC2981ContractWideRoyalties,
+    IMusicBox
+{
     // number of tokens to mint
-    uint8 public constant MAX_TOKENS_REQUIRED_TO_MINT = 3;
+    uint8 public constant ORIGIN_TOKENS_REQUIRED_TO_MINT = 3;
+
+    // number of tokens to mint
+    uint8 public constant PARTNER_TOKENS_REQUIRED_TO_MINT = 1;
 
     /// The maximum number of mints per address
     uint256 public constant MAX_MINT_PER_ADDRESS = 3;
 
     /// The maximum ERC-2981 royalties percentage (two decimals).
     uint256 public constant MAX_ROYALTIES_PCT = 930; // 9.3%
-    
+
     uint256 public constant MAX_SUPPLY = 3333;
 
     /// The base URI for token metadata.
@@ -118,7 +131,7 @@ abstract contract MusicBox721 is TokenRescuer, ERC721Enumerable, IMusicBox721, E
         if (!success) revert FailedToWithdraw();
     }
 
-        /**
+    /**
      * @notice (only owner) Sets ERC-2981 royalties recipient and percentage.
      * @param _recipient The address to which to send royalties.
      * @param _value The royalties percentage (two decimals, e.g. 1000 = 10%).
@@ -129,7 +142,7 @@ abstract contract MusicBox721 is TokenRescuer, ERC721Enumerable, IMusicBox721, E
         _setRoyalties(_recipient, _value);
     }
 
-        /**
+    /**
      * @notice Transfers multiple tokens from `_from` to `_to`.
      * @param _from The address from which to transfer tokens.
      * @param _to The address to which to transfer tokens.
