@@ -15,7 +15,6 @@
 // Soulbinding does not give access - state 0 = Merged.  3 NFT's
 // 2. Can transfer when Merged but not after that level.
 // 3. any level can be paid for can upgrade but cannot downgrade.abi
-// 4. no need to revoke if we can upgrade no problems.
 
   
    // The maximum token supply.
