@@ -27,10 +27,7 @@ interface SANSoulbindable {
     error CannotTransferSoulboundToken(address from, address to, uint256 tokenId);
 
     error InvalidNumberOfLevelPrices();
-    error InvalidSoulbindCredit();
-    error SoulbindingDisabled();
     error LevelAlreadyReached();
-    error LevelFourFull();
     error LevelPricesNotIncreasing();
     error TokenAlreadyUsed();
     error TokenAlreadyBoundInOrigin();

@@ -6,7 +6,6 @@ import "src/utils/Ownable.sol";
 import "src/token/ERC721Enumerable.sol";
 import "src/interfaces/SanSound/SANSoulbindable.sol";
 
-
 abstract contract MusicBox721 is Ownable, ERC721Enumerable, IMusicBox721, SANSoulbindable {
     // number of tokens to mint
     uint8 public constant TOKENS_REQUIRED_TO_MINT = 3;
@@ -39,11 +38,10 @@ abstract contract MusicBox721 is Ownable, ERC721Enumerable, IMusicBox721, SANSou
     mapping(address tokenOwner => uint256 totalMinted) public userMinted;
 
     constructor(string memory _name, string memory _symbol, string memory _contractURI, string memory _baseURI)
-        ERC721(_name, _symbol, _startingTokenID)
+        ERC721(_name, _symbol, uint256(1))
     {
         contractURI = _contractURI;
         baseURI = _baseURI;
-        currentTokenId = _startingTokenID;
     }
 
     function _getTokenIdAndIncrement() internal returns (uint256) {
@@ -105,7 +103,9 @@ abstract contract MusicBox721 is Ownable, ERC721Enumerable, IMusicBox721, SANSou
      * @notice (only owner) Withdraws all ether to the caller.
      */
     function safeWithdrawAll() external onlyOwner {
-        withdraw(contractBalance);
+        uint256 balance = address(this).balance;
+        if (balance == 0) revert NothingToWithdraw();
+        withdraw(balance);
     }
 
     /**
@@ -123,10 +123,5 @@ abstract contract MusicBox721 is Ownable, ERC721Enumerable, IMusicBox721, SANSou
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal pure override {
         revert CannotTransferSoulboundToken(from, to, tokenId);
-    }
-
-    modifier notZeroAddress(address _address) {
-        require(_address != address(0), "0x0 addr");
-        _;
     }
 }

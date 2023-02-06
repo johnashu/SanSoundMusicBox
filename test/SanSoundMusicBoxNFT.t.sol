@@ -5,12 +5,15 @@ import "lib/forge-std/src/Test.sol";
 import "src/MusicBox.sol";
 
 contract TestMusicBox is Test {
+    uint256 constant FORK_BLOCK = 16507662;
+
     MusicBox musicBox;
     ISanOriginNFT sanOriginNFT;
 
     address user = 0x8D23fD671300c409372cFc9f209CDA59c612081a;
 
     function setUp() public {
+        vm.createSelectFork(vm.rpcUrl("mainnet"), FORK_BLOCK);
         uint256[] memory _levelPrices = new uint[](6);
         _levelPrices[0] = 0;
         _levelPrices[1] = 0;

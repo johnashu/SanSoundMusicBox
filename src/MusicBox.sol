@@ -105,10 +105,9 @@ contract MusicBox is MusicBox721 {
         return true;
     }
 
-    function soulbind(uint256 _tokenID, SoulboundLevel _newLevel) public payable {
+    function soulbind(uint256 _tokenID, SoulboundLevel _newLevel) public payable tokenOwned(_tokenID) {
         SoulboundLevel curLevel = currentTokenLevel[_tokenID];
 
-        if (ownerOf(_tokenID) != _msgSender()) revert TokenNotOwned();
         if (curLevel >= _newLevel) revert LevelAlreadyReached();
 
         unchecked {
@@ -161,5 +160,15 @@ contract MusicBox is MusicBox721 {
                 ".json"
             )
         );
+    }
+
+    modifier notZeroAddress(address _address) {
+        if (_address == address(0)) revert ZeroAddress();
+        _;
+    }
+
+    modifier tokenOwned(uint256 _tokenID) {
+        if (ownerOf(_tokenID) != _msgSender()) revert TokenNotOwned();
+        _;
     }
 }
