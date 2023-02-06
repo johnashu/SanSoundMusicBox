@@ -2,23 +2,24 @@
 pragma solidity ^0.8.18;
 
 import "src/interfaces/MusicBox/IMusicBox721.sol";
-import "src/utils/Ownable.sol";
-import "src/token/ERC721Enumerable.sol";
+// import "src/utils/Ownable.sol"; // inherited via TokenRescuer
+import "src/token/ERC721/ERC721Enumerable.sol";
+import "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
 import "src/interfaces/SanSound/SANSoulbindable.sol";
+import "src/token/rescue/TokenRescuer.sol";
 
-abstract contract MusicBox721 is Ownable, ERC721Enumerable, IMusicBox721, SANSoulbindable {
+
+abstract contract MusicBox721 is TokenRescuer, ERC721Enumerable, IMusicBox721, ERC-2981: NFT Royalty Standard , SANSoulbindable {
     // number of tokens to mint
     uint8 public constant TOKENS_REQUIRED_TO_MINT = 3;
 
     /// The maximum number of mints per address
     uint256 public constant MAX_MINT_PER_ADDRESS = 3;
 
-    /// The maximum token supply.
-    // 9,748 Unbound SanOrigin Tokens
-    // divided by 3 = 3249.3333
-    // MAX_SUPPLY = 3249
-    // Remaining NFTs = 1
-    uint256 public constant MAX_SUPPLY = 3249;
+    /// The maximum ERC-2981 royalties percentage (two decimals).
+    uint256 public constant MAX_ROYALTIES_PCT = 930; // 9.3%
+    
+    uint256 public constant MAX_SUPPLY = 3333;
 
     /// The base URI for token metadata.
     string public baseURI;
@@ -54,7 +55,7 @@ abstract contract MusicBox721 is Ownable, ERC721Enumerable, IMusicBox721, SANSou
      * @param _tokenIDs An array of token IDs to be checked for ownership.
      * @return True if `_account` owns all token IDs `_tokenIDs`, else false.
      */
-    function isOwnerOf(address _account, uint256[] calldata _tokenIDs) public view returns (bool) {
+    function isOwnerOf(address _account, uint256[MAX_MINT_PER_ADDRESS] calldata _tokenIDs) public view returns (bool) {
         unchecked {
             for (uint256 i; i < MAX_MINT_PER_ADDRESS; ++i) {
                 if (ownerOf(_tokenIDs[i]) != _account) {
@@ -117,11 +118,64 @@ abstract contract MusicBox721 is Ownable, ERC721Enumerable, IMusicBox721, SANSou
         if (!success) revert FailedToWithdraw();
     }
 
-    function approve(address to, uint256 tokenId) public pure override(IERC721, ERC721) {
-        revert CannotApproveSoulboundToken(to, tokenId);
+        /**
+     * @notice (only owner) Sets ERC-2981 royalties recipient and percentage.
+     * @param _recipient The address to which to send royalties.
+     * @param _value The royalties percentage (two decimals, e.g. 1000 = 10%).
+     */
+    function setRoyalties(address _recipient, uint256 _value) external onlyOwner {
+        if (_value > MAX_ROYALTIES_PCT) revert ExceedsMaxRoyaltiesPercentage();
+
+        _setRoyalties(_recipient, _value);
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal pure override {
-        revert CannotTransferSoulboundToken(from, to, tokenId);
+        /**
+     * @notice Transfers multiple tokens from `_from` to `_to`.
+     * @param _from The address from which to transfer tokens.
+     * @param _to The address to which to transfer tokens.
+     * @param _tokenIDs An array of token IDs to transfer.
+     */
+    function batchTransferFrom(address _from, address _to, uint256[] calldata _tokenIDs) external {
+        unchecked {
+            for (uint256 i = 0; i < _tokenIDs.length; i++) {
+                transferFrom(_from, _to, _tokenIDs[i]);
+            }
+        }
+    }
+
+    /**
+     * @notice Safely transfers multiple tokens from `_from` to `_to`.
+     * @param _from The address from which to transfer tokens.
+     * @param _to The address to which to transfer tokens.
+     * @param _tokenIDs An array of token IDs to transfer.
+     */
+    function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIDs, bytes calldata _data)
+        external
+    {
+        unchecked {
+            for (uint256 i = 0; i < _tokenIDs.length; i++) {
+                safeTransferFrom(_from, _to, _tokenIDs[i], _data);
+            }
+        }
+    }
+
+    /**
+     * @inheritdoc ERC165
+     */
+    function supportsInterface(bytes4 _interfaceId)
+        public
+        view
+        override(ERC721Enumerable, ERC2981Base)
+        returns (bool)
+    {
+        return super.supportsInterface(_interfaceId);
+    }
+
+    function _cappedMint(uint256 _mintAmount) private {
+        _mint(_mintAmount);
+
+        if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) {
+            revert ExceedsMaxMintPerAddress();
+        }
     }
 }

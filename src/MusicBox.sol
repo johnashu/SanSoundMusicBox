@@ -1,22 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-// Once in a Soulbound state, the NFT acts as the holder’s token-gated login to the SAN Sound platform:
+// Partner NfTs
 
-// Merged will not receive access to the SAN Sound platform.
-// Citizen will receive one year of access to the SAN Sound platform. .33 ETH
-// Defiant will receive LIFETIME access to the SAN Sound platform.    xxETH
-// Hanzoku will receive LIFETIME access to the SAN Sound platform.  xxETH
-// “The 33” will receive LIFETIME access to the SAN Sound platform. xxETH
+// Let’s say 1 0n1 owned- you can merge 1 San for a new NFT (music box) 
 
-// Fees can be changed
+// 1 world of women owned - merge 1 San for music box 
 
-// Only Merged NFT's from orign are allowed - level 0 only
-// 1. Soulbind 3 nfts that are at level 0 in the origin to create a new NFT MB (MusicBox) Token
-// Soulbinding does not give access.  3 NFT's
-// 2. Can transfer when Merged.
-// 3. any level can be paid for can upgrade not downgrade.abi
-// 4. no need to revoke if we can upgrade no problems.
+// 4 x mutant ape owned - merge 1 San
+
+// But after those three are taken - 3 San for merge into music box
+
+// 1 allowable per NFT collection, and only claimable once per ID
+
 
 import "src/MusicBox721.sol";
 import "src/interfaces/SanSound/ISanOriginNFT.sol";
@@ -48,7 +44,7 @@ contract MusicBox is MusicBox721 {
         levelPrice[SoulboundLevel.The33] = _levelPrices[5];
     }
 
-    function _checkUserOwnsTokens(uint256[TOKENS_REQUIRED_TO_MINT] memory tokenIds, address _address)
+    function _checkUserOwnsTokens(uint256[TOKENS_REQUIRED_TO_MINT] memory tokenIds)
         private
         view
         notZeroAddress(_address)
@@ -73,33 +69,50 @@ contract MusicBox is MusicBox721 {
         return true;
     }
 
-    function mergeTokens(uint256[TOKENS_REQUIRED_TO_MINT] memory tokenIds, SoulboundLevel _newLevel)
-        public
-        payable
-        returns (bool)
-    {
-        _checkUserOwnsTokens(tokenIds, _msgSender());
-        _checkOriginTokensNotBound(tokenIds);
+
+    function _checkMintConstraints(uint[] memory tokenIds )  private {
         if (tokenIds.length != TOKENS_REQUIRED_TO_MINT) revert MintAmountTokensIncorrect();
         if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
-        if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) {
-            revert ExceedsMaxMintPerAddress();
-        }
+        if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
+        
+    }
 
-        // Pass checks, map the ids so they cannot be used again.
+    function _addToUsedIds(uint[] memory tokenIds )  private {
         unchecked {
             for (uint256 i = 0; i < TOKENS_REQUIRED_TO_MINT; i++) {
                 usedOriginTokens[tokenIds[i]] = true;
             }
         }
-        uint256 newTokenId = _getTokenIdAndIncrement();
+        
+    }
 
+    function _addNewTokenData(uint[] memory tokenIds )  private {
+        uint256 newTokenId = _getTokenIdAndIncrement();
         userMinted[_msgSender()] += 1;
         tokensMergedFrom[newTokenId] = tokenIds;
         currentTokenLevel[newTokenId] = _newLevel;
-        if (_newLevel > SoulboundLevel.Unbound) {
-            soulbind(newTokenId, _newLevel);
-        }
+    }
+    function mergeTokens(uint256[TOKENS_REQUIRED_TO_MINT] memory tokenIds, SoulboundLevel _newLevel)
+        public
+        payable
+        returns (bool)
+    {
+        // Checks
+        _checkUserOwnsTokens(tokenIds);
+        _checkOriginTokensNotBound(tokenIds);
+        _checkMintConstraints(tokenIds);
+        
+        // Effects
+        // Pass checks, map the ids so they cannot be used again.
+        _addToUsedIds(tokenIds);
+
+        // Update token data.
+        _addNewTokenData(tokenIds);
+
+        // Soulbind  status
+        soulbind(newTokenId, _newLevel);
+
+        // Interactions
         _safeMint(_msgSender(), newTokenId);
 
         return true;
@@ -160,6 +173,19 @@ contract MusicBox is MusicBox721 {
                 ".json"
             )
         );
+    }
+
+        function approve(address to, uint256 tokenId) public override(IERC721, ERC721) {
+            // allow merged to be approved
+            if (currentTokenLevel[tokenId] > SoulboundLevel.Merged)  revert CannotApproveSoulboundToken(to, tokenId);
+            super.approve(to, tokenId);
+
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
+        // allow Merged to be transfered.
+        if (currentTokenLevel[tokenId] > SoulboundLevel.Merged) revert CannotTransferSoulboundToken(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId);
     }
 
     modifier notZeroAddress(address _address) {
