@@ -11,7 +11,8 @@ contract TestMusicBox is Test {
     uint256 constant FORK_BLOCK = 16507662;
 
     MusicBox musicBox;
-    MockERC721 mockERC721;
+    MockERC721 mockERC721Single;
+    MockERC721 mockERC721Multi;
 
     address sanOriginAddress = 0x33333333333371718A3C2bB63E5F3b94C9bC13bE;
 
@@ -25,7 +26,8 @@ contract TestMusicBox is Test {
     uint256[] notBoundTokensPartner = [452];
     uint256[] isBoundTokensPartner = [1055];
 
-    uint256[] partnerTokensToCheck = [1];
+    uint256[] partnerTokensToCheckSingle = [1];
+    uint256[] partnerTokensToCheckMulti = [2, 3, 4];
     address partnerTokenAddress;
 
     function setUp() public {
@@ -46,7 +48,8 @@ contract TestMusicBox is Test {
             string(""),
             _levelPrices
         );
-        mockERC721 = new MockERC721();
+        mockERC721Single = new MockERC721();
+        mockERC721Multi = new MockERC721();
     }
 
     function testCheckOriginAddressIsValid() public {
@@ -74,24 +77,43 @@ contract TestMusicBox is Test {
 
         // try again, this time with revert
         vm.expectRevert();
-        musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.AccessLevel(1));
+        musicBox.mintFromSanOrigin{value: price}(notBoundTokens, IMusicBox.AccessLevel(1));
     }
 
     function testMintWithPartnerSingle() public {
         emit log_uint(user.balance);
         uint256 price = _levelPrices[1] - _levelPrices[0];
 
-        _addContracttoValidList(address(mockERC721), 1, true);
+        _addContracttoValidList(address(mockERC721Single), 1, true);
         bool success = musicBox.mintFromPartner{value: price}(
-            notBoundTokensPartner, IMusicBox.AccessLevel(1), partnerTokensToCheck, address(mockERC721)
+            notBoundTokensPartner, IMusicBox.AccessLevel(1), partnerTokensToCheckSingle, address(mockERC721Single)
         );
-
         assertTrue(success);
         emit log_uint(user.balance);
 
         // try again, this time with revert
         vm.expectRevert();
-        musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.AccessLevel(1));
+        musicBox.mintFromPartner{value: price}(
+            notBoundTokensPartner, IMusicBox.AccessLevel(1), partnerTokensToCheckSingle, address(mockERC721Single)
+        );
+    }
+
+    function testMintWithPartnerMultiple() public {
+        emit log_uint(user.balance);
+        uint256 price = _levelPrices[1] - _levelPrices[0];
+
+        _addContracttoValidList(address(mockERC721Multi), 3, true);
+        bool success = musicBox.mintFromPartner{value: price}(
+            notBoundTokensPartner, IMusicBox.AccessLevel(1), partnerTokensToCheckMulti, address(mockERC721Multi)
+        );
+        assertTrue(success);
+        emit log_uint(user.balance);
+
+        // try again, this time with revert
+        vm.expectRevert();
+        musicBox.mintFromPartner{value: price}(
+            notBoundTokensPartner, IMusicBox.AccessLevel(1), partnerTokensToCheckMulti, address(mockERC721Multi)
+        );
     }
 
     function testUpgradeAccessLevel() public {
@@ -102,13 +124,13 @@ contract TestMusicBox is Test {
         assertTrue(success);
     }
 
-    function testFailMintNotBound() public {
-        vm.prank(user);
+    function testFailMintIsBound() public {
         assertTrue(musicBox.mintFromSanOrigin(isBoundTokens, IMusicBox.AccessLevel(0)));
     }
 
     function testFailMintNotOwned() public {
-        vm.prank(user);
-        assertTrue(musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.AccessLevel(0)));
+        vm.stopPrank(); // User becomes the owner of everything..
+        vm.prank(address(1));
+        assertTrue(musicBox.mintFromSanOrigin(isBoundTokens, IMusicBox.AccessLevel(0)));
     }
 }
