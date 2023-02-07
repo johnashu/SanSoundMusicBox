@@ -7,7 +7,7 @@ pragma solidity ^0.8.18;
  */
 
 interface IMusicBox {
-    enum TokenAccessLevel {
+    enum AccessLevel {
         Unbound,
         Merged,
         Citizen,
@@ -19,8 +19,8 @@ interface IMusicBox {
     event AccessLevelUpdated(
         address indexed TokenOwnerAddress,
         uint256 indexed tokenId,
-        TokenAccessLevel indexed newLevel,
-        TokenAccessLevel previousLevel
+        AccessLevel indexed newLevel,
+        AccessLevel previousLevel
     );
 
     error CannotApproveAccessLevel(address to, uint256 tokenId);
@@ -34,15 +34,12 @@ interface IMusicBox {
     error contractAddressNotValid();
     error TokenUnBound();
 
-    function upgradeAccessLevel(uint256 _tokenId, TokenAccessLevel _newLevel) external payable returns (bool);
-    function mintFromSanOrigin(uint256[] calldata tokenIds, TokenAccessLevel _newLevel)
-        external
-        payable
-        returns (bool);
+    function upgradeAccessLevel(uint256 _tokenId, AccessLevel _newLevel) external payable returns (bool);
+    function mintFromSanOrigin(uint256[] calldata tokenIds, AccessLevel _newLevel) external payable returns (bool);
 
     function mintFromPartner(
         uint256[] calldata originTokenIds,
-        TokenAccessLevel _newLevel,
+        AccessLevel _newLevel,
         uint256[] calldata partnerTokenIds,
         address _contractAddress
     ) external payable returns (bool);

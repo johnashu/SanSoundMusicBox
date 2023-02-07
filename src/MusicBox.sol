@@ -20,13 +20,13 @@ contract MusicBox is MusicBox721 {
     uint256 public constant NUM_OF_LEVELS = 6;
     address public constant sanOriginAddress = 0x33333333333371718A3C2bB63E5F3b94C9bC13bE;
 
-    mapping(TokenAccessLevel tokenAccessLevel => uint256 price) public levelPrice;
-    mapping(uint256 tokenId => TokenAccessLevel tokenAccessLevel) public currentTokenLevel;
+    mapping(AccessLevel tokenAccessLevel => uint256 price) public levelPrice;
+    mapping(uint256 tokenId => AccessLevel tokenAccessLevel) public currentTokenLevel;
     mapping(uint tokenId => uint256[] TokenIds) public tokensMergedFrom;
 
     mapping(address contractAddress => bool isValid) public isValidContract;
+    mapping(address contractAddress => mapping(uint tokenId => bool isUsed)) public usedTokens;
     mapping(address contractAddress => uint8 _numTokens) public numPartnerTokensRequired;
-    mapping(address contractAddress => mapping(uint originTokenId => bool isUsed)) public usedTokens;
 
     constructor(
         string memory _name,
@@ -35,12 +35,12 @@ contract MusicBox is MusicBox721 {
         string memory _baseURI,
         uint256[NUM_OF_LEVELS] memory _levelPrices
     ) MusicBox721(_name, _symbol, _contractURI, _baseURI) {
-        levelPrice[TokenAccessLevel.Unbound] = _levelPrices[0];
-        levelPrice[TokenAccessLevel.Merged] = _levelPrices[1];
-        levelPrice[TokenAccessLevel.Citizen] = _levelPrices[2];
-        levelPrice[TokenAccessLevel.Defiant] = _levelPrices[3];
-        levelPrice[TokenAccessLevel.Hanzoku] = _levelPrices[4];
-        levelPrice[TokenAccessLevel.The33] = _levelPrices[5];
+        levelPrice[AccessLevel.Unbound] = _levelPrices[0];
+        levelPrice[AccessLevel.Merged] = _levelPrices[1];
+        levelPrice[AccessLevel.Citizen] = _levelPrices[2];
+        levelPrice[AccessLevel.Defiant] = _levelPrices[3];
+        levelPrice[AccessLevel.Hanzoku] = _levelPrices[4];
+        levelPrice[AccessLevel.The33] = _levelPrices[5];
         isValidContract[sanOriginAddress] = true;
     }
 
@@ -48,9 +48,12 @@ contract MusicBox is MusicBox721 {
     /// @dev sanOriginAddress is added in construction so we dont want to change it.  Same with 0 address.
     /// @param _partnerAddress Address of the Partner Contract.
     /// @param _isValid true to be valid (add) or false to be invlaid
-    function updatePartnerAddress(address _partnerAddress, uint8 numTokensRequired, bool _isValid) public onlyOwner {
-        if (_partnerAddress == sanOriginAddress || _partnerAddress == address(0)) revert contractAddressNotValid();
+    function updatePartnerAddress(address _partnerAddress, uint8 _numTokensRequired, bool _isValid) public onlyOwner {
+        if (_partnerAddress == sanOriginAddress || _partnerAddress == address(0) || _numTokensRequired == 0) {
+            revert contractAddressNotValid();
+        }
         isValidContract[_partnerAddress] = _isValid;
+        numPartnerTokensRequired[_partnerAddress] = _numTokensRequired;
     }
 
     /// @notice Check Contract is valid
@@ -62,7 +65,7 @@ contract MusicBox is MusicBox721 {
         }
     }
 
-    function _checkUserOwnsTokens(uint256[] memory tokenIds, address _tokenAddress) private view returns (bool) {
+    function _checkUserOwnsTokens(uint256[] calldata tokenIds, address _tokenAddress) private view returns (bool) {
         unchecked {
             for (uint256 i = 0; i < tokenIds.length; i++) {
                 if (usedTokens[_tokenAddress][tokenIds[i]] != false) revert TokenAlreadyUsed();
@@ -72,7 +75,7 @@ contract MusicBox is MusicBox721 {
         return true;
     }
 
-    function _checkOriginTokensNotBound(uint256[] memory tokenIds) private view returns (bool) {
+    function _checkOriginTokensNotBound(uint256[] calldata tokenIds) private view returns (bool) {
         unchecked {
             for (uint256 i = 0; i < tokenIds.length; i++) {
                 uint256 tokenLevel = ISanOriginNFT(sanOriginAddress).tokenLevel(tokenIds[i]);
@@ -82,13 +85,13 @@ contract MusicBox is MusicBox721 {
         return true;
     }
 
-    function _checkMintConstraints(uint256[] memory tokenIds, uint8 tokensRequired) private view {
+    function _checkMintConstraints(uint256[] calldata tokenIds, uint8 tokensRequired) private view {
         if (tokenIds.length > tokensRequired) revert MintAmountTokensIncorrect();
         if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
         if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
     }
 
-    function _addToUsedIds(uint256[] memory tokenIds, address _tokenAddress) private {
+    function _addToUsedIds(uint256[] calldata tokenIds, address _tokenAddress) private {
         unchecked {
             for (uint256 i = 0; i < tokenIds.length; i++) {
                 usedTokens[_tokenAddress][tokenIds[i]] = true;
@@ -96,7 +99,7 @@ contract MusicBox is MusicBox721 {
         }
     }
 
-    function _addNewTokenData(uint256 newTokenId, uint256[] memory tokenIds, TokenAccessLevel _newLevel) private {
+    function _addNewTokenData(uint256 newTokenId, uint256[] calldata tokenIds, AccessLevel _newLevel) private {
         unchecked {
             userMinted[_msgSender()] += 1;
         }
@@ -116,8 +119,8 @@ contract MusicBox is MusicBox721 {
     /// @notice Merge Tokens from San Origin.
     /// @param originTokenIds San Origin Id(s) to merge
     /// @return _newLevel Access level requested
-    function mintFromSanOrigin(uint256[] calldata originTokenIds, TokenAccessLevel _newLevel)
-        public
+    function mintFromSanOrigin(uint256[] calldata originTokenIds, AccessLevel _newLevel)
+        external
         payable
         returns (bool)
     {
@@ -133,10 +136,10 @@ contract MusicBox is MusicBox721 {
 
     function mintFromPartner(
         uint256[] calldata originTokenIds,
-        TokenAccessLevel _newLevel,
+        AccessLevel _newLevel,
         uint256[] calldata partnerTokenIds,
         address _contractAddress
-    ) public payable returns (bool) {
+    ) external payable returns (bool) {
         _checkContractAddress(_contractAddress);
         _processChecks(originTokenIds, PARTNER_TOKENS_REQUIRED_TO_MINT, sanOriginAddress);
         _processChecks(partnerTokenIds, numPartnerTokensRequired[_contractAddress], _contractAddress);
@@ -144,31 +147,35 @@ contract MusicBox is MusicBox721 {
         return _mergeMint(originTokenIds, _newLevel);
     }
 
-    function _mergeMint(uint256[] calldata originTokenIds, TokenAccessLevel _newLevel) private returns (bool) {
-         uint256 newTokenId = _getTokenIdAndIncrement();
+    function _mergeMint(uint256[] calldata originTokenIds, AccessLevel _newLevel) private returns (bool) {
+        uint256 newTokenId = _getTokenIdAndIncrement();
         _addNewTokenData(newTokenId, originTokenIds, _newLevel);
+        _upgradeAccessLevel(newTokenId, _newLevel, AccessLevel(0)); // curLevel MUST be 0 to mint..
         _safeMint(_msgSender(), newTokenId);
         return true;
     }
 
-    function upgradeAccessLevel(uint256 _tokenId, TokenAccessLevel _newLevel)
-        public
-        payable
-        tokenOwned(_tokenId)
+    function _upgradeAccessLevel(uint256 _tokenId, AccessLevel _newLevel, AccessLevel _curLevel)
+        private
         returns (bool)
     {
-        TokenAccessLevel curLevel = currentTokenLevel[_tokenId];
-        if (_newLevel == TokenAccessLevel.Unbound) revert TokenUnBound();
-        if (curLevel >= _newLevel) revert LevelAlreadyReached();
-
         unchecked {
-            uint256 price = levelPrice[_newLevel] - levelPrice[curLevel];
+            uint256 price = levelPrice[_newLevel] - levelPrice[_curLevel];
             if (msg.value != price) revert IncorrectPaymentAmount();
         }
         currentTokenLevel[_tokenId] = _newLevel;
-        _approve(address(0), _tokenId);
-        emit AccessLevelUpdated(_msgSender(), _tokenId, _newLevel, curLevel);
+        emit AccessLevelUpdated(_msgSender(), _tokenId, _newLevel, _curLevel);
         return true;
+    }
+
+    function upgradeAccessLevel(uint256 _tokenId, AccessLevel _newLevel) public payable returns (bool) {
+        AccessLevel curLevel = currentTokenLevel[_tokenId];
+        if (ownerOf(_tokenId) != _msgSender()) revert TokenNotOwned();
+        if (_newLevel == AccessLevel.Unbound) revert TokenUnBound();
+        if (curLevel >= _newLevel) revert LevelAlreadyReached();
+        currentTokenLevel[_tokenId] = _newLevel;
+
+        return _upgradeAccessLevel(_tokenId, _newLevel, curLevel);
     }
 
     function setLevelPrices(uint256[NUM_OF_LEVELS] calldata _newPrices) external onlyOwner {
@@ -180,20 +187,20 @@ contract MusicBox is MusicBox721 {
                 if (_newPrices[i] <= previousPrice) {
                     revert LevelPricesNotIncreasing();
                 }
-                levelPrice[TokenAccessLevel(i + 1)] = _newPrices[i];
+                levelPrice[AccessLevel(i + 1)] = _newPrices[i];
                 previousPrice = _newPrices[i];
             }
         }
     }
 
-    function userMaxTokenAccessLevel(address _owner) external view returns (TokenAccessLevel) {
+    function userMaxAccessLevel(address _owner) external view returns (AccessLevel) {
         uint256 tokenCount = balanceOf(_owner);
-        if (tokenCount == 0) return TokenAccessLevel.Unbound;
+        if (tokenCount == 0) return AccessLevel.Unbound;
 
-        TokenAccessLevel userMaxLevel;
+        AccessLevel userMaxLevel;
         unchecked {
             for (uint256 i; i < tokenCount; i++) {
-                TokenAccessLevel level = currentTokenLevel[tokenOfOwnerByIndex(_owner, i)];
+                AccessLevel level = currentTokenLevel[tokenOfOwnerByIndex(_owner, i)];
                 if (level > userMaxLevel) userMaxLevel = level;
             }
         }
@@ -215,21 +222,16 @@ contract MusicBox is MusicBox721 {
 
     function approve(address to, uint256 tokenId) public override(IERC721, ERC721) {
         // allow merged to be approved
-        if (currentTokenLevel[tokenId] > TokenAccessLevel.Merged) revert CannotApproveAccessLevel(to, tokenId);
+        if (currentTokenLevel[tokenId] > AccessLevel.Merged) revert CannotApproveAccessLevel(to, tokenId);
         super.approve(to, tokenId);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
         // allow Merged to be transfered.
-        if (currentTokenLevel[tokenId] > TokenAccessLevel.Merged) {
+        if (currentTokenLevel[tokenId] > AccessLevel.Merged) {
             revert CannotTransferAccessLevelUpdatedToken(from, to, tokenId);
         }
         super._beforeTokenTransfer(from, to, tokenId);
-    }
-
-    modifier tokenOwned(uint256 _tokenId) {
-        if (ownerOf(_tokenId) != _msgSender()) revert TokenNotOwned();
-        _;
     }
 
     receive() external payable {

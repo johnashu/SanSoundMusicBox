@@ -5,6 +5,7 @@ import "lib/forge-std/src/Test.sol";
 import "src/MusicBox.sol";
 import "src/interfaces/MusicBox/IMusicBox.sol";
 
+
 contract TestMusicBox is Test {
     uint256 constant FORK_BLOCK = 16507662;
 
@@ -14,15 +15,21 @@ contract TestMusicBox is Test {
     address user = 0x8D23fD671300c409372cFc9f209CDA59c612081a;
 
     uint256[6] _levelPrices;
+    uint256[] notBoundTokens = [452, 472, 6271];
+    uint256[] notBoundTokensPartner = [452];
+    uint256[] isBoundTokens = [452, 1055, 3829]; // middle will fail.
+    uint256[] isBoundTokensPartner = [1055];
+    uint[] partnerTokensToCheck = [1];
+    address partnerTokenAddress;
 
     function setUp() public {
         vm.createSelectFork(vm.rpcUrl("mainnet"), FORK_BLOCK);
         _levelPrices[0] = 0;
         _levelPrices[1] = 333000000000000000;
-        _levelPrices[2] = 333000000000000000;
-        _levelPrices[3] = 633000000000000000;
-        _levelPrices[4] = 963000000000000000;
-        _levelPrices[5] = 5000000000000000000;
+        _levelPrices[2] = 633000000000000000;
+        _levelPrices[3] = 963000000000000000;
+        _levelPrices[4] = 5000000000000000000;
+        _levelPrices[5] = 10000000000000000000;
 
         musicBox = new MusicBox(
             string("SanSoundMusicBox"),
@@ -31,6 +38,8 @@ contract TestMusicBox is Test {
             string(""),
             _levelPrices
         );
+        vm.startPrank(user);
+        vm.deal(user, 10 ether);
     }
 
     function testCheckOriginAddressIsValid() public {
@@ -38,74 +47,47 @@ contract TestMusicBox is Test {
         assertTrue(musicBox.isValidContract(san));
     }
 
-    function testMintWithMultiSanOrigin() public {
-        uint256[] memory notBoundTokens = new uint256[](3);
-        notBoundTokens[0] = 452;
-        notBoundTokens[1] = 472;
-        notBoundTokens[2] = 6271;
-
-        vm.startPrank(user);
-        vm.deal(user, 10 ether);
+    function testMintWithMultiSanOrigin() public payable {
         emit log_uint(user.balance);
-        assertTrue(musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.TokenAccessLevel(0)));
-        _upgradeAccessLevel();
+        uint256 price = _levelPrices[1] - _levelPrices[0];
+        bool success = musicBox.mintFromSanOrigin{value: price}(notBoundTokens, IMusicBox.AccessLevel(1));
+
+        assertTrue(success);
+        emit log_uint(user.balance);
 
         // try again, this time with revert
         vm.expectRevert();
-        musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.TokenAccessLevel(0));
-
-        _upgradeAccessLevel();
+        musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.AccessLevel(1));
     }
 
-    function _upgradeAccessLevel() public payable {
-        (bool success, bytes memory data) =
-            IMusicBox(address(musicBox)).upgradeAccessLevel(1, IMusicBox.TokenAccessLevel(2)){value: _levelPrices[5]}();
-        // (
-        // abi.encodeWithSignature(
-        //     "upgradeAccessLevel(uint256,TokenAccessLevel)",
-        //     "call upgradeAccessLevel",
-        //     1,
-        //     IMusicBox.TokenAccessLevel(2)
-        // )
-        // );
+    function testUpgradeAccessLevel() public {
+        testMintWithMultiSanOrigin();
+        uint256 price = _levelPrices[2] - _levelPrices[1];
+        bool success = musicBox.upgradeAccessLevel{value: price}(1, IMusicBox.AccessLevel(2));
 
-        // abi.encodeWithSelector(MyToken.balanceOf.selector, address(1)),
-        // abi.encode(10)
-
-        // emit log_boolean(success);
-
-        // assertTrue(success);
+        assertTrue(success);
     }
 
-    // function testMintWithPartnerOrigin() public {
-    //     uint256[] memory notBoundTokens = new uint256[](1);
-    //     notBoundTokens[0] = 452;
-    //     vm.prank(user);
-    //     assertTrue(musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.TokenAccessLevel(0)));
+    function testMintWithPartnerOrigin() public {
+        emit log_uint(user.balance);
+        uint256 price = _levelPrices[1] - _levelPrices[0];
+        bool success = musicBox.mintFromPartner{value: price}(notBoundTokensPartner, IMusicBox.AccessLevel(1), );
 
-    //     // try again, this time with revert
-    //     vm.expectRevert();
-    //     vm.prank(user);
-    //     musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.TokenAccessLevel(0));
-    // }
+        assertTrue(success);
+        emit log_uint(user.balance);
 
-    // function testFailMintNotBound() public {
-    //     uint256[] memory isBoundTokens = new uint256[](3);
+        // try again, this time with revert
+        vm.expectRevert();
+        musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.AccessLevel(1));
+    }
 
-    //     isBoundTokens[0] = 452;
-    //     isBoundTokens[1] = 1055;
-    //     isBoundTokens[2] = 3829;
-    //     vm.prank(user);
-    //     assertTrue(musicBox.mintFromSanOrigin(isBoundTokens, IMusicBox.TokenAccessLevel(0)));
-    // }
+    function testFailMintNotBound() public {
+        vm.prank(user);
+        assertTrue(musicBox.mintFromSanOrigin(isBoundTokens, IMusicBox.AccessLevel(0)));
+    }
 
-    // function testFailMintNotOwned() public {
-    //     uint256[] memory notBoundTokens = new uint256[](3);
-    //     notBoundTokens[0] = 452;
-    //     notBoundTokens[1] = 471;
-    //     notBoundTokens[2] = 6222;
-
-    //     vm.prank(user);
-    //     assertTrue(musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.TokenAccessLevel(0)));
-    // }
+    function testFailMintNotOwned() public {
+        vm.prank(user);
+        assertTrue(musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.AccessLevel(0)));
+    }
 }
