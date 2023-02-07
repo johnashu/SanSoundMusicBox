@@ -4,26 +4,34 @@ pragma solidity ^0.8.18;
 import "lib/forge-std/src/Test.sol";
 import "src/MusicBox.sol";
 import "src/interfaces/MusicBox/IMusicBox.sol";
-
+import {MockERC721} from "test/mockERC721.sol";
+import {IERC721} from "src/interfaces/ERC721/IERC721.sol";
 
 contract TestMusicBox is Test {
     uint256 constant FORK_BLOCK = 16507662;
 
     MusicBox musicBox;
+    MockERC721 mockERC721;
+
     address sanOriginAddress = 0x33333333333371718A3C2bB63E5F3b94C9bC13bE;
 
     address user = 0x8D23fD671300c409372cFc9f209CDA59c612081a;
 
     uint256[6] _levelPrices;
+
     uint256[] notBoundTokens = [452, 472, 6271];
-    uint256[] notBoundTokensPartner = [452];
     uint256[] isBoundTokens = [452, 1055, 3829]; // middle will fail.
+
+    uint256[] notBoundTokensPartner = [452];
     uint256[] isBoundTokensPartner = [1055];
-    uint[] partnerTokensToCheck = [1];
+
+    uint256[] partnerTokensToCheck = [1];
     address partnerTokenAddress;
 
     function setUp() public {
         vm.createSelectFork(vm.rpcUrl("mainnet"), FORK_BLOCK);
+        vm.startPrank(user); // User becomes the owner of everything..
+        vm.deal(user, 10 ether);
         _levelPrices[0] = 0;
         _levelPrices[1] = 333000000000000000;
         _levelPrices[2] = 633000000000000000;
@@ -38,13 +46,22 @@ contract TestMusicBox is Test {
             string(""),
             _levelPrices
         );
-        vm.startPrank(user);
-        vm.deal(user, 10 ether);
+        mockERC721 = new MockERC721();
     }
 
     function testCheckOriginAddressIsValid() public {
         address san = musicBox.sanOriginAddress();
         assertTrue(musicBox.isValidContract(san));
+    }
+
+    function testAddContractToValidListFuzzy(address _partnerAddress, uint8 _numTokensRequired, bool _isValid) public {
+        vm.assume(_partnerAddress != address(0));
+        vm.assume(_numTokensRequired != 0);
+        _addContracttoValidList(_partnerAddress, _numTokensRequired, _isValid);
+    }
+
+    function _addContracttoValidList(address _partnerAddress, uint8 _numTokensRequired, bool _isValid) private {
+        musicBox.updatePartnerAddress(_partnerAddress, _numTokensRequired, _isValid);
     }
 
     function testMintWithMultiSanOrigin() public payable {
@@ -60,18 +77,14 @@ contract TestMusicBox is Test {
         musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.AccessLevel(1));
     }
 
-    function testUpgradeAccessLevel() public {
-        testMintWithMultiSanOrigin();
-        uint256 price = _levelPrices[2] - _levelPrices[1];
-        bool success = musicBox.upgradeAccessLevel{value: price}(1, IMusicBox.AccessLevel(2));
-
-        assertTrue(success);
-    }
-
-    function testMintWithPartnerOrigin() public {
+    function testMintWithPartnerSingle() public {
         emit log_uint(user.balance);
         uint256 price = _levelPrices[1] - _levelPrices[0];
-        bool success = musicBox.mintFromPartner{value: price}(notBoundTokensPartner, IMusicBox.AccessLevel(1), );
+
+        _addContracttoValidList(address(mockERC721), 1, true);
+        bool success = musicBox.mintFromPartner{value: price}(
+            notBoundTokensPartner, IMusicBox.AccessLevel(1), partnerTokensToCheck, address(mockERC721)
+        );
 
         assertTrue(success);
         emit log_uint(user.balance);
@@ -79,6 +92,14 @@ contract TestMusicBox is Test {
         // try again, this time with revert
         vm.expectRevert();
         musicBox.mintFromSanOrigin(notBoundTokens, IMusicBox.AccessLevel(1));
+    }
+
+    function testUpgradeAccessLevel() public {
+        testMintWithMultiSanOrigin();
+        uint256 price = _levelPrices[2] - _levelPrices[1];
+        bool success = musicBox.upgradeAccessLevel{value: price}(1, IMusicBox.AccessLevel(2));
+
+        assertTrue(success);
     }
 
     function testFailMintNotBound() public {
