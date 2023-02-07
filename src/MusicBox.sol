@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
+// rebirth collection - clone of first but with the soulbound - unbound becomes bound - burn San origin, mint new rebirth.  
+
+// basically musicbox will mint 3 x rebirth and 1c mb nft
+
+// 0 state in new contract = SoulBound. 1-4 levels.
+
+// MusicBox standalone - act of merging, takes 3 rebirth to mint musicbox nft, fully tradable.. standard NFT ,nothing special.
+// Rebirth will own MusicBox and mint on demand.
+
+
+
 // Partner NfTs
 
 // Let’s say 1 0n1 owned- you can merge 1 San for a new NFT (music box)
