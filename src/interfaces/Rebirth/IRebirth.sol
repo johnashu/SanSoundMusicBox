@@ -2,11 +2,11 @@
 pragma solidity ^0.8.18;
 
 /**
- * @title SanSound MusicBox
+ * @title SanSound Rebirth
  * @author Maffaz
  */
 
-interface IMusicBox {
+interface IRebirth {
     enum AccessLevel {
         Unbound,
         Merged,

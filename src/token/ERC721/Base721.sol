@@ -1,37 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import "src/interfaces/MusicBox/IMusicBox721.sol";
-import "src/token/ERC721/ERC721Enumerable.sol";
-import "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
-import "src/interfaces/MusicBox/IMusicBox.sol";
-import "src/token/rescue/TokenRescuer.sol";
+import {IBase721} from "src/interfaces/ERC721/IBase721.sol";
+import {ERC721Enumerable, ERC721, IERC721, Strings} from "src/token/ERC721/ERC721Enumerable.sol";
+import {ERC2981ContractWideRoyalties, ERC2981Base, ERC165} from "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
+import {TokenRescuer} from "src/token/rescue/TokenRescuer.sol";
+import {Ownable} from "src/utils/Ownable.sol";
 
 /**
- * @title SanSound MusicBox721
+ * @title SanSound Base721
  * @author Maffaz
  */
 
-abstract contract MusicBox721 is
-    TokenRescuer,
-    ERC721Enumerable,
-    IMusicBox721,
-    ERC2981ContractWideRoyalties,
-    IMusicBox
-{
-    // number of tokens to mint
-    uint8 public constant ORIGIN_TOKENS_REQUIRED_TO_MINT = 3;
-
-    // number of tokens to mint
-    uint8 public constant PARTNER_TOKENS_REQUIRED_TO_MINT = 1;
-
-    /// The maximum number of mints per address
-    uint256 public constant MAX_MINT_PER_ADDRESS = 3;
-
+abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981ContractWideRoyalties {
     /// The maximum ERC-2981 royalties percentage (two decimals).
     uint256 public constant MAX_ROYALTIES_PCT = 930; // 9.3%
 
-    uint256 public constant MAX_SUPPLY = 3333;
+    /// The maximum number of mints per address
+    uint256 public constant MAX_MINT_PER_ADDRESS = 3;
 
     /// The base URI for token metadata.
     string public baseURI;
@@ -179,5 +165,10 @@ abstract contract MusicBox721 is
         returns (bool)
     {
         return super.supportsInterface(_interfaceId);
+    }
+
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        if (!_exists(_tokenId)) revert TokenDoesNotExist();
+        return string(abi.encodePacked(baseURI, "/", Strings.toString(_tokenId), ".json"));
     }
 }

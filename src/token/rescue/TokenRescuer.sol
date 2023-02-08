@@ -2,8 +2,8 @@
 pragma solidity ^0.8.12;
 
 // import "./IStuckTokens.sol";  // imported by SafeERC20 in this case.
-import "src/token/rescue/SafeERC20.sol";
-import "src/utils/Ownable.sol";
+import {SafeERC20, IStuckERC20, IStuckERC721} from "src/token/rescue/SafeERC20.sol";
+import {Ownable} from "src/utils/Ownable.sol";
 
 error ArrayLengthMismatch();
 
