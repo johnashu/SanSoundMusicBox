@@ -24,6 +24,20 @@
     // divided by 3 = 3249(San Origin) + 84 (Partners)
     // MAX_SUPPLY = 3333 
 
+NEW*********
+// rebirth collection - clone of first but with the soulbound - unbound becomes bound - burn San origin, mint new rebirth.  
+
+// basically musicbox will mint 3 x rebirth and 1c mb nft
+
+// 0 state in new contract = SoulBound. 1-4 levels.
+
+// MusicBox standalone - act of merging, takes 3 rebirth to mint musicbox nft, fully tradable.. standard NFT ,nothing special.
+// Rebirth will own MusicBox and mint on demand.
+
+
+
+// Partner NfTs
+
 
 Takes approx 20 mins first time (use a block otherwise it will sync each time!)
 
