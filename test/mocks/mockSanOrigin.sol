@@ -5,13 +5,13 @@
 
 pragma solidity ^0.8.18;
 
-import {ERC721Enumerable, ERC721} from "src/token/ERC721/ERC721Enumerable.sol";
-import {Ownable} from "src/utils/Ownable.sol";
+import {Base721, IERC721, ERC721} from "src/token/ERC721/Base721.sol";
 
-contract MockSanOrigin is ERC721Enumerable, Ownable {
+contract MockSanOrigin is Base721 {
+    uint256 public constant MAX_SUPPLY = 3333;
     mapping(uint256 => uint256) public tokenLevel;
 
-    constructor() ERC721("Mock1", "MK1", 1) {
+    constructor() Base721("San Origin Mock", "SOM", "", "") {
         for (uint256 i = 1; i < 21; i++) {
             _safeMint(msg.sender, i);
             if (i > 10) {
@@ -28,6 +28,4 @@ contract MockSanOrigin is ERC721Enumerable, Ownable {
         _approve(msg.sender, tokenId);
         safeTransferFrom(from, to, tokenId);
     }
-
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {}
 }
