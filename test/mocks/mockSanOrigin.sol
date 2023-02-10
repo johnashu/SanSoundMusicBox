@@ -8,6 +8,7 @@ pragma solidity ^0.8.18;
 import {Base721, IERC721, ERC721} from "src/token/ERC721/Base721.sol";
 
 contract MockSanOrigin is Base721 {
+    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
     uint256 public constant MAX_SUPPLY = 3333;
     mapping(uint256 => uint256) public tokenLevel;
 
@@ -17,15 +18,11 @@ contract MockSanOrigin is Base721 {
             if (i > 10) {
                 tokenLevel[i] = 1;
             }
+            isApprovedForAll(msg.sender, msg.sender);
         }
     }
 
     function mint() public {
         _safeMint((msg.sender), totalSupply() + 1);
-    }
-
-    function _safeTransferFrom(address from, address to, uint256 tokenId) public {
-        _approve(msg.sender, tokenId);
-        safeTransferFrom(from, to, tokenId);
     }
 }

@@ -16,6 +16,7 @@ pragma solidity ^0.8.18;
 import {Base721, IERC721, ERC721} from "src/token/ERC721/Base721.sol";
 import {ISanOriginNFT} from "src/interfaces/SanSound/ISanOriginNFT.sol";
 import {IRebirth} from "src/interfaces/Rebirth/IRebirth.sol";
+import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
 
 contract Rebirth is Base721, IRebirth {
     uint8 public constant ORIGIN_TOKENS_REQUIRED_TO_MINT = 3;
@@ -24,10 +25,12 @@ contract Rebirth is Base721, IRebirth {
 
     uint256 public constant NUM_OF_LEVELS = 6;
     address public immutable sanOriginAddress;
+    address public immutable musicBoxAddress;
+
+    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
     mapping(AccessLevel tokenAccessLevel => uint256 price) public levelPrice;
     mapping(uint256 tokenId => AccessLevel tokenAccessLevel) public currentTokenLevel;
-    mapping(uint tokenId => uint256[] TokenIds) public tokensMergedFrom;
 
     mapping(address contractAddress => bool isValid) public isValidContract;
     mapping(address contractAddress => mapping(uint tokenId => bool isUsed)) public usedTokens;
@@ -39,6 +42,7 @@ contract Rebirth is Base721, IRebirth {
         string memory _contractURI,
         string memory _baseURI,
         address _sanOriginAddress,
+        address _musicBoxAddress,
         uint256[NUM_OF_LEVELS] memory _levelPrices
     ) Base721(_name, _symbol, _contractURI, _baseURI) {
         levelPrice[AccessLevel.Unbound] = _levelPrices[0];
@@ -48,12 +52,14 @@ contract Rebirth is Base721, IRebirth {
         levelPrice[AccessLevel.Hanzoku] = _levelPrices[4];
         levelPrice[AccessLevel.The33] = _levelPrices[5];
         sanOriginAddress = _sanOriginAddress;
+        musicBoxAddress = _musicBoxAddress;
         isValidContract[_sanOriginAddress] = true;
     }
 
     /// @notice Update a partner address
     /// @dev sanOriginAddress is added in construction so we dont want to change it.  Same with 0 address.
     /// @param _partnerAddress Address of the Partner Contract.
+    /// @param _numTokensRequired tokens required to mint.
     /// @param _isValid true to be valid (add) or false to be invlaid
     function updatePartnerAddress(address _partnerAddress, uint8 _numTokensRequired, bool _isValid) public onlyOwner {
         if (_partnerAddress == sanOriginAddress || _partnerAddress == address(0) || _numTokensRequired == 0) {
@@ -76,10 +82,9 @@ contract Rebirth is Base721, IRebirth {
         unchecked {
             for (uint256 i = 0; i < tokenIds.length; i++) {
                 if (usedTokens[_tokenAddress][tokenIds[i]] != false) revert TokenAlreadyUsed();
-                if (ISanOriginNFT(_tokenAddress).ownerOf(tokenIds[i]) != _msgSender()) revert TokenNotOwned();
+                if (IERC721(_tokenAddress).ownerOf(tokenIds[i]) != _msgSender()) revert TokenNotOwned();
             }
         }
-        return true;
     }
 
     function _checkOriginTokensNotBound(uint256[] calldata tokenIds) private view returns (bool) {
@@ -89,7 +94,6 @@ contract Rebirth is Base721, IRebirth {
                 if (tokenLevel != 0) revert TokenAlreadyBoundInOrigin();
             }
         }
-        return true;
     }
 
     function _checkMintConstraints(uint256[] calldata tokenIds, uint8 tokensRequired) private view {
@@ -106,13 +110,6 @@ contract Rebirth is Base721, IRebirth {
         }
     }
 
-    function _addNewTokenData(uint256 newTokenId, uint256[] calldata tokenIds, AccessLevel _newLevel) private {
-        unchecked {
-            userMinted[_msgSender()] += 1;
-        }
-        tokensMergedFrom[newTokenId] = tokenIds;
-        currentTokenLevel[newTokenId] = _newLevel;
-    }
 
     function _processChecks(uint256[] calldata tokenIds, uint8 requiredTokens, address _address) private {
         _checkMintConstraints(tokenIds, requiredTokens);
@@ -123,7 +120,24 @@ contract Rebirth is Base721, IRebirth {
         _addToUsedIds(tokenIds, _address);
     }
 
-    /// @notice Merge Tokens from San Origin.
+    /// @notice Soulbind an existing SAN Origin NFT to receive a Legendary SAN Music Box NFT
+    /// @dev Only Checks Soulbind and then mints
+    /// @param originTokenIds San Origin Id(s) to merge
+    /// @return _newLevel Access level requested
+    function mintFromSoulbound(uint256[] calldata originTokenIds, AccessLevel _newLevel)
+        external
+        payable
+        returns (bool){
+            _processChecks(originTokenIds, 1, sanOriginAddress);
+            unchecked {
+                for (uint256 i = 0; i < originTokenIds.length; i++) {
+                    
+                }
+            }
+            
+        }
+
+    /// @notice Send three SAN Origin NFTs to the Sanctuary receive a Rare SAN Music Box NFT
     /// @param originTokenIds San Origin Id(s) to merge
     /// @return _newLevel Access level requested
     function mintFromSanOrigin(uint256[] calldata originTokenIds, AccessLevel _newLevel)
@@ -135,7 +149,9 @@ contract Rebirth is Base721, IRebirth {
         return _mergeMint(originTokenIds, _newLevel);
     }
 
-    /// @notice Merge and mint from a partner, amounts may vary for the checks.
+    /// @notice Merge and mint from a partner, Send a Scout SAN Origin NFT to the Sanctuary, which
+    /// requires one SAN Origin NFT and an accompanying partner NFT (0N1 Force, Mutant Apes, WoW, Etc), 
+    /// for a common SAN Music Box NFT.
     /// @param originTokenIds San Origin Id(s) to merge
     /// @return _newLevel Access level requested
     /// @param partnerTokenIds TokenIds from the Partner NFTs to check against
@@ -157,20 +173,30 @@ contract Rebirth is Base721, IRebirth {
     function _burnOriginTokens(uint256[] calldata originTokenIds) private {
         unchecked {
             for (uint256 i = 0; i < originTokenIds.length; i++) {
-                // Burn them somehow..
-                // ISanOriginNFT(sanOriginAddress).burn(originTokenIds[i]);
+                // Burn them..
+                IERC721(sanOriginAddress).transferFrom(_msgSender(), BURN_ADDRESS, originTokenIds[i]);
+            }
+        }
+    }
+
+    function _mintRebirthTokens(uint256[] calldata originTokenIds) private {
+        unchecked {
+            for (uint256 i = 0; i < originTokenIds.length; i++) {
+                userMinted[_msgSender()] += 1;
+                _safeMint(_msgSender(), originTokenIds[i]);
             }
         }
     }
 
     function _mergeMint(uint256[] calldata originTokenIds, AccessLevel _newLevel) private returns (bool) {
         uint256 newTokenId = _getTokenIdAndIncrement();
-        _addNewTokenData(newTokenId, originTokenIds, _newLevel);
         _upgradeAccessLevel(newTokenId, _newLevel, AccessLevel(0)); // curLevel MUST be 0 to mint..
-        _safeMint(_msgSender(), newTokenId);
         _burnOriginTokens(originTokenIds);
+        _mintRebirthTokens(originTokenIds);
+        // IMusicBox(musicBoxAddress).mint(_msgSender(), musicBoxLevel);
         return true;
     }
+
 
     function _upgradeAccessLevel(uint256 _tokenId, AccessLevel _newLevel, AccessLevel _curLevel)
         private

@@ -3,12 +3,14 @@ pragma solidity ^0.8.18;
 
 import {Test} from "lib/forge-std/src/Test.sol";
 import {Rebirth} from "src/Rebirth.sol";
+import {MusicBox} from "src/MusicBox.sol";
 import {IRebirth} from "src/interfaces/Rebirth/IRebirth.sol";
 import {MockERC721} from "test/mocks/mockERC721.sol";
 import {IERC721} from "src/interfaces/ERC721/IERC721.sol";
 
 abstract contract TestBase is Test {
     Rebirth rebirth;
+    MusicBox musicBox;
     MockERC721 mockERC721Single;
     MockERC721 mockERC721Multi;
 
@@ -16,6 +18,9 @@ abstract contract TestBase is Test {
     address mockERC721MultiAddress;
 
     address sanOriginAddress;
+    address musicBoxAddress;
+
+    address rebirthAddress;
 
     address user;
 
@@ -43,18 +48,33 @@ abstract contract TestBase is Test {
     }
 
     function deployContracts() public {
+        MusicBox musicBox = new MusicBox( string("SanSoundMusicBox"),
+            string("SMB"),
+            string("https://example.com/"),
+            string(""));
+
+        musicBoxAddress = address(musicBox);
         MockERC721 mockERC721Single = new MockERC721();
         mockERC721SingleAddress = address(mockERC721Single);
         MockERC721 mockERC721Multi = new MockERC721();
         mockERC721MultiAddress = address(mockERC721Multi);
         rebirth = new Rebirth(
             string("SanSoundRebirth"),
-            string("SMB"),
+            string("SRB"),
             string("https://example.com/"),
             string(""),
             sanOriginAddress,
+            musicBoxAddress,
             _levelPrices
         );
+
+        rebirthAddress = address(rebirth);
+    }
+
+    function _approveAllTokens(uint256[] memory tokenIds) private {
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            IERC721(sanOriginAddress).approve(rebirthAddress, tokenIds[i]);
+        }
     }
 
     function testCheckOriginAddressIsValid() public {
@@ -75,6 +95,7 @@ abstract contract TestBase is Test {
     function testMintWithMultiSanOrigin() public payable {
         emit log_uint(user.balance);
         uint256 price = _levelPrices[1] - _levelPrices[0];
+        _approveAllTokens(notBoundTokens);
         bool success = rebirth.mintFromSanOrigin{value: price}(notBoundTokens, IRebirth.AccessLevel(1));
 
         assertTrue(success);
@@ -92,6 +113,7 @@ abstract contract TestBase is Test {
         emit log_address(mockERC721SingleAddress);
 
         _addContracttoValidList(mockERC721SingleAddress, 1, true);
+        _approveAllTokens(notBoundTokensPartner);
         bool success = rebirth.mintFromPartner{value: price}(
             notBoundTokensPartner, IRebirth.AccessLevel(1), partnerTokensToCheckSingle, mockERC721SingleAddress
         );
@@ -110,6 +132,8 @@ abstract contract TestBase is Test {
         uint256 price = _levelPrices[1] - _levelPrices[0];
 
         _addContracttoValidList(mockERC721MultiAddress, 3, true);
+        _approveAllTokens(notBoundTokensPartner);
+
         bool success = rebirth.mintFromPartner{value: price}(
             notBoundTokensPartner, IRebirth.AccessLevel(1), partnerTokensToCheckMulti, mockERC721MultiAddress
         );
