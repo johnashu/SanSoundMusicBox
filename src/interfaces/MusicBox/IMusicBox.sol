@@ -2,5 +2,11 @@
 pragma solidity ^0.8.18;
 
 interface IMusicBox {
-    function mint(uint256 _to) external;
+    enum MusicBoxLevel {
+        Common,
+        Rare,
+        Legendary
+    }
+
+    function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel, uint256 _amount) external;
 }

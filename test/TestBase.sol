@@ -3,8 +3,9 @@ pragma solidity ^0.8.18;
 
 import {Test} from "lib/forge-std/src/Test.sol";
 import {Rebirth} from "src/Rebirth.sol";
+import {ITokenLevels} from "src/interfaces/Levels/ITokenLevels.sol";
+
 import {MusicBox} from "src/MusicBox.sol";
-import {IRebirth} from "src/interfaces/Rebirth/IRebirth.sol";
 import {MockERC721} from "test/mocks/mockERC721.sol";
 import {IERC721} from "src/interfaces/ERC721/IERC721.sol";
 
@@ -40,11 +41,11 @@ abstract contract TestBase is Test {
         vm.startPrank(user); // User becomes the owner of everything..
         vm.deal(user, 10 ether);
         _levelPrices[0] = 0;
-        _levelPrices[1] = 333000000000000000;
-        _levelPrices[2] = 633000000000000000;
+        _levelPrices[1] = 0;
+        _levelPrices[2] = 333000000000000000;
+        _levelPrices[3] = 633000000000000000;
         _levelPrices[3] = 963000000000000000;
-        _levelPrices[4] = 5000000000000000000;
-        _levelPrices[5] = 10000000000000000000;
+        _levelPrices[5] = 5000000000000000000;
     }
 
     function deployContracts() public {
@@ -78,7 +79,7 @@ abstract contract TestBase is Test {
     }
 
     function testCheckOriginAddressIsValid() public {
-        address san = rebirth.sanOriginAddress();
+        address san = rebirth.SAN_ORIGIN_ADDRESS();
         assertTrue(rebirth.isValidContract(san));
     }
 
@@ -96,14 +97,13 @@ abstract contract TestBase is Test {
         emit log_uint(user.balance);
         uint256 price = _levelPrices[1] - _levelPrices[0];
         _approveAllTokens(notBoundTokens);
-        bool success = rebirth.mintFromSanOrigin{value: price}(notBoundTokens, IRebirth.AccessLevel(1));
+        rebirth.mintFromSanOrigin{value: price}(notBoundTokens, ITokenLevels.TokenLevel(1));
 
-        assertTrue(success);
         emit log_uint(user.balance);
 
         // try again, this time with revert
         vm.expectRevert();
-        rebirth.mintFromSanOrigin{value: price}(notBoundTokens, IRebirth.AccessLevel(1));
+        rebirth.mintFromSanOrigin{value: price}(notBoundTokens, ITokenLevels.TokenLevel(1));
     }
 
     function testMintWithPartnerSingle() public {
@@ -114,16 +114,15 @@ abstract contract TestBase is Test {
 
         _addContracttoValidList(mockERC721SingleAddress, 1, true);
         _approveAllTokens(notBoundTokensPartner);
-        bool success = rebirth.mintFromPartner{value: price}(
-            notBoundTokensPartner, IRebirth.AccessLevel(1), partnerTokensToCheckSingle, mockERC721SingleAddress
+        rebirth.mintFromPartner{value: price}(
+            notBoundTokensPartner, ITokenLevels.TokenLevel(1), partnerTokensToCheckSingle, mockERC721SingleAddress
         );
-        assertTrue(success);
         emit log_uint(user.balance);
 
         // try again, this time with revert
         vm.expectRevert();
         rebirth.mintFromPartner{value: price}(
-            notBoundTokensPartner, IRebirth.AccessLevel(1), partnerTokensToCheckSingle, mockERC721SingleAddress
+            notBoundTokensPartner, ITokenLevels.TokenLevel(1), partnerTokensToCheckSingle, mockERC721SingleAddress
         );
     }
 
@@ -134,34 +133,32 @@ abstract contract TestBase is Test {
         _addContracttoValidList(mockERC721MultiAddress, 3, true);
         _approveAllTokens(notBoundTokensPartner);
 
-        bool success = rebirth.mintFromPartner{value: price}(
-            notBoundTokensPartner, IRebirth.AccessLevel(1), partnerTokensToCheckMulti, mockERC721MultiAddress
+        rebirth.mintFromPartner{value: price}(
+            notBoundTokensPartner, ITokenLevels.TokenLevel(1), partnerTokensToCheckMulti, mockERC721MultiAddress
         );
-        assertTrue(success);
+
         emit log_uint(user.balance);
 
         // try again, this time with revert
         vm.expectRevert();
         rebirth.mintFromPartner{value: price}(
-            notBoundTokensPartner, IRebirth.AccessLevel(1), partnerTokensToCheckMulti, mockERC721MultiAddress
+            notBoundTokensPartner, ITokenLevels.TokenLevel(1), partnerTokensToCheckMulti, mockERC721MultiAddress
         );
     }
 
-    function testUpgradeAccessLevel() public {
+    function testUpgradeTokenLevel() public {
         testMintWithMultiSanOrigin();
         uint256 price = _levelPrices[2] - _levelPrices[1];
-        bool success = rebirth.upgradeAccessLevel{value: price}(1, IRebirth.AccessLevel(2));
-
-        assertTrue(success);
+        rebirth.upgradeTokenLevel{value: price}(1, ITokenLevels.TokenLevel(2));
     }
 
     function testFailMintIsBound() public {
-        assertTrue(rebirth.mintFromSanOrigin(isBoundTokens, IRebirth.AccessLevel(0)));
+        rebirth.mintFromSanOrigin(isBoundTokens, ITokenLevels.TokenLevel(0));
     }
 
     function testFailMintNotOwned() public {
         vm.stopPrank(); // User becomes the owner of everything..
         vm.prank(address(1));
-        assertTrue(rebirth.mintFromSanOrigin(isBoundTokens, IRebirth.AccessLevel(0)));
+        rebirth.mintFromSanOrigin(isBoundTokens, ITokenLevels.TokenLevel(0));
     }
 }
