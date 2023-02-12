@@ -50,7 +50,7 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
      * @param _tokenIds An array of token IDs to be checked for ownership.
      * @return True if `_account` owns all token IDs `_tokenIds`, else false.
      */
-    function isOwnerOf(address _account, uint256[MAX_MINT_PER_ADDRESS] calldata _tokenIds) public view returns (bool) {
+    function isOwnerOf(address _account, uint256[] calldata _tokenIds) public view returns (bool) {
         unchecked {
             for (uint256 i; i < MAX_MINT_PER_ADDRESS; ++i) {
                 if (ownerOf(_tokenIds[i]) != _account) {
@@ -171,4 +171,10 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
         if (!_exists(_tokenId)) revert TokenDoesNotExist();
         return string(abi.encodePacked(baseURI, "/", Strings.toString(_tokenId), ".json"));
     }
+
+    // Function to receive Ether. msg.data must be empty
+    receive() external payable {}
+
+    // Fallback function is called when msg.data is not empty
+    fallback() external payable {}
 }

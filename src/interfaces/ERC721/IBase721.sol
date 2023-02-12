@@ -13,4 +13,5 @@ interface IBase721 {
     error ZeroAddress();
     error ExceedsMaxRoyaltiesPercentage();
     error MaximumBulkMintExceeded();
+    error TokenAlreadyMinted(uint256 tokenId);
 }

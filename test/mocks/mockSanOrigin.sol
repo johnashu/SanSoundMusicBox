@@ -15,8 +15,15 @@ contract MockSanOrigin is Base721 {
     constructor() Base721("San Origin Mock", "SOM", "", "") {
         for (uint256 i = 0; i < 42; i++) {
             _safeMint(msg.sender, i + 1);
+
+            // SoulbOund Level 1
             if (i > 20) {
                 tokenLevel[i] = 1;
+            }
+
+            // Soulbound level 3
+            if (i > 38) {
+                tokenLevel[i] = 3;
             }
             isApprovedForAll(msg.sender, msg.sender);
         }

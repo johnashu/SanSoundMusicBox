@@ -11,7 +11,7 @@ contract Sanctuary is TokenLevels, Base721 {
     uint8 public constant ORIGIN_TOKENS_REQUIRED_TO_MINT = 3;
     uint8 public constant WITH_PARTNER_TOKENS_REQUIRED_TO_MINT = 1;
     uint256 public constant MAX_SUPPLY = 3333;
-    uint256 public MAX_BULK_MINT = 10;
+    uint256 public constant MAX_BULK_MINT = 10;
 
     address public immutable SAN_ORIGIN_ADDRESS;
     address public immutable MUSIC_BOX_ADDRESS;
@@ -94,7 +94,7 @@ contract Sanctuary is TokenLevels, Base721 {
         uint256[] calldata partnerTokenIds,
         address _contractAddress
     ) external payable {
-        _checkContractAddress(_contractAddress);
+        _checkPartnerContractAddress(_contractAddress);
         _processChecks(originTokenIds, WITH_PARTNER_TOKENS_REQUIRED_TO_MINT, SAN_ORIGIN_ADDRESS);
         _processChecks(partnerTokenIds, numPartnerTokensRequired[_contractAddress], _contractAddress);
         _checkOriginTokensNotBound(originTokenIds);
@@ -104,14 +104,17 @@ contract Sanctuary is TokenLevels, Base721 {
 
     // PRIVATE FUNCTIONS
 
-    /// @notice Check Contract is valid
-    /// @dev Revert if not a valid contract.
-    /// @param _partnerAddress Address of the Partner Contract.
-    function _checkContractAddress(address _partnerAddress) private view {
-        if (_partnerAddress == SAN_ORIGIN_ADDRESS || _partnerAddress == address(0) || !isValidContract[_partnerAddress])
-        {
-            revert contractAddressNotValid();
-        }
+    function _processChecks(uint256[] calldata tokenIds, uint8 requiredTokens, address _address) private {
+        _checkMintConstraints(tokenIds, requiredTokens);
+        _checkUserOwnsTokens(tokenIds, _address);
+        // Pass checks, map the ids so they cannot be used again.
+        return _addToUsedIds(tokenIds, SAN_ORIGIN_ADDRESS);
+    }
+
+    function _checkMintConstraints(uint256[] calldata tokenIds, uint8 tokensRequired) private view {
+        if (tokenIds.length != tokensRequired) revert MintAmountTokensIncorrect();
+        if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
+        if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
     }
 
     function _checkUserOwnsTokens(uint256[] calldata tokenIds, address _tokenAddress) private view {
@@ -123,30 +126,6 @@ contract Sanctuary is TokenLevels, Base721 {
         }
     }
 
-    function _checkOriginTokensAreBound(uint256[] calldata tokenIds) private view {
-        unchecked {
-            for (uint256 i = 0; i < tokenIds.length; i++) {
-                uint256 tokenLevel = ISanOriginNFT(SAN_ORIGIN_ADDRESS).tokenLevel(tokenIds[i]);
-                if (tokenLevel == 0) revert TokenUnBound();
-            }
-        }
-    }
-
-    function _checkOriginTokensNotBound(uint256[] calldata tokenIds) private view {
-        unchecked {
-            for (uint256 i = 0; i < tokenIds.length; i++) {
-                uint256 tokenLevel = ISanOriginNFT(SAN_ORIGIN_ADDRESS).tokenLevel(tokenIds[i]);
-                if (tokenLevel != 0) revert TokenAlreadyBoundInOrigin();
-            }
-        }
-    }
-
-    function _checkMintConstraints(uint256[] calldata tokenIds, uint8 tokensRequired) private view {
-        if (tokenIds.length != tokensRequired) revert MintAmountTokensIncorrect();
-        if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
-        if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
-    }
-
     function _addToUsedIds(uint256[] calldata tokenIds, address _tokenAddress) private {
         unchecked {
             for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -155,11 +134,36 @@ contract Sanctuary is TokenLevels, Base721 {
         }
     }
 
-    function _processChecks(uint256[] calldata tokenIds, uint8 requiredTokens, address _address) private {
-        _checkMintConstraints(tokenIds, requiredTokens);
-        _checkUserOwnsTokens(tokenIds, _address);
-        // Pass checks, map the ids so they cannot be used again.
-        _addToUsedIds(tokenIds, SAN_ORIGIN_ADDRESS);
+    function _checkPartnerContractAddress(address _partnerAddress) private view {
+        if (_partnerAddress == SAN_ORIGIN_ADDRESS || _partnerAddress == address(0) || !isValidContract[_partnerAddress])
+        {
+            revert contractAddressNotValid();
+        }
+    }
+
+    /// @notice Check for SoulBound Tokens
+    /// @dev Make sure all tokens passed are both SoulBound and the same level.
+    /// @param tokenIds San Origin Id(s) to merge.
+    function _checkOriginTokensAreBound(uint256[] calldata tokenIds) private view {
+        uint256 currentLevel;
+        unchecked {
+            for (uint256 i = 0; i < tokenIds.length; i++) {
+                uint256 level = ISanOriginNFT(SAN_ORIGIN_ADDRESS).tokenLevel(tokenIds[i]);
+                if (currentLevel == 0) {
+                    currentLevel = level;
+                }
+                if (level == 0) revert TokenUnBound();
+                if (level != currentLevel) revert TokenLevelMismatch();
+            }
+        }
+    }
+
+    function _checkOriginTokensNotBound(uint256[] calldata tokenIds) private view {
+        unchecked {
+            for (uint256 i = 0; i < tokenIds.length; i++) {
+                if (ISanOriginNFT(SAN_ORIGIN_ADDRESS).tokenLevel(tokenIds[i]) != 0) revert TokenAlreadyBoundInOrigin();
+            }
+        }
     }
 
     function _burnOriginTokens(uint256[] calldata originTokenIds) private {
@@ -190,29 +194,31 @@ contract Sanctuary is TokenLevels, Base721 {
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(_msgSender(), _musicBoxLevel, originTokenIds.length);
     }
 
-    // OVERRIDES
+    // OVERRIDES for Soulbinding
 
     function approve(address to, uint256 tokenId) public override(IERC721, ERC721) {
-        // allow merged to be approved
+        // allow Unbound to be approved during Mint.
         if (currentTokenLevel[tokenId] > TokenLevel.Unbound) revert CannotApproveTokenLevel(to, tokenId);
         super.approve(to, tokenId);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
-        // allow Merged to be transfered.
+        // allow Unbound to be transfered during Mint.
         if (currentTokenLevel[tokenId] > TokenLevel.Unbound) {
             revert CannotTransferTokenLevelUpdatedToken(from, to, tokenId);
         }
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
+    // OVERRIDES for token Mappings
+
     /// @dev Override mint to enable transfer by skipping the _beforeTokenTransfer function.
     ///      After mint, tokens are SouldBound and cannot be burned /tx.
     /// @param to Address to mint to
     /// @param tokenId id to mint
     function _mint(address to, uint256 tokenId) internal virtual override {
-        require(to != address(0), "ERC721: mint to the zero address");
-        require(!_exists(tokenId), "ERC721: token already minted");
+        if (to == address(0)) revert ZeroAddress();
+        if (_exists(tokenId)) revert TokenAlreadyMinted(tokenId);
 
         _owners.push(to);
         ownerByToken[tokenId] = to;
@@ -223,7 +229,7 @@ contract Sanctuary is TokenLevels, Base721 {
      * @dev See {IERC721-balanceOf}.
      */
     function balanceOf(address owner) public view virtual override(IERC721, ERC721) returns (uint256) {
-        require(owner != address(0), "ERC721: balance query for the zero address");
+        if (owner == address(0)) revert ZeroAddress();
         return userMinted[owner];
     }
 
@@ -232,7 +238,7 @@ contract Sanctuary is TokenLevels, Base721 {
      */
     function ownerOf(uint256 tokenId) public view virtual override(IERC721, ERC721) returns (address) {
         address owner = ownerByToken[tokenId];
-        require(owner != address(0), "ERC721: owner query for nonexistent token");
+        if (owner == address(0)) revert ZeroAddress();
         return owner;
     }
 

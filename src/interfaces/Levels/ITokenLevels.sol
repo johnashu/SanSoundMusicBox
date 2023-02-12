@@ -35,4 +35,5 @@ interface ITokenLevels {
     error TokenAlreadyBoundInOrigin();
     error contractAddressNotValid();
     error TokenUnBound();
+    error TokenLevelMismatch();
 }

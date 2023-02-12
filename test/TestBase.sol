@@ -22,7 +22,7 @@ abstract contract TestBase is Test {
     address mockERC721MultiAddress;
 
     address SAN_ORIGIN_ADDRESS;
-    address musicBoxAddress;
+    address payable musicBoxAddress;
 
     address SANCTUARY_ADDRESS;
 
@@ -33,17 +33,19 @@ abstract contract TestBase is Test {
     uint256[] partnerTokensToCheckSingle = [15];
     uint256[] partnerTokensToCheckMulti = [4, 17, 6];
 
-    uint256[] notBoundTokens;
-    uint256[] isBoundTokens; // middle will fail.
+    uint256[] notBoundTokens = [4, 5, 16];
+    uint256[] isBoundTokens = [21, 22, 23]; // middle will fail.
+    uint256[] tooManyNotBoundTokens = [1, 2, 13, 14];
+    uint256[] tooManyIsBoundTokens = [21, 22, 323, 34];
 
-    uint256[] notBoundTokensSingle;
-    uint256[] isBoundTokensSingle;
+    uint256[] notBoundTokensPartner = [15];
+    uint256[] isBoundTokensPartner = [28];
 
-    uint256[] notBoundTokensPartner;
-    uint256[] isBoundTokensPartner;
+    uint256[] notBoundTokensSingle = [13];
+    uint256[] isBoundTokensSingle = [38];
 
-    uint256[] tooManyNotBoundTokens;
-    uint256[] tooManyIsBoundTokens;
+    uint256[] isBoundTokensMismatched = [38, 39, 40];
+
     uint256[] noTokens;
 
     function _setUp(address[] memory users) internal {
@@ -56,13 +58,13 @@ abstract contract TestBase is Test {
 
     function _initOWNERs() internal {
         vm.startPrank(OWNER); // OWNER becomes the owner of everything..
-        vm.deal(OWNER, 10 ether);
+        vm.deal(OWNER, 100 ether);
     }
 
     function _initUsers(address[] memory users) internal {
         for (uint256 i = 0; i < users.length; i++) {
             address user = users[i];
-            vm.deal(user, 10 ether);
+            vm.deal(user, 100 ether);
         }
     }
 
@@ -73,16 +75,6 @@ abstract contract TestBase is Test {
         _levelPrices[3] = 633000000000000000;
         _levelPrices[3] = 963000000000000000;
         _levelPrices[5] = 5000000000000000000;
-        notBoundTokens = [4, 5, 16];
-        isBoundTokens = [21, 22, 23]; // middle will fail.
-        tooManyNotBoundTokens = [1, 2, 13, 14];
-        tooManyIsBoundTokens = [21, 22, 323, 34];
-
-        notBoundTokensPartner = [15];
-        isBoundTokensPartner = [28];
-
-        notBoundTokensSingle = [13];
-        isBoundTokensSingle = [38];
     }
 
     function _deployContracts() internal {
@@ -103,7 +95,7 @@ abstract contract TestBase is Test {
         );
 
         SANCTUARY_ADDRESS = address(sanctuary);
-        musicBoxAddress = address(sanctuary.MUSIC_BOX_ADDRESS());
+        musicBoxAddress = payable(address(sanctuary.MUSIC_BOX_ADDRESS()));
         musicBox = MusicBox(musicBoxAddress);
     }
 
@@ -142,11 +134,11 @@ abstract contract TestBase is Test {
         sanctuary.updatePartnerAddress(_partnerAddress, _numTokensRequired, _isValid);
     }
 
-    function _getPrice(uint256 _new, uint256 _cur) internal returns (uint256) {
+    function _getPrice(uint256 _new, uint256 _cur) internal view returns (uint256) {
         return _levelPrices[_new] - _levelPrices[_cur];
     }
 
-    function _checkSanctuaryTokenLevel(ITokenLevels.TokenLevel level, uint256 token) internal {
+    function _checkSanctuaryTokenLevel(ITokenLevels.TokenLevel level, uint256 token) internal view {
         ITokenLevels.TokenLevel currentLevel = sanctuary.currentTokenLevel(token);
         if (currentLevel != level) revert();
     }
