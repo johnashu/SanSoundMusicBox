@@ -18,7 +18,7 @@ contract TestCommon is TestBase {
     function testOwnerIsSanctuary() public {
         address ownerAddress = musicBox.owner();
         emit log_address(ownerAddress);
-        assertEq((ownerAddress == sanctuaryAddress), true);
+        assertEq((ownerAddress == SANCTUARY_ADDRESS), true);
     }
 
     function testCheckOriginAddressIsValid() public {

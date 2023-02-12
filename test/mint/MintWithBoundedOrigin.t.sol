@@ -11,6 +11,8 @@ contract TestMintWithSoulBound is TestBase {
         user = makeAddr("OriginBoundedUser");
         users.push(user);
         _setUp(users);
+        vm.stopPrank();
+        vm.startPrank(user);
     }
 
     function testMintWithSanSoundBoundSingle() public {
@@ -22,12 +24,9 @@ contract TestMintWithSoulBound is TestBase {
     }
 
     function _mintWithSanSoundBoundMultiple(uint256[] memory _toCheck) private {
-        vm.stopPrank();
-        vm.startPrank(user);
         uint256 _cur = 0;
         uint256 _new = 1;
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
-        emit log_uint(_toCheck[0]);
         _approveAllTokens(_toCheck);
 
         sanctuary.mintFromSoulbound{value: _getPrice(_new, _cur)}(_toCheck, level);

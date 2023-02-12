@@ -21,10 +21,10 @@ abstract contract TestBase is Test {
     address mockERC721SingleAddress;
     address mockERC721MultiAddress;
 
-    address sanOriginAddress;
+    address SAN_ORIGIN_ADDRESS;
     address musicBoxAddress;
 
-    address sanctuaryAddress;
+    address SANCTUARY_ADDRESS;
 
     address OWNER = makeAddr("Owner");
 
@@ -52,8 +52,7 @@ abstract contract TestBase is Test {
         _initUsers(users);
         _initShared();
         _deployContracts();
-        _transferTokensPartner(users);
-        _transferTokensOrigin(users);
+        _transferTokens(users);
     }
 
     function _initOWNERs() internal {
@@ -89,7 +88,7 @@ abstract contract TestBase is Test {
 
     function _deployContracts() internal {
         mockSanOrigin = new MockSanOrigin();
-        sanOriginAddress = address(mockSanOrigin);
+        SAN_ORIGIN_ADDRESS = address(mockSanOrigin);
 
         mockERC721Single = new MockERC721();
         mockERC721SingleAddress = address(mockERC721Single);
@@ -100,46 +99,41 @@ abstract contract TestBase is Test {
             string("SRB"),
             string("https://example.com/"),
             string(""),
-            sanOriginAddress,
+            SAN_ORIGIN_ADDRESS,
             _levelPrices
         );
 
-        sanctuaryAddress = address(sanctuary);
+        SANCTUARY_ADDRESS = address(sanctuary);
         musicBoxAddress = address(sanctuary.MUSIC_BOX_ADDRESS());
         musicBox = MusicBox(musicBoxAddress);
     }
 
-    function _transferTokensPartner(address[] memory users) internal {
+    function _transferTokens(address[] memory users) internal {
         uint256 userLen = users.length;
         uint256 split = 40 / userLen;
-        for (uint256 i = 1; i < userLen; i++) {
+        for (uint256 i = 0; i < userLen; ++i) {
             address user = users[i];
-            uint256 start = i * split;
+            uint256 start = (i * split) + 1;
             uint256 end = split * (i + 1);
+
             mockERC721Single.transferAll(user, start, end);
             mockERC721Multi.transferAll(user, start, end);
-        }
-    }
 
-    function _transferTokensOrigin(address[] memory users) internal {
-        uint256 userLen = users.length;
-        uint256 split = 40 / userLen;
-        for (uint256 i = 1; i < userLen; i++) {
-            address user = users[i];
-            emit log_address(user);
-            uint256 start = i * split;
-            uint256 end = split * (i + 1);
-            emit log_uint(start);
-            emit log_uint(end);
-            mockSanOrigin.TransferUnbound(user, start, start + (split / userLen) - 1);
-            mockSanOrigin.TransferBound(user, start + (split / userLen), end);
+            uint256 offset = 0;
+            if (userLen == 1) {
+                offset = 1;
+            }
+            uint256 calc = split / (userLen + offset);
+            mockSanOrigin.TransferUnbound(user, start, start + calc - 1);
+            mockSanOrigin.TransferBound(user, start + calc, end);
         }
     }
 
     function _approveAllTokens(uint256[] memory tokenIds) internal {
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            emit log_address(IERC721(sanOriginAddress).ownerOf(tokenIds[i]));
-            IERC721(sanOriginAddress).approve(sanctuaryAddress, tokenIds[i]);
+            emit log_address(IERC721(SAN_ORIGIN_ADDRESS).ownerOf(tokenIds[i]));
+            emit log_uint(tokenIds[i]);
+            IERC721(SAN_ORIGIN_ADDRESS).approve(SANCTUARY_ADDRESS, tokenIds[i]);
         }
     }
 
@@ -167,7 +161,7 @@ abstract contract TestBase is Test {
         // Check they are existing and are at the correct level requested.
         for (uint256 i = 0; i < tokenIds.length; i++) {
             uint256 token = tokenIds[i];
-            assertTrue(sanctuary.usedTokens(sanOriginAddress, token));
+            assertTrue(sanctuary.usedTokens(SAN_ORIGIN_ADDRESS, token));
             assertEq(sanctuary.ownerOf(token), user);
             _checkSanctuaryTokenLevel(level, token);
         }
