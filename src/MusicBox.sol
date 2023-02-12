@@ -11,15 +11,13 @@ import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
 contract MusicBox is Base721, IMusicBox {
     uint256 public constant MAX_SUPPLY = 3333;
 
-    address SANCTUARY_ADDRESS;
-
-    mapping(uint tokenId => MusicBoxLevel) tokenLevel;
+    mapping(uint tokenId => MusicBoxLevel) public tokenLevel;
 
     constructor(string memory _name, string memory _symbol, string memory _contractURI, string memory _baseURI)
         Base721(_name, _symbol, _contractURI, _baseURI)
     {}
 
-    function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel, uint _amount) external {
+    function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel, uint _amount) external onlyOwner {
         unchecked {
             for (uint256 i = 0; i < _amount; i++) {
                 uint newId = _getTokenIdAndIncrement();
@@ -29,4 +27,5 @@ contract MusicBox is Base721, IMusicBox {
             }
         }
     }
+
 }

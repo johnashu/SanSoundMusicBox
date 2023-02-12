@@ -2,12 +2,12 @@
 pragma solidity ^0.8.18;
 
 /**
- * @title SanSound Rebirth
+ * @title SanSound Sanctuary
  * @author Maffaz
  */
 import {ITokenLevels} from "src/interfaces/Levels/ITokenLevels.sol";
 
-interface IRebirth {
+interface ISanctuary {
     function mintFromSanOrigin(uint256[] calldata tokenIds, ITokenLevels.TokenLevel _newLevel) external payable;
 
     function mintFromPartner(

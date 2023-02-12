@@ -12,4 +12,5 @@ interface IBase721 {
     error NothingToWithdraw();
     error ZeroAddress();
     error ExceedsMaxRoyaltiesPercentage();
+    error MaximumBulkMintExceeded();
 }

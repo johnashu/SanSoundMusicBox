@@ -19,7 +19,7 @@ import "src/utils/Context.sol";
  * the owner.
  */
 abstract contract Ownable is Context {
-    address private _owner;
+    address internal _owner;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 

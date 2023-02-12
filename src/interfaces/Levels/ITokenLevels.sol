@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 
 /**
- * @title SanSound Rebirth
+ * @title SanSound Sanctuary
  * @author Maffaz
  */
 

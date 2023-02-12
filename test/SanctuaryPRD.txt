@@ -5,7 +5,7 @@ import {TestBase} from "test/TestBase.sol";
 import {MockSanOrigin} from "test/mocks/mockSanOrigin.sol";
 import {MockERC721} from "test/mocks/mockERC721.sol";
 
-contract TestRebirthMainNet is TestBase {
+contract TestMainNet is TestBase {
     uint256 constant FORK_BLOCK = 16507662;
 
     function setUp() public {
