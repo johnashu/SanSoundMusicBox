@@ -4,26 +4,39 @@ pragma solidity ^0.8.18;
 import {TestBase, ITokenLevels, IMusicBox, MusicBox} from "test/TestBase.sol";
 
 contract TestMintWithThreeUnBounded is TestBase {
+    address user;
+    address[] users;
+
+    function setUp() public {
+        user = makeAddr("ThreeUnboundedUser");
+        users.push(user);
+        _setUp(users);
+        vm.stopPrank();
+        vm.startPrank(user);
+    }
+
     function testMintWithMultiSanOrigin() public payable {
-        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(1);
+        _mintWithMultiSanOrigin(notBoundTokens);
+    }
+
+    function _mintWithMultiSanOrigin(uint256[] memory tokens) public payable {
         uint256 _cur = 0;
         uint256 _new = 1;
+        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
 
-        _approveAllTokens(notBoundTokens);
+        _approveAllTokens(tokens);
         // Mint the Tokens
-        sanctuary.mintFromSanOrigin{value: _getPrice(_new, _cur)}(notBoundTokens, level);
-        _checkAfterMint(notBoundTokens, level);
-        _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel(1), 1);
+        sanctuary.mintFromSanOrigin{value: _getPrice(_new, _cur)}(tokens, level);
+        _checkAfterMint(tokens, level, user);
+        _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel.Rare, 1, user);
     }
 
     function testUpgradeTokenLevelThreeUnbound() public {
         testMintWithMultiSanOrigin();
-
-        uint256 token = 1;
-        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
         uint256 _cur = 1;
         uint256 _new = 2;
-
+        uint256 token = 1;
+        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
         sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
         _checkSanctuaryTokenLevel(level, token);
     }
@@ -40,6 +53,18 @@ contract TestMintWithThreeUnBounded is TestBase {
 
     function testFailTransferWhenSoulBound() public {
         testUpgradeTokenLevelThreeUnbound();
-        sanctuary.transferFrom(msg.sender, address(0x1), 1);
+        _failTransfer();
+    }
+
+    function testFailTooManyTokens() public {
+        _mintWithMultiSanOrigin(tooManyNotBoundTokens);
+    }
+
+    function testFailTooFewTokens() public {
+        _mintWithMultiSanOrigin(notBoundTokensPartner); // Only 1 token required with Partners.
+    }
+
+    function testFailNoTokens() public {
+        _mintWithMultiSanOrigin(noTokens);
     }
 }

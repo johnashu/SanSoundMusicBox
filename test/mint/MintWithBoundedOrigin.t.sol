@@ -4,6 +4,15 @@ pragma solidity ^0.8.18;
 import {TestBase, ITokenLevels, IMusicBox, MusicBox} from "test/TestBase.sol";
 
 contract TestMintWithSoulBound is TestBase {
+    address user;
+    address[] users;
+
+    function setUp() public {
+        user = makeAddr("OriginBoundedUser");
+        users.push(user);
+        _setUp(users);
+    }
+
     function testMintWithSanSoundBoundSingle() public {
         _mintWithSanSoundBoundMultiple(isBoundTokensSingle);
     }
@@ -13,14 +22,17 @@ contract TestMintWithSoulBound is TestBase {
     }
 
     function _mintWithSanSoundBoundMultiple(uint256[] memory _toCheck) private {
-        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(1);
+        vm.stopPrank();
+        vm.startPrank(user);
         uint256 _cur = 0;
         uint256 _new = 1;
+        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
+        emit log_uint(_toCheck[0]);
         _approveAllTokens(_toCheck);
 
-        sanctuary.mintFromSoulbound{value: _getPrice(1, 0)}(_toCheck, ITokenLevels.TokenLevel(1));
-        _checkAfterMint(_toCheck, level);
-        _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel(0), 1);
+        sanctuary.mintFromSoulbound{value: _getPrice(_new, _cur)}(_toCheck, level);
+        _checkAfterMint(_toCheck, level, user);
+        _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel.Legendary, 1, user);
     }
 
     function testUpgradeTokenLevelSoulBound() public {
@@ -47,7 +59,10 @@ contract TestMintWithSoulBound is TestBase {
 
     function testFailTransferWhenSoulBound() public {
         testUpgradeTokenLevelSoulBound();
-        sanctuary.transferFrom(msg.sender, address(0x1), 1);
-        sanctuary.transferFrom(msg.sender, address(0x0), 1);
+        _failTransfer();
+    }
+
+    function testFailNoTokens() public {
+        _mintWithSanSoundBoundMultiple(isBoundTokens);
     }
 }

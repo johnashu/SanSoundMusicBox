@@ -13,13 +13,30 @@ contract MockSanOrigin is Base721 {
     mapping(uint256 => uint256) public tokenLevel;
 
     constructor() Base721("San Origin Mock", "SOM", "", "") {
-        for (uint256 i = 1; i < 21; i++) {
-            _safeMint(msg.sender, i);
-            if (i > 10) {
+        for (uint256 i = 0; i < 42; i++) {
+            _safeMint(msg.sender, i + 1);
+            if (i > 20) {
                 tokenLevel[i] = 1;
             }
             isApprovedForAll(msg.sender, msg.sender);
         }
+    }
+
+    function TransferUnbound(address to, uint256 start, uint256 end) public {
+        for (uint256 i = start; i < end; i++) {
+            _safeTransferFrom(_msgSender(), to, i);
+        }
+    }
+
+    function TransferBound(address to, uint256 start, uint256 end) public {
+        for (uint256 i = start; i < end; i++) {
+            _safeTransferFrom(_msgSender(), to, i);
+        }
+    }
+
+    function _safeTransferFrom(address from, address to, uint256 tokenId) public {
+        _approve(msg.sender, tokenId);
+        safeTransferFrom(from, to, tokenId);
     }
 
     function mint() public {

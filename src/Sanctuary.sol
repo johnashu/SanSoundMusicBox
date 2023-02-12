@@ -18,7 +18,7 @@ contract Sanctuary is TokenLevels, Base721 {
     address public immutable BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
     mapping(address contractAddress => bool isValid) public isValidContract;
-    mapping(address contractAddress => mapping(uint tokenId => bool isUsed)) public usedTokens;
+    mapping(address contractAddress => mapping(uint256 tokenId => bool isUsed)) public usedTokens;
     mapping(address contractAddress => uint8 _numTokens) public numPartnerTokensRequired;
 
     constructor(
@@ -140,7 +140,7 @@ contract Sanctuary is TokenLevels, Base721 {
     }
 
     function _checkMintConstraints(uint256[] calldata tokenIds, uint8 tokensRequired) private view {
-        if (tokenIds.length > tokensRequired) revert MintAmountTokensIncorrect();
+        if (tokenIds.length != tokensRequired) revert MintAmountTokensIncorrect();
         if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
         if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
     }
@@ -183,7 +183,7 @@ contract Sanctuary is TokenLevels, Base721 {
         for (uint256 i = 0; i < originTokenIds.length; i++) {
             _upgradeTokenLevel(originTokenIds[i], _newLevel, TokenLevel(0)); // curLevel MUST be 0 to mint..
         }
-        
+
         _mintSanctuaryTokens(originTokenIds);
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(_msgSender(), _musicBoxLevel, originTokenIds.length);
     }
@@ -211,6 +211,6 @@ contract Sanctuary is TokenLevels, Base721 {
     // modifier x(){
     // if (_partnerAddress == SAN_ORIGIN_ADDRESS || _partnerAddress == address(0) || _numTokensRequired == 0) {
     //         revert contractAddressNotValid();
-    // } 
-        // }
+    // }
+    // }
 }

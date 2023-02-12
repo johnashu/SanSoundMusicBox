@@ -26,12 +26,12 @@ abstract contract TestBase is Test {
 
     address sanctuaryAddress;
 
-    address user;
+    address OWNER = makeAddr("Owner");
 
     uint256[6] _levelPrices;
 
-    uint256[] partnerTokensToCheckSingle = [1];
-    uint256[] partnerTokensToCheckMulti = [2, 3, 4];
+    uint256[] partnerTokensToCheckSingle = [15];
+    uint256[] partnerTokensToCheckMulti = [4, 17, 6];
     address partnerTokenAddress;
 
     uint256[] notBoundTokens;
@@ -43,36 +43,51 @@ abstract contract TestBase is Test {
     uint256[] notBoundTokensPartner;
     uint256[] isBoundTokensPartner;
 
-    function setUp() public virtual {
-        initUsers();
-        initShared();
-        deployContracts();
+    uint256[] tooManyNotBoundTokens;
+    uint256[] tooManyIsBoundTokens;
+    uint256[] noTokens;
+
+    function _setUp(address[] memory users) internal {
+        _initOWNERs();
+        _initUsers(users);
+        _initShared();
+        _deployContracts();
+        _transferTokensPartner(users);
+        _transferTokensOrigin(users);
     }
 
-    function initUsers() public {
-        user = makeAddr("Maffaz");
-        vm.startPrank(user); // User becomes the owner of everything..
-        vm.deal(user, 10 ether);
+    function _initOWNERs() internal {
+        vm.startPrank(OWNER); // OWNER becomes the owner of everything..
+        vm.deal(OWNER, 10 ether);
     }
 
-    function initShared() public {
+    function _initUsers(address[] memory users) internal {
+        for (uint256 i = 0; i < users.length; i++) {
+            address user = users[i];
+            vm.deal(user, 10 ether);
+        }
+    }
+
+    function _initShared() internal {
         _levelPrices[0] = 0;
         _levelPrices[1] = 0;
         _levelPrices[2] = 333000000000000000;
         _levelPrices[3] = 633000000000000000;
         _levelPrices[3] = 963000000000000000;
         _levelPrices[5] = 5000000000000000000;
-        notBoundTokens = [1, 2, 3];
-        isBoundTokens = [11, 12, 13]; // middle will fail.
+        notBoundTokens = [4, 5, 16];
+        isBoundTokens = [21, 22, 23]; // middle will fail.
+        tooManyNotBoundTokens = [1, 2, 13, 14];
+        tooManyIsBoundTokens = [21, 22, 323, 34];
 
-        notBoundTokensPartner = [1];
-        isBoundTokensPartner = [12];
+        notBoundTokensPartner = [15];
+        isBoundTokensPartner = [28];
 
-        notBoundTokensSingle = [1];
-        isBoundTokensSingle = [15];
+        notBoundTokensSingle = [13];
+        isBoundTokensSingle = [38];
     }
 
-    function deployContracts() public {
+    function _deployContracts() internal {
         mockSanOrigin = new MockSanOrigin();
         sanOriginAddress = address(mockSanOrigin);
 
@@ -94,8 +109,36 @@ abstract contract TestBase is Test {
         musicBox = MusicBox(musicBoxAddress);
     }
 
+    function _transferTokensPartner(address[] memory users) internal {
+        uint256 userLen = users.length;
+        uint256 split = 40 / userLen;
+        for (uint256 i = 1; i < userLen; i++) {
+            address user = users[i];
+            uint256 start = i * split;
+            uint256 end = split * (i + 1);
+            mockERC721Single.transferAll(user, start, end);
+            mockERC721Multi.transferAll(user, start, end);
+        }
+    }
+
+    function _transferTokensOrigin(address[] memory users) internal {
+        uint256 userLen = users.length;
+        uint256 split = 40 / userLen;
+        for (uint256 i = 1; i < userLen; i++) {
+            address user = users[i];
+            emit log_address(user);
+            uint256 start = i * split;
+            uint256 end = split * (i + 1);
+            emit log_uint(start);
+            emit log_uint(end);
+            mockSanOrigin.TransferUnbound(user, start, start + (split / userLen) - 1);
+            mockSanOrigin.TransferBound(user, start + (split / userLen), end);
+        }
+    }
+
     function _approveAllTokens(uint256[] memory tokenIds) internal {
         for (uint256 i = 0; i < tokenIds.length; i++) {
+            emit log_address(IERC721(sanOriginAddress).ownerOf(tokenIds[i]));
             IERC721(sanOriginAddress).approve(sanctuaryAddress, tokenIds[i]);
         }
     }
@@ -113,14 +156,14 @@ abstract contract TestBase is Test {
         if (currentLevel != level) revert();
     }
 
-    function _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel level, uint256 token) internal {
+    function _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel level, uint256 token, address user) internal {
         // Check MusicBox Token is minted and Level.
         IMusicBox.MusicBoxLevel currentLevel = musicBox.tokenLevel(token);
         assertEq(musicBox.ownerOf(token), user);
         if (currentLevel != level) revert();
     }
 
-    function _checkAfterMint(uint256[] memory tokenIds, ITokenLevels.TokenLevel level) internal {
+    function _checkAfterMint(uint256[] memory tokenIds, ITokenLevels.TokenLevel level, address user) internal {
         // Check they are existing and are at the correct level requested.
         for (uint256 i = 0; i < tokenIds.length; i++) {
             uint256 token = tokenIds[i];
@@ -128,5 +171,10 @@ abstract contract TestBase is Test {
             assertEq(sanctuary.ownerOf(token), user);
             _checkSanctuaryTokenLevel(level, token);
         }
+    }
+
+    function _failTransfer() internal {
+        sanctuary.transferFrom(msg.sender, address(0x1), 1);
+        sanctuary.transferFrom(msg.sender, address(0x0), 1);
     }
 }

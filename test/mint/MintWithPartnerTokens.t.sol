@@ -4,26 +4,40 @@ pragma solidity ^0.8.18;
 import {TestBase, ITokenLevels, IMusicBox, MusicBox} from "test/TestBase.sol";
 
 contract TestMintWithPartnerTokens is TestBase {
+    address user;
+    address[] users;
+
+    function setUp() public {
+        user = makeAddr("PartnerTokensUser");
+        users.push(user);
+        _setUp(users);
+        vm.stopPrank();
+        vm.startPrank(user);
+    }
+
     function testMintWithPartnerSingle() public {
-        _mintWithPartnerMultiple(1, partnerTokensToCheckSingle, mockERC721SingleAddress);
+        _mintWithPartnerMultiple(1, mockERC721SingleAddress, partnerTokensToCheckSingle, notBoundTokensPartner);
     }
 
     function testMintWithPartnerMultiple() public {
-        _mintWithPartnerMultiple(3, partnerTokensToCheckMulti, mockERC721MultiAddress);
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner);
     }
 
-    function _mintWithPartnerMultiple(uint256 n, uint256[] memory _toCheck, address _address) private {
-        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(1);
+    function _mintWithPartnerMultiple(
+        uint8 numTokensRequired,
+        address _address,
+        uint256[] memory _toCheckPartner,
+        uint256[] memory _toCheckOrigin
+    ) private {
         uint256 _cur = 0;
         uint256 _new = 1;
-        _addContracttoValidList(_address, 3, true);
-        _approveAllTokens(notBoundTokensPartner);
+        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
+        _addContracttoValidList(_address, numTokensRequired, true);
+        _approveAllTokens(_toCheckOrigin);
 
-        sanctuary.mintFromPartner{value: _getPrice(1, 0)}(
-            notBoundTokensPartner, ITokenLevels.TokenLevel(1), _toCheck, _address
-        );
-        _checkAfterMint(notBoundTokensPartner, level);
-        _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel(0), 1);
+        sanctuary.mintFromPartner{value: _getPrice(_new, _cur)}(_toCheckOrigin, level, _toCheckPartner, _address);
+        _checkAfterMint(_toCheckOrigin, level, user);
+        _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel.Common, 1, user);
     }
 
     function testUpgradeTokenLevelPartners() public {
@@ -39,21 +53,37 @@ contract TestMintWithPartnerTokens is TestBase {
     }
 
     function testFailMintIsBound() public {
-        sanctuary.mintFromPartner{value: _getPrice(1, 0)}(
-            notBoundTokensPartner, ITokenLevels.TokenLevel(1), partnerTokensToCheckMulti, mockERC721MultiAddress
-        );
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, isBoundTokensPartner);
     }
 
     function testFailMintNotOwnedOrigin() public {
         vm.stopPrank();
         vm.prank(address(1));
-        sanctuary.mintFromPartner{value: _getPrice(1, 0)}(
-            notBoundTokensPartner, ITokenLevels.TokenLevel(1), partnerTokensToCheckMulti, mockERC721MultiAddress
-        );
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner);
     }
 
     function testFailTransferWhenSoulBound() public {
         testUpgradeTokenLevelPartners();
-        sanctuary.transferFrom(msg.sender, address(0x1), 1);
+        _failTransfer();
+    }
+
+    function testFailTooManyOriginTokens() public {
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokens);
+    }
+
+    function testFailTooManyPartnerTokens() public {
+        _mintWithPartnerMultiple(2, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner);
+    }
+
+    function testFailTooFewPartnerTokens() public {
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckSingle, notBoundTokensPartner);
+    }
+
+    function testFailNoTokensPartner() public {
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, noTokens, notBoundTokensPartner);
+    }
+
+    function testFailNoTokensOrigin() public {
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, noTokens);
     }
 }

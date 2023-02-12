@@ -14,3 +14,13 @@ def removeZeros(l: list) -> list:
 
 print(f'isBound = {removeZeros(isBound)}')
 print(f'notBound = {removeZeros(notBound)}')
+
+userLen = 2
+split = 40 // userLen
+for i in range(userLen): 
+    start = i * split+1;   
+    end = split * (i+1)
+    print('start unbound', start)
+    print('end', start + (split // userLen) - 1)
+    print('start bound', start + (split // userLen))
+    print('end', end)
