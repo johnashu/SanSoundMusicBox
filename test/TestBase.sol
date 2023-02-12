@@ -32,7 +32,6 @@ abstract contract TestBase is Test {
 
     uint256[] partnerTokensToCheckSingle = [15];
     uint256[] partnerTokensToCheckMulti = [4, 17, 6];
-    address partnerTokenAddress;
 
     uint256[] notBoundTokens;
     uint256[] isBoundTokens; // middle will fail.
@@ -138,6 +137,8 @@ abstract contract TestBase is Test {
     }
 
     function _addContracttoValidList(address _partnerAddress, uint8 _numTokensRequired, bool _isValid) internal {
+        vm.stopPrank();
+        vm.prank(OWNER);
         sanctuary.updatePartnerAddress(_partnerAddress, _numTokensRequired, _isValid);
     }
 

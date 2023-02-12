@@ -17,6 +17,8 @@ contract Sanctuary is TokenLevels, Base721 {
     address public immutable MUSIC_BOX_ADDRESS;
     address public immutable BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
+    mapping(uint256 tokenId => address tokenOwner) public ownerByToken;
+
     mapping(address contractAddress => bool isValid) public isValidContract;
     mapping(address contractAddress => mapping(uint256 tokenId => bool isUsed)) public usedTokens;
     mapping(address contractAddress => uint8 _numTokens) public numPartnerTokensRequired;
@@ -188,29 +190,54 @@ contract Sanctuary is TokenLevels, Base721 {
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(_msgSender(), _musicBoxLevel, originTokenIds.length);
     }
 
-    // OVERRIDE
+    // OVERRIDES
 
     function approve(address to, uint256 tokenId) public override(IERC721, ERC721) {
         // allow merged to be approved
-        if (currentTokenLevel[tokenId] > TokenLevel.Merged) revert CannotApproveTokenLevel(to, tokenId);
+        if (currentTokenLevel[tokenId] > TokenLevel.Unbound) revert CannotApproveTokenLevel(to, tokenId);
         super.approve(to, tokenId);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
         // allow Merged to be transfered.
-        if (currentTokenLevel[tokenId] > TokenLevel.Merged) {
+        if (currentTokenLevel[tokenId] > TokenLevel.Unbound) {
             revert CannotTransferTokenLevelUpdatedToken(from, to, tokenId);
         }
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
-    receive() external payable {
-        require(msg.value > 0, "You cannot send 0 ether");
+    /// @dev Override mint to enable transfer by skipping the _beforeTokenTransfer function.
+    ///      After mint, tokens are SouldBound and cannot be burned /tx.
+    /// @param to Address to mint to
+    /// @param tokenId id to mint
+    function _mint(address to, uint256 tokenId) internal virtual override {
+        require(to != address(0), "ERC721: mint to the zero address");
+        require(!_exists(tokenId), "ERC721: token already minted");
+
+        _owners.push(to);
+        ownerByToken[tokenId] = to;
+        emit Transfer(address(0), to, tokenId);
     }
 
-    // modifier x(){
-    // if (_partnerAddress == SAN_ORIGIN_ADDRESS || _partnerAddress == address(0) || _numTokensRequired == 0) {
-    //         revert contractAddressNotValid();
-    // }
-    // }
+    /**
+     * @dev See {IERC721-balanceOf}.
+     */
+    function balanceOf(address owner) public view virtual override(IERC721, ERC721) returns (uint256) {
+        require(owner != address(0), "ERC721: balance query for the zero address");
+        return userMinted[owner];
+    }
+
+    /**
+     * @dev See {IERC721-ownerOf}.
+     */
+    function ownerOf(uint256 tokenId) public view virtual override(IERC721, ERC721) returns (address) {
+        address owner = ownerByToken[tokenId];
+        require(owner != address(0), "ERC721: owner query for nonexistent token");
+        return owner;
+    }
+
+    function _exists(uint256 tokenId) internal view virtual override(ERC721) returns (bool) {
+        if (tokenId < _startingTokenID) return false;
+        return ownerByToken[tokenId] != address(0);
+    }
 }

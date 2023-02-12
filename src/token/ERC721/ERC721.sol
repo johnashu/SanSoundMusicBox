@@ -20,12 +20,6 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     // Mapping from token ID to owner address
     address[] internal _owners;
 
-    // Mapping from token ID to owner address
-    mapping(uint256 => address) internal _ownerByToken;
-
-    // Mapping from token ID to owner address
-    mapping(address => uint256) internal _ownerTotal;
-
     mapping(uint256 => address) private _tokenApprovals;
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
@@ -59,14 +53,19 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      */
     function balanceOf(address owner) public view virtual override returns (uint256) {
         require(owner != address(0), "ERC721: balance query for the zero address");
-        return _ownerTotal[owner];
+
+        uint256 count;
+        for (uint256 i; i < _owners.length; ++i) {
+            if (owner == _owners[i]) ++count;
+        }
+        return count;
     }
 
     /**
      * @dev See {IERC721-ownerOf}.
      */
     function ownerOf(uint256 tokenId) public view virtual override returns (address) {
-        address owner = _ownerByToken[tokenId];
+        address owner = _owners[_internalTokenID(tokenId)];
         require(owner != address(0), "ERC721: owner query for nonexistent token");
         return owner;
     }
@@ -184,7 +183,9 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      */
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
         if (tokenId < _startingTokenID) return false;
-        return _ownerByToken[tokenId] != address(0);
+
+        uint256 internalID = _internalTokenID(tokenId);
+        return internalID < _owners.length && _owners[internalID] != address(0);
     }
 
     /**
@@ -243,8 +244,7 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
         // _beforeTokenTransfer(address(0), to, tokenId);
         // Disabled as Mint is the only time we can transfer the token.
-        _ownerTotal[to] += 1;
-        _ownerByToken[tokenId] = to;
+        _owners.push(to);
 
         emit Transfer(address(0), to, tokenId);
     }
@@ -266,8 +266,7 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
         // Clear approvals
         _approve(address(0), tokenId);
-        _ownerTotal[_ownerByToken[tokenId]] -= 1;
-        _ownerByToken[tokenId] = address(0);
+        _owners[_internalTokenID(tokenId)] = address(0);
 
         emit Transfer(owner, address(0), tokenId);
     }
@@ -291,9 +290,7 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId);
-        _ownerTotal[to] += 1;
-        _ownerTotal[from] -= 1;
-        _ownerByToken[tokenId] = to;
+        _owners[_internalTokenID(tokenId)] = to;
 
         emit Transfer(from, to, tokenId);
     }

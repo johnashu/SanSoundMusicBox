@@ -35,9 +35,9 @@ contract TestMintWithSoulBound is TestBase {
     }
 
     function testUpgradeTokenLevelSoulBound() public {
-        testMintWithSanSoundBoundMultiple();
+        _mintWithSanSoundBoundMultiple(isBoundTokens);
 
-        uint256 token = 1;
+        uint256 token = isBoundTokens[0];
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
         uint256 _cur = 1;
         uint256 _new = 2;
@@ -62,6 +62,6 @@ contract TestMintWithSoulBound is TestBase {
     }
 
     function testFailNoTokens() public {
-        _mintWithSanSoundBoundMultiple(isBoundTokens);
+        _mintWithSanSoundBoundMultiple(noTokens);
     }
 }

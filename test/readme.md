@@ -8,11 +8,11 @@ forge test --debug testSomething
 forge test --gas-report
 
 # Only run tests in test/Contract.t.sol in the BigTest contract that start with testFail:
-forge test --match-path test/mint/MintWithPartnerTokens.t.sol --match-contract TestMintWithPartnerTokens  --match-test "testMintWithPartnerSingle*" -vvvvv
+forge test --match-path test/mint/MintWithPartnerTokens.t.sol --match-contract TestMintWithPartnerTokens  --match-test "testFailMintNotOwnedOrigin*" -vvvvv
 
-forge test --match-path test/mint/MintWithThreeUnboundedOrigin.t.sol --match-contract TestMintWithThreeUnBounded  --match-test "testFailTooFewTokens*" -vvvvv
+forge test --match-path test/mint/MintWithThreeUnboundedOrigin.t.sol --match-contract TestMintWithThreeUnBounded  --match-test "testUpgradeTokenLevelThreeUnbound*" -vvvvv
 
-forge test --match-path test/mint/MintWithBoundedOrigin.t.sol --match-contract TestMintWithSoulBound  --match-test "testMintWithSanSoundBoundSingle*" -vvvvv
+forge test --match-path test/mint/MintWithBoundedOrigin.t.sol --match-contract TestMintWithSoulBound  --match-test "testUpgradeTokenLevelSoulBound*" -vvvvv
 
 forge test --match-path test/Common.t.sol --match-contract TestCommon  -vvvv
 --match-test "testMintWithSanSoundBoundSingle*" -vvvvv

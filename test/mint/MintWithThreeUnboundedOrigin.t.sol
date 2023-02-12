@@ -32,10 +32,10 @@ contract TestMintWithThreeUnBounded is TestBase {
     }
 
     function testUpgradeTokenLevelThreeUnbound() public {
-        testMintWithMultiSanOrigin();
+        _mintWithMultiSanOrigin(notBoundTokens);
         uint256 _cur = 1;
         uint256 _new = 2;
-        uint256 token = 1;
+        uint256 token = notBoundTokens[0];
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
         sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
         _checkSanctuaryTokenLevel(level, token);

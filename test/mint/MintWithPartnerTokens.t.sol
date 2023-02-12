@@ -16,23 +16,26 @@ contract TestMintWithPartnerTokens is TestBase {
     }
 
     function testMintWithPartnerSingle() public {
-        _mintWithPartnerMultiple(1, mockERC721SingleAddress, partnerTokensToCheckSingle, notBoundTokensPartner);
+        _mintWithPartnerMultiple(1, mockERC721SingleAddress, partnerTokensToCheckSingle, notBoundTokensPartner, user);
     }
 
     function testMintWithPartnerMultiple() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner);
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner, user);
     }
 
     function _mintWithPartnerMultiple(
         uint8 numTokensRequired,
         address _address,
         uint256[] memory _toCheckPartner,
-        uint256[] memory _toCheckOrigin
+        uint256[] memory _toCheckOrigin,
+        address user
     ) private {
         uint256 _cur = 0;
         uint256 _new = 1;
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
         _addContracttoValidList(_address, numTokensRequired, true);
+
+        vm.startPrank(user);
         _approveAllTokens(_toCheckOrigin);
 
         sanctuary.mintFromPartner{value: _getPrice(_new, _cur)}(_toCheckOrigin, level, _toCheckPartner, _address);
@@ -41,9 +44,9 @@ contract TestMintWithPartnerTokens is TestBase {
     }
 
     function testUpgradeTokenLevelPartners() public {
-        testMintWithPartnerMultiple();
+        _mintWithPartnerMultiple(1, mockERC721SingleAddress, partnerTokensToCheckSingle, notBoundTokensPartner, user);
 
-        uint256 token = 1;
+        uint256 token = partnerTokensToCheckSingle[0];
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
         uint256 _cur = 1;
         uint256 _new = 2;
@@ -53,13 +56,17 @@ contract TestMintWithPartnerTokens is TestBase {
     }
 
     function testFailMintIsBound() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, isBoundTokensPartner);
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, isBoundTokensPartner, user);
     }
 
     function testFailMintNotOwnedOrigin() public {
-        vm.stopPrank();
-        vm.prank(address(1));
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner);
+        _mintWithPartnerMultiple(
+            3,
+            mockERC721MultiAddress,
+            partnerTokensToCheckMulti,
+            notBoundTokensPartner,
+            makeAddr("PartnerNoTokensOwned")
+        );
     }
 
     function testFailTransferWhenSoulBound() public {
@@ -68,22 +75,22 @@ contract TestMintWithPartnerTokens is TestBase {
     }
 
     function testFailTooManyOriginTokens() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokens);
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokens, user);
     }
 
     function testFailTooManyPartnerTokens() public {
-        _mintWithPartnerMultiple(2, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner);
+        _mintWithPartnerMultiple(2, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner, user);
     }
 
     function testFailTooFewPartnerTokens() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckSingle, notBoundTokensPartner);
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckSingle, notBoundTokensPartner, user);
     }
 
     function testFailNoTokensPartner() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, noTokens, notBoundTokensPartner);
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, noTokens, notBoundTokensPartner, user);
     }
 
     function testFailNoTokensOrigin() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, noTokens);
+        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, noTokens, user);
     }
 }
