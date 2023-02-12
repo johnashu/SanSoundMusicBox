@@ -22,10 +22,6 @@ contract TokenRescuer is Ownable {
         }
     }
 
-    function rescueERC20(address _token, address _receiver, uint256 _amount) external onlyOwner {
-        _rescueERC20(_token, _receiver, _amount);
-    }
-
     function rescueBatchERC721(address _token, address[] calldata _receivers, uint256[][] calldata _tokenIds)
         external
         onlyOwner
@@ -39,6 +35,10 @@ contract TokenRescuer is Ownable {
                 }
             }
         }
+    }
+
+    function rescueERC20(address _token, address _receiver, uint256 _amount) external onlyOwner {
+        _rescueERC20(_token, _receiver, _amount);
     }
 
     function rescueERC721(address _token, address _receiver, uint256 _tokenId) external onlyOwner {

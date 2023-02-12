@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import {TestBase, ITokenLevels, IMusicBox, MusicBox} from "test/TestBase.sol";
 
-contract MintWithSoulBound is TestBase {
+contract MintWithBoundedOrigin is TestBase {
     function _mintWithSanSoundBoundMultiple(uint256[] memory _toCheck, address user) internal {
         uint256 _cur = 0;
         uint256 _new = 1;

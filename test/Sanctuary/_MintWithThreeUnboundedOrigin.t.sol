@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import {TestBase, ITokenLevels, IMusicBox, MusicBox, IERC721} from "test/TestBase.sol";
 
-contract MintWithThreeUnBounded is TestBase {
+contract MintWithThreeUnboundedOrigin is TestBase {
     function _mintWithMultiSanOrigin(uint256[] memory tokens, address user) internal {
         uint256 _cur = 0;
         uint256 _new = 1;

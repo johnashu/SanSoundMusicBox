@@ -34,13 +34,15 @@ contract Sanctuary is TokenLevels, Base721 {
         SAN_ORIGIN_ADDRESS = _SAN_ORIGIN_ADDRESS;
         isValidContract[_SAN_ORIGIN_ADDRESS] = true;
 
-        MusicBox musicBox = new MusicBox( string("SanSoundMusicBox"),
+        MusicBox musicBox = new MusicBox( 
+            string("SanSoundMusicBox"),
             string("SMB"),
             string("https://example.com/"),
-            string(""));
+            string(""),
+            address(this));
 
         MUSIC_BOX_ADDRESS = address(musicBox);
-        musicBox.transferOwnership(address(this));
+        // musicBox.transferOwnership(address(this));
     }
 
     // SETTERS

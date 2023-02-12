@@ -2,9 +2,9 @@
 pragma solidity ^0.8.18;
 
 import {TestBase, ITokenLevels, IMusicBox, MusicBox, IERC721} from "test/TestBase.sol";
-import {MintWithSoulBound} from "test/Sanctuary/_MintWithBoundedOrigin.t.sol";
+import {MintWithBoundedOrigin} from "test/Sanctuary/_MintWithBoundedOrigin.t.sol";
 
-contract TestERC721 is TestBase, MintWithSoulBound {
+contract TestERC721 is TestBase, MintWithBoundedOrigin {
     address user;
     address[] users;
     uint256[] expected = [1, 2, 3];

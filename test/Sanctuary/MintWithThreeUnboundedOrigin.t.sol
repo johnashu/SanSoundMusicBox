@@ -2,13 +2,13 @@
 pragma solidity ^0.8.18;
 
 import {
-    MintWithThreeUnBounded,
+    MintWithThreeUnboundedOrigin,
     ITokenLevels,
     IMusicBox,
     MusicBox
 } from "test/Sanctuary/_MintWithThreeUnboundedOrigin.t.sol";
 
-contract TestMintWithThreeUnBounded is MintWithThreeUnBounded {
+contract TestMintWithThreeUnboundedOrigin is MintWithThreeUnboundedOrigin {
     address user;
     address[] users;
 

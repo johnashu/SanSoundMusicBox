@@ -9,4 +9,6 @@ interface IMusicBox {
     }
 
     function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel, uint256 _amount) external;
+
+    error OnlySanctuaryAllowedToMint();
 }
