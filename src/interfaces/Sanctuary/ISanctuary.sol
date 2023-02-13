@@ -7,10 +7,8 @@ pragma solidity ^0.8.18;
  */
 
 interface ISanctuary {
+    function balanceOf(address owner) external view returns (uint256);
+    function ownerOf(uint256 tokenId) external view returns (address);
 
-function balanceOf(address owner) view  external returns(uint);
-function ownerOf(uint tokenId) view external returns(address);
-function tokensOwnedByAddress(address owner) view external returns(uint[]);
-
-
+    function tokensOwnedByAddress(address owner) external view returns (uint256[] memory);
 }

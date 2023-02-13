@@ -24,8 +24,6 @@ contract Sanctuary is TokenLevels, Base721 {
     mapping(address contractAddress => bool isValid) public isValidContract;
     mapping(address contractAddress => uint8 _numTokens) public numPartnerTokensRequired;
 
-
-
     constructor(
         string memory _name,
         string memory _symbol,
@@ -112,13 +110,13 @@ contract Sanctuary is TokenLevels, Base721 {
         _checkMintConstraints(tokenIds, requiredTokens);
         _checkUserOwnsTokens(tokenIds, _address);
         // Pass checks, map the ids so they cannot be used again.
-         _addToUsedIds(tokenIds, SAN_ORIGIN_ADDRESS);
+        _addToUsedIds(tokenIds, SAN_ORIGIN_ADDRESS);
     }
 
     function _checkMintConstraints(uint256[] calldata tokenIds, uint8 tokensRequired) private view {
         if (tokenIds.length != tokensRequired) revert MintAmountTokensIncorrect();
         if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
-        if (userMinted[_msgSender()] >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
+        if (balanceOf(_msgSender()) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
     }
 
     function _checkUserOwnsTokens(uint256[] calldata tokenIds, address _tokenAddress) private view {
@@ -186,9 +184,11 @@ contract Sanctuary is TokenLevels, Base721 {
         }
     }
 
-    function _burnMintRebirth(uint256[] calldata originTokenIds, TokenLevel _newLevel, IMusicBox.MusicBoxLevel _musicBoxLevel)
-        private
-    {
+    function _burnMintRebirth(
+        uint256[] calldata originTokenIds,
+        TokenLevel _newLevel,
+        IMusicBox.MusicBoxLevel _musicBoxLevel
+    ) private {
         for (uint256 i = 0; i < originTokenIds.length; i++) {
             _upgradeTokenLevel(originTokenIds[i], _newLevel, TokenLevel(0)); // curLevel MUST be 0 to mint..
         }
@@ -224,7 +224,6 @@ contract Sanctuary is TokenLevels, Base721 {
         if (to == address(0)) revert ZeroAddress();
         if (_exists(tokenId)) revert TokenAlreadyMinted(tokenId);
 
-        userMinted[_msgSender()] += 1;
         tokensOwnedByAddress[_msgSender()].push(tokenId);
         ownerByToken[tokenId] = to;
         emit Transfer(address(0), to, tokenId);

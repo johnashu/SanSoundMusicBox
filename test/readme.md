@@ -12,8 +12,9 @@ forge test --debug testSomething
 
 forge test --gas-report
 
-# Only run tests in test/Contract.t.sol in the BigTest contract that start with testFail:
+# Run tests..
 
+```bash
 forge test --match-path test/Sanctuary/MintWithPartnerTokens.t.sol --match-contract TestMintWithPartnerTokens  --match-test "testFailMintNotOwnedOrigin*" -vvvvv
 
 forge test --match-path test/Sanctuary/MintWithThreeUnboundedOrigin.t.sol --match-contract TestMintWithThreeUnBounded  --match-test "testSendNFTToSanctuaryAddress*" -vvvvv
@@ -24,6 +25,9 @@ forge test --match-path test/Common.t.sol --match-contract TestCommon --match-te
 
 forge test --match-path test/ERC721/ERC721.t.sol --match-contract TestERC721  --match-test "testWalletOfOwner*" -vvvvv
 
+forge test --match-path test/Levels/TokenLevels.t.sol --match-contract TestLevels  --match-test "testUserMaxTokenLevel*" -vvvvv
+
+```
 
 # List tests in desired format:
 

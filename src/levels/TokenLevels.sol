@@ -42,7 +42,8 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
 
         unchecked {
             uint256 previousPrice;
-            for (uint256 i; i < NUM_OF_LEVELS; i++) {
+            for (uint256 i = NUM_OF_LEVELS; i > 0; i--) {
+                i -= 1;
                 if (_newPrices[i] > previousPrice) {
                     revert LevelPricesNotIncreasing();
                 }
@@ -57,10 +58,10 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
         if (tokenCount == 0) return TokenLevel.Unbound;
 
         TokenLevel userMaxLevel;
-        // uint[] memory tokenIds = ISanctuary(address(this)).tokensOwnedByAddress(_msgSender());
+        uint256[] memory tokenIds = ISanctuary(address(this)).tokensOwnedByAddress(_owner);
         unchecked {
             for (uint256 i; i < tokenCount; i++) {
-                TokenLevel level = currentTokenLevel[ISanctuary(address(this)).tokensOwnedByAddress(_owner, i)];
+                TokenLevel level = currentTokenLevel[tokenIds[i]];
                 if (level > userMaxLevel) userMaxLevel = level;
             }
         }
