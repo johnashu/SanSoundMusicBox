@@ -37,15 +37,15 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
         _upgradeTokenLevel(_tokenId, _newLevel, curLevel);
     }
 
-    function setLevelPrices(uint256[NUM_OF_LEVELS] calldata _newPrices) external onlyOwner {
-        if (_newPrices.length != NUM_OF_LEVELS) revert InvalidNumberOfLevelPrices();
-
+    function setLevelPrices(uint256[NUM_OF_LEVELS] calldata _newPrices) public onlyOwner {
         unchecked {
             uint256 previousPrice;
-            for (uint256 i = NUM_OF_LEVELS; i > 0; i--) {
-                i -= 1;
-                if (_newPrices[i] > previousPrice) {
+            for (uint256 i; i < NUM_OF_LEVELS; ++i) {
+                if (_newPrices[i] < previousPrice) {
                     revert LevelPricesNotIncreasing();
+                }
+                if (i == NUM_OF_LEVELS - 1) {
+                    break;
                 }
                 levelPrice[TokenLevel(i + 1)] = _newPrices[i];
                 previousPrice = _newPrices[i];
@@ -53,7 +53,8 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
         }
     }
 
-    function userMaxTokenLevel(address _owner) external view returns (TokenLevel) {
+    function userMaxTokenLevel(address _owner) public view returns (TokenLevel) {
+        // Use token count here as we have a MAX_MINT_PER USER in place in the sanctuary.
         uint256 tokenCount = ISanctuary(address(this)).balanceOf(_owner);
         if (tokenCount == 0) return TokenLevel.Unbound;
 

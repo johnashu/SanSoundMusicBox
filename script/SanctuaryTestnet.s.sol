@@ -14,7 +14,7 @@ contract SanctuaryScript is Script {
         uint256 deployerPrivateKey = vm.envUint("TEST_PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        Sanctuary sanctuary = new Sanctuary(
+        new Sanctuary(
             string("SanSoundMusicBox"),
             string("SMB"),
             string("https://example.com/"),

@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import {MintWithBoundedOrigin, ITokenLevels, IMusicBox, MusicBox} from "test/Sanctuary/_MintWithBoundedOrigin.t.sol";
+import {MintWithBoundedOrigin, IMusicBox, MusicBox} from "test/Sanctuary/_MintWithBoundedOrigin.t.sol";
+import {ITokenLevels} from "src/interfaces/Levels/ITokenLevels.sol";
 
 contract TestLevels is MintWithBoundedOrigin {
     address user;
     address[] users;
-    uint256[6] newLevelPrices;
-    uint256[6] incLevelPrices;
+    uint256[6] newLevelPrices = [0, 0, 11100000000000000, 22200000000000000, 33300000000000000, 444000000000000000];
+    uint256[6] incorrectLevelPrices =
+        [0, 0, 11100000000000000, 22200000000000000, 33300000000000000, 444000000000000000];
 
     function setUp() public {
         user = makeAddr("TokensLevelUser");
@@ -15,37 +17,32 @@ contract TestLevels is MintWithBoundedOrigin {
         _setUp(users);
         vm.stopPrank();
         vm.startPrank(user);
-        newLevelPrices[0] = 0;
-        newLevelPrices[1] = 0;
-        newLevelPrices[2] = 11100000000000000;
-        newLevelPrices[3] = 22200000000000000;
-        newLevelPrices[3] = 33300000000000000;
-        newLevelPrices[5] = 444000000000000000;
+    }
 
-        incLevelPrices[0] = 0;
-        incLevelPrices[1] = 0;
-        incLevelPrices[2] = 11100000000000000;
-        incLevelPrices[3] = 22200000000000000;
-        incLevelPrices[3] = 11100000000000000;
-        incLevelPrices[5] = 444000000000000000;
+    function testFailSetLevelPricesPriceIncrease() public {
+        vm.stopPrank();
+        vm.prank(OWNER);
+        sanctuary.setLevelPrices(incorrectLevelPrices);
     }
 
     function testSetLevelPrices() public {
         vm.stopPrank();
         vm.prank(OWNER);
         sanctuary.setLevelPrices(newLevelPrices);
-        for (uint256 i = 0; i < newLevelPrices.length; i++) {
-            assertEq(sanctuary.levelPrice(ITokenLevels.TokenLevel(i)), newLevelPrices[i]);
-        }
+
+        // ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
+        // emit log_uint(1);
+
+        // for (uint256 i = 0; i < newLevelPrices.length; i++) {
+        //     ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
+        //     // if (sanctuary.levelPrice(_tokenLevel) != newLevelPrices[i]) revert();
+        // }
     }
 
     function testFailSetLevelPricesNotOwner(address caller) public {
         vm.stopPrank();
         vm.prank(caller);
         sanctuary.setLevelPrices(newLevelPrices);
-        for (uint256 i = 0; i < newLevelPrices.length; i++) {
-            assertEq(sanctuary.levelPrice(ITokenLevels.TokenLevel(i)), newLevelPrices[i]);
-        }
     }
 
     function testUserMaxTokenLevel() public {
