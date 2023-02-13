@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 interface ISanctuary {
     enum TokenLevel {
         Unbound,
-        Merged,
+        Rebirthed,
         Citizen,
         Defiant,
         Hanzoku,

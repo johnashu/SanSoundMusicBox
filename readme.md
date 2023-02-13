@@ -30,7 +30,7 @@ There will be three ways to get a music box:
 
 * basically musicbox will mint 3 x rebirth and 1 x mb nft
 
-* 1 state in new contract = SoulBound (Merged). Then 1-4 levels.
+* 1 state in new contract = SoulBound (Rebirthed). Then 1-4 levels.
 
 * MusicBox standalone - act of merging, takes 3 rebirth to mint musicbox nft, fully tradable.. standard NFT.
   
@@ -38,18 +38,18 @@ There will be three ways to get a music box:
 
 * Fees can be changed
 
-* Only Merged NFT's from orign are allowed - level 0 only
+* Only Non Souldbound NFT's from orign are allowed - level 0 only
   
-1. Soulbind **3 San Orgin** NFT's that are at level 0 in the origin to create a new NFT** SMB (MusicBox) ** Token and *Rebirth* 3 New Tokens in the *Sanctuary*. Soulbinding does not give access - state 1 = Merged.  
+1. Soulbind **3 San Orgin** NFT's that are at level 0 in the origin to create a new NFT** SMB (MusicBox) ** Token and *Rebirth* 3 New Tokens in the *Sanctuary*. Soulbinding does not give access - state 1 = Rebirthed.  
    
-2. Can transfer when Merged but not after that level.
+2. Can transfer when Rebirthed but not after that level.
    
 3. Any level can be paid for can upgrade but cannot downgrade
   
 * Once in a Soulbound state, the NFT acts as the holder’s token-gated login to the SAN Sound platform:
 
 
-* Merged will not receive access to the SAN Sound platform.
+* Rebirthed will not receive access to the SAN Sound platform.
 * Citizen will receive one year of access to the SAN Sound platform. .33 ETH
 * Defiant will receive LIFETIME access to the SAN Sound platform.    xxETH
 * Hanzoku will receive LIFETIME access to the SAN Sound platform.  xxETH

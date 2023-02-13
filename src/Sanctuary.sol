@@ -18,10 +18,13 @@ contract Sanctuary is TokenLevels, Base721 {
     address public immutable BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
     mapping(uint256 tokenId => address tokenOwner) public ownerByToken;
+    mapping(address ownerOfTokens => uint256[] tokensOwned) public tokensOwnedByAddress;
+    mapping(address contractAddress => mapping(uint256 tokenId => bool isUsed)) public usedTokens;
 
     mapping(address contractAddress => bool isValid) public isValidContract;
-    mapping(address contractAddress => mapping(uint256 tokenId => bool isUsed)) public usedTokens;
     mapping(address contractAddress => uint8 _numTokens) public numPartnerTokensRequired;
+
+
 
     constructor(
         string memory _name,
@@ -64,28 +67,28 @@ contract Sanctuary is TokenLevels, Base721 {
 
     /// @notice Soulbind an existing SAN Origin NFT to receive a Legendary SAN Music Box NFT
     /// @dev Only Checks Soulbind and then mints
-    /// @param originTokenIds San Origin Id(s) to merge
+    /// @param originTokenIds San Origin Id(s) to Rebirth
     /// @param _newLevel Token level requested
     function mintFromSoulbound(uint256[] calldata originTokenIds, TokenLevel _newLevel) external payable {
         if (originTokenIds.length > MAX_BULK_MINT) revert MaximumBulkMintExceeded();
         _processChecks(originTokenIds, uint8(originTokenIds.length), SAN_ORIGIN_ADDRESS);
         _checkOriginTokensAreBound(originTokenIds);
-        _mergeMint(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel(2));
+        _burnMintRebirth(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel(2));
     }
 
     /// @notice Send three SAN Origin NFTs to the Sanctuary receive a Rare SAN Music Box NFT
-    /// @param originTokenIds San Origin Id(s) to merge
+    /// @param originTokenIds San Origin Id(s) to Rebirth
     /// @param _newLevel Token level requested
     function mintFromSanOrigin(uint256[] calldata originTokenIds, TokenLevel _newLevel) external payable {
         _processChecks(originTokenIds, ORIGIN_TOKENS_REQUIRED_TO_MINT, SAN_ORIGIN_ADDRESS);
         _checkOriginTokensNotBound(originTokenIds);
-        _mergeMint(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel(1));
+        _burnMintRebirth(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel(1));
     }
 
-    /// @notice Merge and mint from a partner, Send a Scout SAN Origin NFT to the Sanctuary, which
+    /// @notice Rebirth and mint from a partner, Send a Scout SAN Origin NFT to the Sanctuary, which
     /// requires one SAN Origin NFT and an accompanying partner NFT (0N1 Force, Mutant Apes, WoW, Etc),
     /// for a common SAN Music Box NFT.
-    /// @param originTokenIds San Origin Id(s) to merge
+    /// @param originTokenIds San Origin Id(s) to Rebirth
     /// @param _newLevel Token level requested
     /// @param partnerTokenIds TokenIds from the Partner NFTs to check against
     /// @param _contractAddress Token Contract address to call for checks.
@@ -100,8 +103,7 @@ contract Sanctuary is TokenLevels, Base721 {
         _processChecks(originTokenIds, WITH_PARTNER_TOKENS_REQUIRED_TO_MINT, SAN_ORIGIN_ADDRESS);
         _processChecks(partnerTokenIds, numPartnerTokensRequired[_contractAddress], _contractAddress);
         _checkOriginTokensNotBound(originTokenIds);
-        _burnOriginTokens(originTokenIds);
-        _mergeMint(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel(0));
+        _burnMintRebirth(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel(0));
     }
 
     // PRIVATE FUNCTIONS
@@ -110,13 +112,13 @@ contract Sanctuary is TokenLevels, Base721 {
         _checkMintConstraints(tokenIds, requiredTokens);
         _checkUserOwnsTokens(tokenIds, _address);
         // Pass checks, map the ids so they cannot be used again.
-        return _addToUsedIds(tokenIds, SAN_ORIGIN_ADDRESS);
+         _addToUsedIds(tokenIds, SAN_ORIGIN_ADDRESS);
     }
 
     function _checkMintConstraints(uint256[] calldata tokenIds, uint8 tokensRequired) private view {
         if (tokenIds.length != tokensRequired) revert MintAmountTokensIncorrect();
         if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
-        if (userMinted[_msgSender()] > MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
+        if (userMinted[_msgSender()] >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
     }
 
     function _checkUserOwnsTokens(uint256[] calldata tokenIds, address _tokenAddress) private view {
@@ -145,7 +147,7 @@ contract Sanctuary is TokenLevels, Base721 {
 
     /// @notice Check for SoulBound Tokens
     /// @dev Make sure all tokens passed are both SoulBound and the same level.
-    /// @param tokenIds San Origin Id(s) to merge.
+    /// @param tokenIds San Origin Id(s) to Rebirth.
     function _checkOriginTokensAreBound(uint256[] calldata tokenIds) private view {
         uint256 currentLevel;
         unchecked {
@@ -179,19 +181,19 @@ contract Sanctuary is TokenLevels, Base721 {
     function _mintSanctuaryTokens(uint256[] calldata originTokenIds) private {
         unchecked {
             for (uint256 i = 0; i < originTokenIds.length; i++) {
-                userMinted[_msgSender()] += 1;
                 _safeMint(_msgSender(), originTokenIds[i]);
             }
         }
     }
 
-    function _mergeMint(uint256[] calldata originTokenIds, TokenLevel _newLevel, IMusicBox.MusicBoxLevel _musicBoxLevel)
+    function _burnMintRebirth(uint256[] calldata originTokenIds, TokenLevel _newLevel, IMusicBox.MusicBoxLevel _musicBoxLevel)
         private
     {
         for (uint256 i = 0; i < originTokenIds.length; i++) {
             _upgradeTokenLevel(originTokenIds[i], _newLevel, TokenLevel(0)); // curLevel MUST be 0 to mint..
         }
 
+        _burnOriginTokens(originTokenIds);
         _mintSanctuaryTokens(originTokenIds);
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(_msgSender(), _musicBoxLevel, originTokenIds.length);
     }
@@ -222,7 +224,8 @@ contract Sanctuary is TokenLevels, Base721 {
         if (to == address(0)) revert ZeroAddress();
         if (_exists(tokenId)) revert TokenAlreadyMinted(tokenId);
 
-        _owners.push(to);
+        userMinted[_msgSender()] += 1;
+        tokensOwnedByAddress[_msgSender()].push(tokenId);
         ownerByToken[tokenId] = to;
         emit Transfer(address(0), to, tokenId);
     }
@@ -230,9 +233,9 @@ contract Sanctuary is TokenLevels, Base721 {
     /**
      * @dev See {IERC721-balanceOf}.
      */
-    function balanceOf(address owner) public view virtual override(IERC721, ERC721) returns (uint256) {
+    function balanceOf(address owner) public view virtual override(Base721) returns (uint256) {
         if (owner == address(0)) revert ZeroAddress();
-        return userMinted[owner];
+        return tokensOwnedByAddress[owner].length;
     }
 
     /**

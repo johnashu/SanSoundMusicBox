@@ -29,15 +29,23 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
     uint256 public currentTokenId;
 
     /**
-     * @notice The total tokens minted by an address.
+     * @notice The total tokens minted by an address. Overriding contracts can decide to use or not.
      */
-    mapping(address tokenOwner => uint256 totalMinted) public userMinted;
+    mapping(address tokenOwner => uint256 totalMinted) internal userMinted;
 
     constructor(string memory _name, string memory _symbol, string memory _contractURI, string memory _baseURI)
         ERC721(_name, _symbol, uint256(1))
     {
         contractURI = _contractURI;
         baseURI = _baseURI;
+    }
+
+    /**
+     * @dev See {IERC721-balanceOf}.
+     */
+    function balanceOf(address owner) public view virtual override(IERC721, ERC721) returns (uint256) {
+        if (owner == address(0)) revert ZeroAddress();
+        return userMinted[owner];
     }
 
     function _getTokenIdAndIncrement() internal returns (uint256) {

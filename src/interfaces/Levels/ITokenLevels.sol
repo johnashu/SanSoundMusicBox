@@ -9,7 +9,7 @@ pragma solidity ^0.8.18;
 interface ITokenLevels {
     enum TokenLevel {
         Unbound,
-        Merged,
+        Rebirthed,
         Citizen,
         Defiant,
         Hanzoku,

@@ -2,8 +2,9 @@
 pragma solidity ^0.8.18;
 
 import {ITokenLevels} from "src/interfaces/Levels/ITokenLevels.sol";
+import {ISanctuary} from "src/interfaces/Sanctuary/ISanctuary.sol";
+
 import {IBase721} from "src/interfaces/ERC721/IBase721.sol";
-import {IERC721Enumerable} from "src/interfaces/ERC721/extensions/IERC721Enumerable.sol";
 import {Ownable} from "src/utils/Ownable.sol";
 
 abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
@@ -29,11 +30,10 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
 
     function upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel) public payable {
         TokenLevel curLevel = currentTokenLevel[_tokenId];
-        if (IERC721Enumerable(address(this)).ownerOf(_tokenId) != _msgSender()) revert TokenNotOwned();
+        if (ISanctuary(address(this)).ownerOf(_tokenId) != _msgSender()) revert TokenNotOwned();
         if (_newLevel == TokenLevel.Unbound) revert TokenUnBound();
         if (curLevel >= _newLevel) revert LevelAlreadyReached();
         currentTokenLevel[_tokenId] = _newLevel;
-
         _upgradeTokenLevel(_tokenId, _newLevel, curLevel);
     }
 
@@ -53,13 +53,14 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
     }
 
     function userMaxTokenLevel(address _owner) external view returns (TokenLevel) {
-        uint256 tokenCount = IERC721Enumerable(address(this)).balanceOf(_owner);
+        uint256 tokenCount = ISanctuary(address(this)).balanceOf(_owner);
         if (tokenCount == 0) return TokenLevel.Unbound;
 
         TokenLevel userMaxLevel;
+        // uint[] memory tokenIds = ISanctuary(address(this)).tokensOwnedByAddress(_msgSender());
         unchecked {
             for (uint256 i; i < tokenCount; i++) {
-                TokenLevel level = currentTokenLevel[IERC721Enumerable(address(this)).tokenOfOwnerByIndex(_owner, i)];
+                TokenLevel level = currentTokenLevel[ISanctuary(address(this)).tokensOwnedByAddress(_owner, i)];
                 if (level > userMaxLevel) userMaxLevel = level;
             }
         }
