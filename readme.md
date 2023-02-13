@@ -38,7 +38,6 @@ NEW*********
 
 // Partner NfTs
 
-
 Takes approx 20 mins first time (use a block otherwise it will sync each time!)
 
 forge test -f https://eth-mainnet.g.alchemy.com/v2/<API KEY> --chain-id 1 -vvvvv --fork-block-number 16507661
