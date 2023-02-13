@@ -8,7 +8,6 @@ pragma solidity ^0.8.18;
 import {Base721, IERC721, ERC721} from "src/token/ERC721/Base721.sol";
 
 contract MockSanOrigin is Base721 {
-    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
     uint256 public constant MAX_SUPPLY = 3333;
     mapping(uint256 => uint256) public tokenLevel;
 

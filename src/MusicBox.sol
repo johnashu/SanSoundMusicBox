@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: UNLICENSED
 
-/// @title Musix Box NFT
+/// @title San Sound Musix Box NFT
 /// @author Maffaz
 
 pragma solidity ^0.8.18;
@@ -24,6 +24,11 @@ contract MusicBox is Base721, IMusicBox {
         SANCTUARY_ADDRESS = _SANCTUARY_ADDRESS;
     }
 
+    /// @notice Mints X Amount of tokens received from the Sanctuary Contract.
+    /// @dev The Sanctuary Contract deploys and sets its address in this contract.  Only that address can mint to it.
+    /// @param _to Address to send the minted Token to.
+    /// @param musicBoxLevel MusicBox level Common, Rare, Epic as sent by the Sanctuary.
+    /// @param _amount The number of tokens to mint.
     function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel, uint256 _amount) external {
         if (_msgSender() != SANCTUARY_ADDRESS) revert OnlySanctuaryAllowedToMint();
         unchecked {

@@ -163,6 +163,8 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
         }
     }
 
+    // Overrides.
+
     /**
      * @inheritdoc ERC165
      */
@@ -179,6 +181,8 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
         if (!_exists(_tokenId)) revert TokenDoesNotExist();
         return string(abi.encodePacked(baseURI, "/", Strings.toString(_tokenId), ".json"));
     }
+
+    // FALLBACK & RECEIVE
 
     // Function to receive Ether. msg.data must be empty
     receive() external payable {}

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
+/// @title San Sound Sanctuary Rebirth NFT
+/// @author Maffaz
 pragma solidity ^0.8.18;
 
 import {TokenLevels} from "src/levels/TokenLevels.sol";
@@ -8,21 +10,21 @@ import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
 import {MusicBox} from "src/MusicBox.sol";
 
 contract Sanctuary is TokenLevels, Base721 {
-    uint8 public constant ORIGIN_TOKENS_REQUIRED_TO_MINT = 3;
-    uint8 public constant WITH_PARTNER_TOKENS_REQUIRED_TO_MINT = 1;
-    uint256 public constant MAX_SUPPLY = 3333;
-    uint256 public constant MAX_BULK_MINT = 10;
+    uint256 public constant ORIGIN_TOKENS_REQUIRED_TO_MINT = 3;
+    uint256 public constant WITH_PARTNER_TOKENS_REQUIRED_TO_MINT = 1;
 
     address public immutable SAN_ORIGIN_ADDRESS;
     address public immutable MUSIC_BOX_ADDRESS;
-    address public immutable BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+    uint256 public constant MAX_SUPPLY = 3333;
+    uint256 public constant MAX_BULK_MINT = 10;
 
+    mapping(address ownerOfTokens => uint256[] tokensOwned) private _tokensOwnedByAddress;
     mapping(uint256 tokenId => address tokenOwner) public ownerByToken;
-    mapping(address ownerOfTokens => uint256[] tokensOwned) public tokensOwnedByAddress;
+
     mapping(address contractAddress => mapping(uint256 tokenId => bool isUsed)) public usedTokens;
 
     mapping(address contractAddress => bool isValid) public isValidContract;
-    mapping(address contractAddress => uint8 _numTokens) public numPartnerTokensRequired;
+    mapping(address contractAddress => uint256 _numTokens) public numPartnerTokensRequired;
 
     constructor(
         string memory _name,
@@ -46,6 +48,16 @@ contract Sanctuary is TokenLevels, Base721 {
         musicBox.transferOwnership(msg.sender);
     }
 
+    // GETTERS
+
+    /// @dev Override to Support Id<>Id assigments.
+    /// @param _owner Address of the tokens requested.
+    /// @return tokens Number of tokens that address owns
+    function tokensOwnedByAddress(address _owner) public view returns (uint256[] memory) {
+        if (_owner == address(0)) revert ZeroAddress();
+        return _tokensOwnedByAddress[_owner];
+    }
+
     // SETTERS
 
     /// @notice Update a partner address
@@ -53,7 +65,10 @@ contract Sanctuary is TokenLevels, Base721 {
     /// @param _partnerAddress Address of the Partner Contract.
     /// @param _numTokensRequired tokens required to mint.
     /// @param _isValid true to be valid (add) or false to be invalid
-    function updatePartnerAddress(address _partnerAddress, uint8 _numTokensRequired, bool _isValid) public onlyOwner {
+    function updatePartnerAddress(address _partnerAddress, uint256 _numTokensRequired, bool _isValid)
+        public
+        onlyOwner
+    {
         if (_partnerAddress == SAN_ORIGIN_ADDRESS || _partnerAddress == address(0) || _numTokensRequired == 0) {
             revert contractAddressNotValid();
         }
@@ -69,7 +84,7 @@ contract Sanctuary is TokenLevels, Base721 {
     /// @param _newLevel Token level requested
     function mintFromSoulbound(uint256[] calldata originTokenIds, TokenLevel _newLevel) external payable {
         if (originTokenIds.length > MAX_BULK_MINT) revert MaximumBulkMintExceeded();
-        _processChecks(originTokenIds, uint8(originTokenIds.length), SAN_ORIGIN_ADDRESS);
+        _processChecks(originTokenIds, originTokenIds.length, SAN_ORIGIN_ADDRESS);
         _checkOriginTokensAreBound(originTokenIds);
         _burnMintRebirth(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel(2));
     }
@@ -90,7 +105,6 @@ contract Sanctuary is TokenLevels, Base721 {
     /// @param _newLevel Token level requested
     /// @param partnerTokenIds TokenIds from the Partner NFTs to check against
     /// @param _contractAddress Token Contract address to call for checks.
-
     function mintFromPartner(
         uint256[] calldata originTokenIds,
         TokenLevel _newLevel,
@@ -105,11 +119,16 @@ contract Sanctuary is TokenLevels, Base721 {
     }
 
     // PRIVATE FUNCTIONS
-    function _processChecks(uint256[] calldata tokenIds, uint8 requiredTokens, address _address) private {
+
+    /// @dev Checks the caller owns the tokens and adds to `usedTokens` or reverts
+    /// @param tokenIds Tokens to Check.
+    /// @param requiredTokens Number of San Origin Tokens Required to Mint.
+    /// @param _tokenAddress Address or contract to check (San Origin / Partners).
+    function _processChecks(uint256[] calldata tokenIds, uint256 requiredTokens, address _tokenAddress) private {
         if (tokenIds.length != requiredTokens) revert MintAmountTokensIncorrect();
         if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
         if (balanceOf(_msgSender()) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
-        _checkUserOwnsTokens(tokenIds, _address);
+        _checkUserOwnsTokens(tokenIds, _tokenAddress);
     }
 
     /// @dev Checks the caller owns the tokens and adds to `usedTokens` or reverts
@@ -168,7 +187,7 @@ contract Sanctuary is TokenLevels, Base721 {
     function _burnOriginMintSanctuary(uint256[] calldata originTokenIds) private {
         unchecked {
             for (uint256 i = 0; i < originTokenIds.length; i++) {
-                IERC721(SAN_ORIGIN_ADDRESS).transferFrom(_msgSender(), BURN_ADDRESS, originTokenIds[i]);
+                IERC721(SAN_ORIGIN_ADDRESS).transferFrom(_msgSender(), _burnAddress(), originTokenIds[i]);
                 _safeMint(_msgSender(), originTokenIds[i]);
             }
         }
@@ -221,26 +240,26 @@ contract Sanctuary is TokenLevels, Base721 {
         if (to == address(0)) revert ZeroAddress();
         if (_exists(tokenId)) revert TokenAlreadyMinted(tokenId);
 
-        tokensOwnedByAddress[_msgSender()].push(tokenId);
+        _tokensOwnedByAddress[_msgSender()].push(tokenId);
         ownerByToken[tokenId] = to;
         emit Transfer(address(0), to, tokenId);
     }
 
     /// @dev Override to Support Id<>Id assigments.
-    /// @param owner a parameter just like in doxygen (must be followed by parameter name)
-    /// @return tokens the return variables of a contract’s function state variable
-    function balanceOf(address owner) public view virtual override(Base721) returns (uint256) {
-        if (owner == address(0)) revert ZeroAddress();
-        return tokensOwnedByAddress[owner].length;
+    /// @param _owner _owner address of the token passed.
+    /// @return tokens Number of tokens that address owns
+    function balanceOf(address _owner) public view virtual override(Base721) returns (uint256) {
+        if (_owner == address(0)) revert ZeroAddress();
+        return _tokensOwnedByAddress[_owner].length;
     }
 
     /// @dev Override to Support Id<>Id assigments.
     /// @param tokenId token to find the address of.
-    /// @return owner owner address of the token passed.
+    /// @return _owner _owner address of the token passed.
     function ownerOf(uint256 tokenId) public view virtual override(IERC721, ERC721) returns (address) {
-        address owner = ownerByToken[tokenId];
-        if (owner == address(0)) revert ZeroAddress();
-        return owner;
+        address _owner = ownerByToken[tokenId];
+        if (_owner == address(0)) revert ZeroAddress();
+        return _owner;
     }
 
     /// @dev Override to Support Id<>Id assigments.

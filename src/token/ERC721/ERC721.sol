@@ -32,6 +32,10 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _startingTokenID = startingTokenID_;
     }
 
+    function _burnAddress() internal view virtual returns (address) {
+        return address(0x000000000000000000000000000000000000dEaD);
+    }
+
     function _internalTokenID(uint256 externalTokenID_) private view returns (uint256) {
         require(externalTokenID_ >= _startingTokenID, "ERC721: owner query for nonexistent token");
 
@@ -266,9 +270,9 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
         // Clear approvals
         _approve(address(0), tokenId);
-        _owners[_internalTokenID(tokenId)] = address(0);
+        _owners[_internalTokenID(tokenId)] = _burnAddress();
 
-        emit Transfer(owner, address(0), tokenId);
+        emit Transfer(owner, _burnAddress(), tokenId);
     }
 
     /**
