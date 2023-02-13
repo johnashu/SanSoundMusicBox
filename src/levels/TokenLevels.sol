@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
+
 import {ITokenLevels} from "src/interfaces/Levels/ITokenLevels.sol";
 import {IBase721} from "src/interfaces/ERC721/IBase721.sol";
-import {IERC721Enumerable} from  "src/interfaces/ERC721/extensions/IERC721Enumerable.sol";
-import {Ownable} from "src/utils/Ownable.sol"; 
+import {IERC721Enumerable} from "src/interfaces/ERC721/extensions/IERC721Enumerable.sol";
+import {Ownable} from "src/utils/Ownable.sol";
 
 abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
     uint256 public constant NUM_OF_LEVELS = 6;
@@ -12,7 +13,6 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
     mapping(uint256 tokenId => TokenLevel tokenLevel) public currentTokenLevel;
 
     constructor(uint256[NUM_OF_LEVELS] memory _levelPrices) {
-
         for (uint256 i = 0; i < NUM_OF_LEVELS; i++) {
             levelPrice[TokenLevel(i)] = _levelPrices[i];
         }
@@ -43,7 +43,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
         unchecked {
             uint256 previousPrice;
             for (uint256 i; i < NUM_OF_LEVELS; i++) {
-                if (_newPrices[i] <= previousPrice) {
+                if (_newPrices[i] > previousPrice) {
                     revert LevelPricesNotIncreasing();
                 }
                 levelPrice[TokenLevel(i + 1)] = _newPrices[i];

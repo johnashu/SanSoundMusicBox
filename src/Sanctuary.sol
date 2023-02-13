@@ -42,7 +42,7 @@ contract Sanctuary is TokenLevels, Base721 {
             address(this));
 
         MUSIC_BOX_ADDRESS = address(musicBox);
-        // musicBox.transferOwnership(address(this));
+        musicBox.transferOwnership(msg.sender);
     }
 
     // SETTERS

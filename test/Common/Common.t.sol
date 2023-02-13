@@ -15,12 +15,6 @@ contract TestCommon is TestBase {
         vm.startPrank(user);
     }
 
-    function testOwnerIsSanctuary() public {
-        address ownerAddress = musicBox.owner();
-        emit log_address(ownerAddress);
-        assertEq((ownerAddress == SANCTUARY_ADDRESS), true);
-    }
-
     function testCheckOriginAddressIsValid() public {
         address san = sanctuary.SAN_ORIGIN_ADDRESS();
         assertTrue(sanctuary.isValidContract(san));

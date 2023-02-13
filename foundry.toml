@@ -9,3 +9,7 @@ fuzz_runs = 5000
 [rpc_endpoints]
 mainnet = "${ALCHEMY_url}"
 # rinkeby = "${RINKEBY_RPC}"
+goerli = "${GOERLI_RPC_URL}"
+
+[etherscan]
+goerli = { key = "${GOERLI_ETHERSCAN_API_KEY}" }

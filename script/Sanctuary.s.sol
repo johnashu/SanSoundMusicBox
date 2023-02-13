@@ -6,7 +6,10 @@ import "lib/forge-std/src/Script.sol";
 contract base721Script is Script {
     function setUp() public {}
 
-    function run() public {
-        vm.broadcast();
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(deployerPrivateKey);
+
+        vm.stopBroadcast();
     }
 }

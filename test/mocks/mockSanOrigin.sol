@@ -16,7 +16,7 @@ contract MockSanOrigin is Base721 {
         for (uint256 i = 0; i < 42; i++) {
             _safeMint(msg.sender, i + 1);
 
-            // SoulbOund Level 1
+            // Soulbound Level 1
             if (i > 20) {
                 tokenLevel[i] = 1;
             }

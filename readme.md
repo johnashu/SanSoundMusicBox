@@ -52,3 +52,12 @@ Minted NFTs = 3
 isBound = [789, 1055, 3829, 8313, 9166]
 
 notBound = [452, 472, 1173, 1388, 1682, 1720, 1851, 2027, 2263, 2275, 2755, 3248, 3277, 3689, 3721, 3811, 4268, 4964, 4965, 4966, 5082, 5474, 5557, 5622, 5826, 5844, 5845, 5976, 6035, 6168, 6206, 6208, 6237, 6244, 6271, 6272, 6277, 6289, 6323, 6391, 6412, 6422, 6455, 6456, 7168, 7178, 8400, 8509]
+
+forge create Sanctuary --constructor-args 0xbf8Bae200eBFF0B437AC57bEBcF474Bc0F7aE25B [0, 0, 3000, 4000, 5000, 6000]  --contracts src/Sanctuary.sol:Sanctuary --verify --private-key {TESTNET_PK} --rpc-url {GOERLI}
+
+forge create MockSanOrigin --contracts test/Mocks/mockSanOrigin.t.sol:MockSanOrigin --verify --private-key  {TESTNET_PK} --rpc-url {GOERLI}
+
+Mock San Origin Goerli:
+Deployer: 0x0d530DCbACB4E0F9B5d70B8dD5a1f01D2dc5E1f9
+Deployed to: 0xbf8Bae200eBFF0B437AC57bEBcF474Bc0F7aE25B
+Transaction hash: 0x787cc973b6f9f38ba3effbe0981fa248ea04cb70ec48d25727c6ba9f9eb70563

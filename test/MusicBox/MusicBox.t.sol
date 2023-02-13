@@ -20,4 +20,11 @@ contract TestMusicBox is MintWithBoundedOrigin {
         _mintWithSanSoundBoundMultiple(isBoundTokens, user);
         musicBox.mintFromSantuary(caller, IMusicBox.MusicBoxLevel.Rare, 1);
     }
+
+    function testOwnerOfMusicBox() public {
+        _mintWithSanSoundBoundMultiple(isBoundTokens, user);
+        address ownerAddress = musicBox.owner();
+        emit log_address(ownerAddress);
+        assertEq((ownerAddress == OWNER), true);
+    }
 }
