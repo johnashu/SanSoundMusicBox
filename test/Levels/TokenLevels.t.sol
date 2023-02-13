@@ -9,7 +9,7 @@ contract TestLevels is MintWithBoundedOrigin {
     address[] users;
     uint256[6] newLevelPrices = [0, 0, 11100000000000000, 22200000000000000, 33300000000000000, 444000000000000000];
     uint256[6] incorrectLevelPrices =
-        [0, 0, 11100000000000000, 22200000000000000, 33300000000000000, 444000000000000000];
+        [0, 0, 11100000000000000, 22200000000000000, 11100000000000000, 444000000000000000];
 
     function setUp() public {
         user = makeAddr("TokensLevelUser");
@@ -29,14 +29,9 @@ contract TestLevels is MintWithBoundedOrigin {
         vm.stopPrank();
         vm.prank(OWNER);
         sanctuary.setLevelPrices(newLevelPrices);
-
-        // ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
-        // emit log_uint(1);
-
-        // for (uint256 i = 0; i < newLevelPrices.length; i++) {
-        //     ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
-        //     // if (sanctuary.levelPrice(_tokenLevel) != newLevelPrices[i]) revert();
-        // }
+        for (uint256 i = 0; i < newLevelPrices.length; i++) {
+            if (sanctuary.levelPrice(ITokenLevels.TokenLevel(i)) != newLevelPrices[i]) revert();
+        }
     }
 
     function testFailSetLevelPricesNotOwner(address caller) public {

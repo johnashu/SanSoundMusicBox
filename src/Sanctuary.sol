@@ -105,37 +105,28 @@ contract Sanctuary is TokenLevels, Base721 {
     }
 
     // PRIVATE FUNCTIONS
-
     function _processChecks(uint256[] calldata tokenIds, uint8 requiredTokens, address _address) private {
-        _checkMintConstraints(tokenIds, requiredTokens);
-        _checkUserOwnsTokens(tokenIds, _address);
-        // Pass checks, map the ids so they cannot be used again.
-        _addToUsedIds(tokenIds, SAN_ORIGIN_ADDRESS);
-    }
-
-    function _checkMintConstraints(uint256[] calldata tokenIds, uint8 tokensRequired) private view {
-        if (tokenIds.length != tokensRequired) revert MintAmountTokensIncorrect();
+        if (tokenIds.length != requiredTokens) revert MintAmountTokensIncorrect();
         if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
         if (balanceOf(_msgSender()) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
+        _checkUserOwnsTokens(tokenIds, _address);
     }
 
-    function _checkUserOwnsTokens(uint256[] calldata tokenIds, address _tokenAddress) private view {
+    /// @dev Checks the caller owns the tokens and adds to `usedTokens` or reverts
+    /// @param tokenIds Tokens to Check.
+    /// @param _tokenAddress Address or contract to check (San Origin / Partners).
+    function _checkUserOwnsTokens(uint256[] calldata tokenIds, address _tokenAddress) private {
         unchecked {
             for (uint256 i = 0; i < tokenIds.length; i++) {
                 if (usedTokens[_tokenAddress][tokenIds[i]] != false) revert TokenAlreadyUsed();
                 if (IERC721(_tokenAddress).ownerOf(tokenIds[i]) != _msgSender()) revert TokenNotOwned();
-            }
-        }
-    }
-
-    function _addToUsedIds(uint256[] calldata tokenIds, address _tokenAddress) private {
-        unchecked {
-            for (uint256 i = 0; i < tokenIds.length; i++) {
                 usedTokens[_tokenAddress][tokenIds[i]] = true;
             }
         }
     }
 
+    /// @dev Checks the partner address passed is correct.
+    /// @param _partnerAddress Address of the partner to check.
     function _checkPartnerContractAddress(address _partnerAddress) private view {
         if (_partnerAddress == SAN_ORIGIN_ADDRESS || _partnerAddress == address(0) || !isValidContract[_partnerAddress])
         {
@@ -160,30 +151,33 @@ contract Sanctuary is TokenLevels, Base721 {
         }
     }
 
-    function _checkOriginTokensNotBound(uint256[] calldata tokenIds) private view {
+    /// @dev Check the Soulbound status of the San Origin Tokens passed.
+    /// @param originTokenIds OriginTokens to Burn and Ids to mint with.
+    function _checkOriginTokensNotBound(uint256[] calldata originTokenIds) private view {
         unchecked {
-            for (uint256 i = 0; i < tokenIds.length; i++) {
-                if (ISanOriginNFT(SAN_ORIGIN_ADDRESS).tokenLevel(tokenIds[i]) != 0) revert TokenAlreadyBoundInOrigin();
+            for (uint256 i = 0; i < originTokenIds.length; i++) {
+                if (ISanOriginNFT(SAN_ORIGIN_ADDRESS).tokenLevel(originTokenIds[i]) != 0) {
+                    revert TokenAlreadyBoundInOrigin();
+                }
             }
         }
     }
 
-    function _burnOriginTokens(uint256[] calldata originTokenIds) private {
+    /// @dev Transfer San Origin NFT to the 'BURN_ADDRESS' and Mint a new 'SoulBound' Santuary NFT.
+    /// @param originTokenIds OriginTokens to Burn and Ids to mint with.
+    function _burnOriginMintSanctuary(uint256[] calldata originTokenIds) private {
         unchecked {
             for (uint256 i = 0; i < originTokenIds.length; i++) {
                 IERC721(SAN_ORIGIN_ADDRESS).transferFrom(_msgSender(), BURN_ADDRESS, originTokenIds[i]);
-            }
-        }
-    }
-
-    function _mintSanctuaryTokens(uint256[] calldata originTokenIds) private {
-        unchecked {
-            for (uint256 i = 0; i < originTokenIds.length; i++) {
                 _safeMint(_msgSender(), originTokenIds[i]);
             }
         }
     }
 
+    /// @dev Finalise the storage values and upgrade the tokens.  Burn and mint to finish!
+    /// @param originTokenIds OriginTokens to Burn and Ids to mint with.
+    /// @param _newLevel Level to upgrade with - All tokens must be at the same level to tx the Soulbound level from San Origin -> Sanctuary.
+    /// @param _musicBoxLevel Common, Rare or Epic depending on the source of the mint.
     function _burnMintRebirth(
         uint256[] calldata originTokenIds,
         TokenLevel _newLevel,
@@ -192,22 +186,25 @@ contract Sanctuary is TokenLevels, Base721 {
         for (uint256 i = 0; i < originTokenIds.length; i++) {
             _upgradeTokenLevel(originTokenIds[i], _newLevel, TokenLevel(0)); // curLevel MUST be 0 to mint..
         }
-
-        _burnOriginTokens(originTokenIds);
-        _mintSanctuaryTokens(originTokenIds);
+        _burnOriginMintSanctuary(originTokenIds);
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(_msgSender(), _musicBoxLevel, originTokenIds.length);
     }
 
     // OVERRIDES for Soulbinding
 
+    /// @dev Allow Unbound San Origin Tokens to be approved during Mint.
+    /// @param to address to Approve
+    /// @param tokenId tokenId to Approve.
     function approve(address to, uint256 tokenId) public override(IERC721, ERC721) {
-        // allow Unbound to be approved during Mint.
         if (currentTokenLevel[tokenId] > TokenLevel.Unbound) revert CannotApproveTokenLevel(to, tokenId);
         super.approve(to, tokenId);
     }
 
+    /// @dev Allow Unbound San Origin Tokens to be transferred during Mint. (Also prevents burning)
+    /// @param from Transfer from address.
+    /// @param to Transfer to address.
+    /// @param tokenId tokenId to Transfer.
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
-        // allow Unbound to be transfered during Mint.
         if (currentTokenLevel[tokenId] > TokenLevel.Unbound) {
             revert CannotTransferTokenLevelUpdatedToken(from, to, tokenId);
         }
@@ -229,23 +226,26 @@ contract Sanctuary is TokenLevels, Base721 {
         emit Transfer(address(0), to, tokenId);
     }
 
-    /**
-     * @dev See {IERC721-balanceOf}.
-     */
+    /// @dev Override to Support Id<>Id assigments.
+    /// @param owner a parameter just like in doxygen (must be followed by parameter name)
+    /// @return tokens the return variables of a contract’s function state variable
     function balanceOf(address owner) public view virtual override(Base721) returns (uint256) {
         if (owner == address(0)) revert ZeroAddress();
         return tokensOwnedByAddress[owner].length;
     }
 
-    /**
-     * @dev See {IERC721-ownerOf}.
-     */
+    /// @dev Override to Support Id<>Id assigments.
+    /// @param tokenId token to find the address of.
+    /// @return owner owner address of the token passed.
     function ownerOf(uint256 tokenId) public view virtual override(IERC721, ERC721) returns (address) {
         address owner = ownerByToken[tokenId];
         if (owner == address(0)) revert ZeroAddress();
         return owner;
     }
 
+    /// @dev Override to Support Id<>Id assigments.
+    /// @param tokenId token to find the address of.
+    /// @return exists whether or not a tokenId exists or not.
     function _exists(uint256 tokenId) internal view virtual override(ERC721) returns (bool) {
         if (tokenId < _startingTokenID) return false;
         return ownerByToken[tokenId] != address(0);

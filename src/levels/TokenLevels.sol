@@ -44,11 +44,12 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
                 if (_newPrices[i] < previousPrice) {
                     revert LevelPricesNotIncreasing();
                 }
+
+                levelPrice[TokenLevel(i)] = _newPrices[i];
+                previousPrice = _newPrices[i];
                 if (i == NUM_OF_LEVELS - 1) {
                     break;
                 }
-                levelPrice[TokenLevel(i + 1)] = _newPrices[i];
-                previousPrice = _newPrices[i];
             }
         }
     }
