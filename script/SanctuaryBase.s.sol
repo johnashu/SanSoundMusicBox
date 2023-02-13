@@ -5,7 +5,7 @@ import "lib/forge-std/src/Script.sol";
 import {Sanctuary} from "src/Sanctuary.sol";
 
 contract SanctuaryScriptBase is Script {
-    function createContract() external {
+    function createContract(address SAN_ORIGIN_ADDRESS, uint256[6] memory _levelPrices) public {
         new Sanctuary(
             string("SanSoundMusicBox"),
             string("SMB"),
@@ -14,8 +14,6 @@ contract SanctuaryScriptBase is Script {
             SAN_ORIGIN_ADDRESS,
             _levelPrices
             );
-
-        vm.stopBroadcast();
     }
 }
 

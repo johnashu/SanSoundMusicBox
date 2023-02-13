@@ -12,7 +12,7 @@ contract SanctuaryScriptTestNet is SanctuaryScriptBase {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("TEST_PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        createContract();
+        createContract(SAN_ORIGIN_ADDRESS, _levelPrices);
         vm.stopBroadcast();
     }
 }
