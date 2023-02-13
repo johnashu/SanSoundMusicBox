@@ -4,14 +4,14 @@ pragma solidity ^0.8.18;
 import {TestBase, ITokenLevels, IMusicBox, MusicBox, IERC721} from "test/TestBase.sol";
 import {MintWithBoundedOrigin} from "test/Sanctuary/_MintWithBoundedOrigin.t.sol";
 
-contract TestERC721 is TestBase, MintWithBoundedOrigin {
+contract TestERC721Sanctuary is TestBase, MintWithBoundedOrigin {
     address user;
     address[] users;
     uint256[] expected = [1, 2, 3];
     uint256[] notExpected = [100, 200, 300];
 
     function setUp() public {
-        user = makeAddr("ERC721User");
+        user = makeAddr("ERC721SanctuaryUser");
         users.push(user);
         _setUp(users);
         vm.stopPrank();
@@ -81,7 +81,6 @@ contract TestERC721 is TestBase, MintWithBoundedOrigin {
     function testWalletOfOwner() public {
         _mintWithSanSoundBoundMultiple(isBoundTokens, user);
         uint256[] memory tokenIds = musicBox.walletOfOwner(user);
-        emit log_uint(tokenIds[0]);
         assertEq(tokenIds, expected);
     }
 

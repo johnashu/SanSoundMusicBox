@@ -31,10 +31,11 @@ contract MusicBox is Base721, IMusicBox {
     /// @param _amount The number of tokens to mint.
     function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel, uint256 _amount) external {
         if (_msgSender() != SANCTUARY_ADDRESS) revert OnlySanctuaryAllowedToMint();
+        if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
         unchecked {
             for (uint256 i = 0; i < _amount; i++) {
                 uint256 newId = _getTokenIdAndIncrement();
-                userMinted[_to] += 1;
+                userMinted[_to]++;
                 tokenLevel[newId] = musicBoxLevel;
                 _safeMint(_to, newId);
             }

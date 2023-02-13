@@ -24,7 +24,6 @@ contract TestMusicBox is MintWithBoundedOrigin {
     function testOwnerOfMusicBox() public {
         _mintWithSanSoundBoundMultiple(isBoundTokens, user);
         address ownerAddress = musicBox.owner();
-        emit log_address(ownerAddress);
         assertEq((ownerAddress == OWNER), true);
     }
 }

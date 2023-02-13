@@ -122,8 +122,6 @@ abstract contract TestBase is Test {
 
     function _approveAllTokens(uint256[] memory tokenIds) internal {
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            emit log_address(IERC721(SAN_ORIGIN_ADDRESS).ownerOf(tokenIds[i]));
-            emit log_uint(tokenIds[i]);
             IERC721(SAN_ORIGIN_ADDRESS).approve(SANCTUARY_ADDRESS, tokenIds[i]);
         }
     }

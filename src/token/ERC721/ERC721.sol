@@ -108,7 +108,6 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      */
     function getApproved(uint256 tokenId) public view virtual override returns (address) {
         require(_exists(tokenId), "ERC721: approved query for nonexistent token");
-
         return _tokenApprovals[tokenId];
     }
 
@@ -246,8 +245,7 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!_exists(tokenId), "ERC721: token already minted");
 
-        // _beforeTokenTransfer(address(0), to, tokenId);
-        // Disabled as Mint is the only time we can transfer the token.
+        _beforeTokenTransfer(address(0), to, tokenId);
         _owners.push(to);
 
         emit Transfer(address(0), to, tokenId);
@@ -320,7 +318,7 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      * @return bool whether the call correctly returned the expected magic value
      */
     function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory _data)
-        private
+        internal
         returns (bool)
     {
         if (to.isContract()) {

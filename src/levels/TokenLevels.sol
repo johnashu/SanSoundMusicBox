@@ -15,8 +15,10 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     mapping(uint256 tokenId => TokenLevel tokenLevel) public currentTokenLevel;
 
     constructor(uint256[NUM_OF_LEVELS] memory _levelPrices) {
-        for (uint256 i = 0; i < NUM_OF_LEVELS; i++) {
-            levelPrice[TokenLevel(i)] = _levelPrices[i];
+        unchecked {
+            for (uint256 i = 0; i < NUM_OF_LEVELS; i++) {
+                levelPrice[TokenLevel(i)] = _levelPrices[i];
+            }
         }
     }
 

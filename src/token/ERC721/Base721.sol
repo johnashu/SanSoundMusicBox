@@ -129,7 +129,6 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
      */
     function setRoyalties(address _recipient, uint256 _value) external onlyOwner {
         if (_value > MAX_ROYALTIES_PCT) revert ExceedsMaxRoyaltiesPercentage();
-
         _setRoyalties(_recipient, _value);
     }
 
