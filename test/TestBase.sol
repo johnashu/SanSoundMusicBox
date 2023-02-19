@@ -12,6 +12,7 @@ import {IERC721} from "src/interfaces/ERC721/IERC721.sol";
 import {MockSanOrigin} from "test/mocks/mockSanOrigin.sol";
 
 abstract contract TestBase is Test {
+    uint128 constant MOCK_MAX_SUPPLY = 5;
     Sanctuary sanctuary;
     MusicBox musicBox;
     MockERC721 mockERC721Single;
@@ -30,16 +31,11 @@ abstract contract TestBase is Test {
 
     uint256[6] _levelPrices;
 
-    uint256[] partnerTokensToCheckSingle = [15];
-    uint256[] partnerTokensToCheckMulti = [4, 17, 6];
-
     uint256[] notBoundTokens = [4, 5, 16];
     uint256[] isBoundTokens = [21, 22, 23]; // middle will fail.
+
     uint256[] tooManyNotBoundTokens = [1, 2, 13, 14];
     uint256[] tooManyIsBoundTokens = [21, 22, 323, 34];
-
-    uint256[] notBoundTokensPartner = [15];
-    uint256[] isBoundTokensPartner = [28];
 
     uint256[] notBoundTokensSingle = [13];
     uint256[] isBoundTokensSingle = [38];
@@ -47,6 +43,12 @@ abstract contract TestBase is Test {
     uint256[] isBoundTokensMismatched = [38, 39, 40];
 
     uint256[] noTokens;
+
+    uint256[][] multipleNotBoundTokens = [[4, 5, 16], [1, 2, 3]];
+
+    uint256 isBoundSingleToken = 21;
+    uint256 notBoundSingleToken = 15;
+    uint256 partnerToken = 28;
 
     function _setUp(address[] memory users) internal {
         _initOWNERs();
@@ -86,11 +88,15 @@ abstract contract TestBase is Test {
         mockERC721Multi = new MockERC721();
         mockERC721MultiAddress = address(mockERC721Multi);
         sanctuary = new Sanctuary(
-            string("SanSoundSanctuary"),
-            string("SRB"),
+            string("TestSanctuary"),
+            string("TSSS"),
             string("https://example.com/"),
             string(""),
-            SAN_ORIGIN_ADDRESS,
+            string("TestMusicBox"),
+            string("TSSMB"),
+            string("https://example.com/"),
+            string(""),
+              SAN_ORIGIN_ADDRESS,
             _levelPrices
         );
 
@@ -122,14 +128,18 @@ abstract contract TestBase is Test {
 
     function _approveAllTokens(uint256[] memory tokenIds) internal {
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            IERC721(SAN_ORIGIN_ADDRESS).approve(SANCTUARY_ADDRESS, tokenIds[i]);
+            _approveToken(tokenIds[i]);
         }
     }
 
-    function _addContracttoValidList(address _partnerAddress, uint8 _numTokensRequired, bool _isValid) internal {
+    function _approveToken(uint256 tokenId) internal {
+        IERC721(SAN_ORIGIN_ADDRESS).approve(SANCTUARY_ADDRESS, tokenId);
+    }
+
+    function _addContracttoValidList(address _partnerAddress, bool _isValid) internal {
         vm.stopPrank();
         vm.prank(OWNER);
-        sanctuary.updatePartnerAddress(_partnerAddress, _numTokensRequired, _isValid);
+        sanctuary.updatePartnerAddress(_partnerAddress, _isValid);
     }
 
     function _getPrice(uint256 _new, uint256 _cur) internal view returns (uint256) {
@@ -138,28 +148,32 @@ abstract contract TestBase is Test {
 
     function _checkSanctuaryTokenLevel(ITokenLevels.TokenLevel level, uint256 token) internal view {
         ITokenLevels.TokenLevel currentLevel = sanctuary.currentTokenLevel(token);
-        if (currentLevel != level) revert();
+        if (currentLevel != level) revert ITokenLevels.TokenLevelMismatch();
     }
 
     function _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel level, uint256 token, address user) internal {
         // Check MusicBox Token is minted and Level.
         IMusicBox.MusicBoxLevel currentLevel = musicBox.tokenLevel(token);
         assertEq(musicBox.ownerOf(token), user);
-        if (currentLevel != level) revert();
+        if (currentLevel != level) revert ITokenLevels.TokenLevelMismatch();
     }
 
     function _checkAfterMint(uint256[] memory tokenIds, ITokenLevels.TokenLevel level, address user) internal {
         // Check they are existing and are at the correct level requested.
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            uint256 token = tokenIds[i];
-            assertTrue(sanctuary.usedTokens(SAN_ORIGIN_ADDRESS, token));
-            assertEq(sanctuary.ownerOf(token), user);
-            _checkSanctuaryTokenLevel(level, token);
+            __checkAfterMint(tokenIds[i], level, user);
         }
+    }
+
+    function __checkAfterMint(uint256 tokenId, ITokenLevels.TokenLevel level, address user) internal {
+        // Check they are existing and are at the correct level requested.
+        assertTrue(sanctuary.usedTokens(SAN_ORIGIN_ADDRESS, tokenId));
+        assertEq(sanctuary.ownerOf(tokenId), user);
+        _checkSanctuaryTokenLevel(level, tokenId);
     }
 
     function _failTransfer() internal {
         sanctuary.transferFrom(msg.sender, address(0x1), 1);
-        sanctuary.transferFrom(msg.sender, address(0x0), 1);
+        sanctuary.transferFrom(msg.sender, address(0), 1);
     }
 }

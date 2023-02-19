@@ -16,61 +16,29 @@ contract TestMintWithPartnerTokens is MintWithPartnerTokens {
     }
 
     function testMintWithPartnerSingle() public {
-        _mintWithPartnerMultiple(1, mockERC721SingleAddress, partnerTokensToCheckSingle, notBoundTokensPartner, user);
-    }
-
-    function testMintWithPartnerMultiple() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner, user);
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
     }
 
     function testUpgradeTokenLevelPartners() public {
-        _mintWithPartnerMultiple(1, mockERC721SingleAddress, partnerTokensToCheckSingle, notBoundTokensPartner, user);
-
-        uint256 token = partnerTokensToCheckSingle[0];
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
         uint256 _cur = 1;
         uint256 _new = 2;
 
-        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
-        _checkSanctuaryTokenLevel(level, token);
+        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(notBoundSingleToken, level);
+        _checkSanctuaryTokenLevel(level, notBoundSingleToken);
     }
 
     function testFailMintIsBound() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, isBoundTokensPartner, user);
+        _mintWithPartner(mockERC721MultiAddress, partnerToken, isBoundSingleToken, user);
     }
 
     function testFailMintNotOwnedOrigin() public {
-        _mintWithPartnerMultiple(
-            3,
-            mockERC721MultiAddress,
-            partnerTokensToCheckMulti,
-            notBoundTokensPartner,
-            makeAddr("PartnerNoTokensOwned")
-        );
+        _mintWithPartner(mockERC721MultiAddress, partnerToken, notBoundSingleToken, makeAddr("PartnerNoTokensOwned"));
     }
 
     function testFailTransferWhenSoulBound() public {
         testUpgradeTokenLevelPartners();
         _failTransfer();
-    }
-
-    function testFailTooManyOriginTokens() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokens, user);
-    }
-
-    function testFailTooManyPartnerTokens() public {
-        _mintWithPartnerMultiple(2, mockERC721MultiAddress, partnerTokensToCheckMulti, notBoundTokensPartner, user);
-    }
-
-    function testFailTooFewPartnerTokens() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckSingle, notBoundTokensPartner, user);
-    }
-
-    function testFailNoTokensPartner() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, noTokens, notBoundTokensPartner, user);
-    }
-
-    function testFailNoTokensOrigin() public {
-        _mintWithPartnerMultiple(3, mockERC721MultiAddress, partnerTokensToCheckMulti, noTokens, user);
     }
 }

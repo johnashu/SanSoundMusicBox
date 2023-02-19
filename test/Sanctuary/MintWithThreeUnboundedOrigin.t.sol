@@ -35,13 +35,13 @@ contract TestMintWithThreeUnboundedOrigin is MintWithThreeUnboundedOrigin {
     }
 
     function testFailMintIsBound() public {
-        sanctuary.mintFromSanOrigin{value: _getPrice(1, 0)}(isBoundTokens, ITokenLevels.TokenLevel(1));
+        sanctuary.mintWith3UnboundSanOrigin{value: _getPrice(1, 0)}(isBoundTokens, ITokenLevels.TokenLevel(1));
     }
 
     function testFailMintNotOwned() public {
         vm.stopPrank();
         vm.prank(address(1));
-        sanctuary.mintFromSanOrigin{value: _getPrice(1, 0)}(isBoundTokens, ITokenLevels.TokenLevel(1));
+        sanctuary.mintWith3UnboundSanOrigin{value: _getPrice(1, 0)}(isBoundTokens, ITokenLevels.TokenLevel(1));
     }
 
     function testFailTransferWhenSoulBound() public {
@@ -54,7 +54,7 @@ contract TestMintWithThreeUnboundedOrigin is MintWithThreeUnboundedOrigin {
     }
 
     function testFailTooFewTokens() public {
-        _mintWithMultiSanOrigin(notBoundTokensPartner, user); // Only 1 token required with Partners.
+        _mintWithMultiSanOrigin(notBoundTokensSingle, user); // Only 1 token required with Partners.
     }
 
     function testFailNoTokens() public {

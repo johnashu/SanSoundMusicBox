@@ -8,10 +8,9 @@ pragma solidity ^0.8.18;
 import {Base721, IERC721, ERC721} from "src/token/ERC721/Base721.sol";
 
 contract MockSanOrigin is Base721 {
-    uint256 public constant MAX_SUPPLY = 3333;
     mapping(uint256 => uint256) public tokenLevel;
 
-    constructor() Base721("San Origin Mock", "SOM", "", "") {
+    constructor() Base721("San Origin Mock", "SOM", "", "", 3333) {
         for (uint256 i = 0; i < 42; i++) {
             _safeMint(msg.sender, i + 1);
 

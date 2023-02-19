@@ -22,7 +22,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
         }
     }
 
-    /// @dev Check prices and do the upgrade.. Used by minting functions and Public explosed function below.
+    /// @dev Check prices and do the upgrade.. Used by minting functions and publicly explosed function below.
     /// @param _tokenId Token to upgrade.
     /// @param _newLevel New level
     /// @param _currentLevel current level
