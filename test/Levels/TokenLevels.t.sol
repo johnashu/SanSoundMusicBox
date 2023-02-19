@@ -41,8 +41,8 @@ contract TestLevels is MintWithBoundedOrigin {
     }
 
     function testUserMaxTokenLevel() public {
-        _mintWithSanSoundBoundMultiple(isBoundTokens, user);
-        sanctuary.userMaxTokenLevel(user);
-        // if (ITokenLevels.TokenLevel(1) != maxLevel) revert("Token LEvel Mismatch");
+        _mintWithSanSoundBound(isBoundSingleToken, user);
+        ITokenLevels.TokenLevel maxLevel = sanctuary.userMaxTokenLevel(user);
+        if (ITokenLevels.TokenLevel(1) != maxLevel) revert("Token LEvel Mismatch");
     }
 }

@@ -15,46 +15,38 @@ contract TestMintWithBoundedOrigin is MintWithBoundedOrigin {
         vm.startPrank(user);
     }
 
-    function testMintWithSanSoundBoundSingle() public {
-        _mintWithSanSoundBoundMultiple(isBoundTokensSingle, user);
-    }
-
     function testMintWithSanSoundBoundMultiple() public {
-        _mintWithSanSoundBoundMultiple(isBoundTokens, user);
+        for (uint256 i = 0; i < isBoundTokens.length; i++) {
+            _mintWithSanSoundBound(isBoundTokens[i], user);
+        }
     }
 
     function testUpgradeTokenLevelSoulBound() public {
-        _mintWithSanSoundBoundMultiple(isBoundTokens, user);
+        for (uint256 i = 0; i < isBoundTokens.length; i++) {
+            _mintWithSanSoundBound(isBoundTokens[i], user);
 
-        uint256 token = isBoundTokens[0];
-        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
-        uint256 _cur = 1;
-        uint256 _new = 2;
+            uint256 token = isBoundTokens[i];
+            ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
+            uint256 _cur = 1;
+            uint256 _new = 2;
 
-        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
-        _checkSanctuaryTokenLevel(level, token);
+            sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
+            _checkSanctuaryTokenLevel(level, token);
+        }
     }
 
     function testFailMintIsNotBound() public {
-        sanctuary.mintFromSoulbound{value: _getPrice(1, 0)}(notBoundTokens, ITokenLevels.TokenLevel(1));
+        sanctuary.mintFromSoulbound{value: _getPrice(1, 0)}(notBoundSingleToken, ITokenLevels.TokenLevel(1));
     }
 
     function testFailMintNotOwned() public {
         vm.stopPrank();
         vm.prank(address(1));
-        sanctuary.mintFromSoulbound{value: _getPrice(1, 0)}(isBoundTokens, ITokenLevels.TokenLevel(1));
+        sanctuary.mintFromSoulbound{value: _getPrice(1, 0)}(isBoundSingleToken, ITokenLevels.TokenLevel(1));
     }
 
     function testFailTransferWhenSoulBound() public {
         testUpgradeTokenLevelSoulBound();
         _failTransfer();
-    }
-
-    function testFailNoTokens() public {
-        _mintWithSanSoundBoundMultiple(noTokens, user);
-    }
-
-    function testFailTokensWithDifferentLevels() public {
-        _mintWithSanSoundBoundMultiple(isBoundTokensMismatched, user);
     }
 }

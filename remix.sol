@@ -11,7 +11,7 @@ interface ISanctuary {
         The33
     }
 
-    function mintFromSanOrigin(uint256[] calldata tokenIds, TokenLevel _newLevel) external payable;
+    function mintWith3UnboundSanOrigin(uint256[] calldata tokenIds, TokenLevel _newLevel) external payable;
 
     function mintFromPartner(
         uint256[] calldata originTokenIds,
@@ -24,7 +24,7 @@ interface ISanctuary {
 contract Mint {
     address sanctuaryAddress = 0x046Ed22Fa63E7595628b4DaF573dc66E2FeDa50D;
 
-    function mintFromSanOrigin(uint256[] calldata tokenIds, ISanctuary.TokenLevel _newLevel) external payable {
-        ISanctuary(sanctuaryAddress).mintFromSanOrigin(tokenIds, _newLevel);
+    function mintWith3UnboundSanOrigin(uint256[] calldata tokenIds, ISanctuary.TokenLevel _newLevel) external payable {
+        ISanctuary(sanctuaryAddress).mintWith3UnboundSanOrigin(tokenIds, _newLevel);
     }
 }

@@ -16,11 +16,12 @@ interface ITokenLevels {
         The33
     }
 
-    event RebirthFromSoulBound(address indexed TokenOwnerAddress, uint256[] originTokenIds);
+    event RebirthFromSoulBound(address indexed TokenOwnerAddress, uint256 originTokenIds);
 
     event RebirthFrom3SanOrigin(address indexed TokenOwnerAddress, uint256[] originTokenIds);
 
     event RebirthFromPartnerAndOrigin(address indexed TokenOwnerAddress, uint256[] originTokenIds);
+    event RebirthFromPartnerAndOrigin(address indexed TokenOwnerAddress, uint256 originTokenId);
 
     event TokenLevelUpdated(
         address indexed TokenOwnerAddress, uint256 indexed tokenId, TokenLevel newLevel, TokenLevel previousLevel

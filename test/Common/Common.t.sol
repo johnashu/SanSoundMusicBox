@@ -20,19 +20,19 @@ contract TestCommon is TestBase {
         assertTrue(sanctuary.isValidContract(san));
     }
 
-    function testAddContractToValidListFuzzy(address _partnerAddress, uint8 _numTokensRequired, bool _isValid) public {
+    function testAddContractToValidListFuzzy(address _partnerAddress, bool _isValid) public {
         vm.assume(_partnerAddress != address(0));
-        vm.assume(_numTokensRequired != 0);
+        vm.assume(_partnerAddress != SAN_ORIGIN_ADDRESS);
         vm.stopPrank();
         vm.startPrank(OWNER);
-        _addContracttoValidList(_partnerAddress, _numTokensRequired, _isValid);
+        _addContracttoValidList(_partnerAddress, _isValid);
     }
 
     function testFailAddContractToValidList() public {
         vm.stopPrank();
         vm.startPrank(OWNER);
         vm.expectRevert();
-        _addContracttoValidList(address(0), 2, true);
-        _addContracttoValidList(msg.sender, 0, false);
+        _addContracttoValidList(address(0), true);
+        _addContracttoValidList(SAN_ORIGIN_ADDRESS, false);
     }
 }

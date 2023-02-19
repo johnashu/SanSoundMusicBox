@@ -13,6 +13,8 @@ import {Ownable} from "src/utils/Ownable.sol";
  */
 
 abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981ContractWideRoyalties {
+    uint256 public immutable MAX_SUPPLY;
+
     /// The maximum ERC-2981 royalties percentage (two decimals).
     uint256 public constant MAX_ROYALTIES_PCT = 930; // 9.3%
 
@@ -33,11 +35,16 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
      */
     mapping(address tokenOwner => uint256 totalMinted) internal userMinted;
 
-    constructor(string memory _name, string memory _symbol, string memory _contractURI, string memory _baseURI)
-        ERC721(_name, _symbol, uint256(1))
-    {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        string memory _contractURI,
+        string memory _baseURI,
+        uint256 _MAX_SUPPLY
+    ) ERC721(_name, _symbol, uint256(1)) {
         contractURI = _contractURI;
         baseURI = _baseURI;
+        MAX_SUPPLY = _MAX_SUPPLY;
     }
 
     /**
@@ -55,13 +62,15 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
     /**
      * @notice Determines whether `_account` owns all token IDs `_tokenIds`.
      * @param _account The account to be checked for token ownership.
-     * @param _tokenIds An array of token IDs to be checked for ownership.
+     * @param tokenIds An array of token IDs to be checked for ownership.
      * @return True if `_account` owns all token IDs `_tokenIds`, else false.
      */
-    function isOwnerOf(address _account, uint256[] calldata _tokenIds) public view returns (bool) {
+    function isOwnerOf(address _account, uint256[] calldata tokenIds) public view returns (bool) {
+        uint256 len = tokenIds.length;
+        if (len > MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
         unchecked {
-            for (uint256 i; i < MAX_MINT_PER_ADDRESS; ++i) {
-                if (ownerOf(_tokenIds[i]) != _account) {
+            for (uint256 i; i < len; ++i) {
+                if (ownerOf(tokenIds[i]) != _account) {
                     return false;
                 }
             }

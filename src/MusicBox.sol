@@ -10,7 +10,6 @@ import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
 
 contract MusicBox is Base721, IMusicBox {
     address public immutable SANCTUARY_ADDRESS;
-    uint256 public constant MAX_SUPPLY = 3333;
 
     mapping(uint256 tokenId => MusicBoxLevel) public tokenLevel;
 
@@ -19,8 +18,9 @@ contract MusicBox is Base721, IMusicBox {
         string memory _symbol,
         string memory _contractURI,
         string memory _baseURI,
-        address _SANCTUARY_ADDRESS
-    ) Base721(_name, _symbol, _contractURI, _baseURI) {
+        address _SANCTUARY_ADDRESS,
+        uint256 _MAX_SUPPLY
+    ) Base721(_name, _symbol, _contractURI, _baseURI, _MAX_SUPPLY) {
         SANCTUARY_ADDRESS = _SANCTUARY_ADDRESS;
     }
 

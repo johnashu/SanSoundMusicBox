@@ -7,8 +7,12 @@ import {Sanctuary} from "src/Sanctuary.sol";
 contract SanctuaryScriptBase is Script {
     function createContract(address SAN_ORIGIN_ADDRESS, uint256[6] memory _levelPrices) public {
         new Sanctuary(
+            string("SanSoundSanctuary"),
+            string("SSS"),
+            string("https://example.com/"),
+            string(""),
             string("SanSoundMusicBox"),
-            string("SMB"),
+            string("SSMB"),
             string("https://example.com/"),
             string(""),
             SAN_ORIGIN_ADDRESS,
