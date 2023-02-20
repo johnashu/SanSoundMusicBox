@@ -19,8 +19,8 @@ contract Sanctuary is TokenLevels, Base721 {
 
     mapping(address ownerOfTokens => uint256[] tokensOwned) private _tokensOwnedByAddress;
 
-    mapping(uint256 SanctuaryId => uint originId) public originSanctuaryTokenMap;
-    mapping(address contractAddress => mapping(uint256 tokenId => bool isUsed)) public usedPartnerTokens;
+    mapping(uint256 SanctuaryId => uint256 originId) public originSanctuaryTokenMap;
+    mapping(address contractAddress => mapping(uint256 tokenId => bool isUsed)) public usedTokens;
 
     mapping(address contractAddress => bool isValid) public isValidContract;
 
@@ -122,7 +122,7 @@ contract Sanctuary is TokenLevels, Base721 {
 
     // PRIVATE FUNCTIONS
 
-    /// @dev Checks the caller owns the tokens and adds to `originSanctuaryTokenMap` or reverts
+    /// @dev Checks the caller owns the tokens and adds to `usedTokens` or reverts
     /// @dev used for the 'mint 3 from san origin' option.
     /// @param tokenIds Tokens to Check.
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
@@ -137,33 +137,23 @@ contract Sanctuary is TokenLevels, Base721 {
         }
     }
 
-    /// @dev Checks the caller owns the tokenId and adds to `originSanctuaryTokenMap` or reverts
+    /// @dev Checks the caller owns the tokenId and adds to `usedTokens` or reverts
     /// @param tokenId Tokens to Check.
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
     function _processChecks(uint256 tokenId, address _tokenAddress) private {
         if (totalSupply >= MAX_SUPPLY) revert MaxSupplyReached();
         if (balanceOf(_msgSender()) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
-        if (_tokenAddress == SAN_ORIGIN_ADDRESS){
-        _checkUserOwnsOriginToken(tokenId, _tokenAddress);
-        }
-        else _checkUserOwnsPartnerToken(tokenId, _tokenAddress);
+
+        _checkUserOwnsToken(tokenId, _tokenAddress);
     }
 
-    /// @dev Checks the caller owns the token and adds to `originSanctuaryTokenMap` or reverts
+    /// @dev Checks the caller owns the token and adds to `usedTokens` or reverts
     /// @param tokenId Token to Check.
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
-    function _checkUserOwnsPartnerToken(uint256 tokenId, address _tokenAddress) private {
-        if (usedPartnerTokens[_tokenAddress][tokenId] != false) revert TokenAlreadyUsed();
+    function _checkUserOwnsToken(uint256 tokenId, address _tokenAddress) private {
+        if (usedTokens[_tokenAddress][tokenId] != false) revert TokenAlreadyUsed();
         if (IERC721(_tokenAddress).ownerOf(tokenId) != _msgSender()) revert TokenNotOwned();
-        usedPartnerTokens[_tokenAddress][tokenId] = true;
-    }
-
-    /// @dev Checks the caller owns the token and adds to `originSanctuaryTokenMap` or reverts
-    /// @param tokenId Token to Check.
-    /// @param _tokenAddress Address or contract to check (San Origin / Partners).
-    function _checkUserOwnsOriginToken(uint256 tokenId, address _tokenAddress) private {
-        if (originSanctuaryTokenMap[tokenId] != 0) revert TokenAlreadyUsed();
-        if (IERC721(_tokenAddress).ownerOf(tokenId) != _msgSender()) revert TokenNotOwned();
+        usedTokens[_tokenAddress][tokenId] = true;
     }
 
     /// @notice Check for SoulBound Tokens
@@ -201,14 +191,13 @@ contract Sanctuary is TokenLevels, Base721 {
         TokenLevel _newLevel,
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
-        
         // Burn San Origin
         ISanOriginNFT(SAN_ORIGIN_ADDRESS).batchSafeTransferFrom(_msgSender(), _burnAddress(), originTokenIds, "");
 
         // Rebirth in the Santuary
         unchecked {
             for (uint256 i = 0; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
-                _rebirth(_newLevel,originTokenIds[i]);
+                _rebirth(_newLevel, originTokenIds[i]);
             }
         }
 
@@ -245,13 +234,13 @@ contract Sanctuary is TokenLevels, Base721 {
     }
 
     /// @dev After mint, tokens are SouldBound and cannot be burned /tx.
-    function _rebirth(TokenLevel _newLevel, uint originTokenId) private {
+    function _rebirth(TokenLevel _newLevel, uint256 originTokenId) private {
         uint256 newId = _getTokenIdAndIncrement();
 
         // Upgrade
         _upgradeTokenLevel(newId, _newLevel, TokenLevel(0)); // curLevel MUST be 0 to mint..
         _tokensOwnedByAddress[_msgSender()].push(newId);
-        originSanctuaryTokenMap[tokenId] = originTokenId;
+        originSanctuaryTokenMap[newId] = originTokenId;
         _safeMint(_msgSender(), newId);
     }
 
@@ -259,7 +248,11 @@ contract Sanctuary is TokenLevels, Base721 {
         if (!_exists(_tokenId)) revert TokenDoesNotExist();
         return string(
             abi.encodePacked(
-                baseURI, Strings.toString(uint256(tokenLevel[_tokenId])), "/", Strings.toString(originSanctuaryTokenMap[_tokenId]), ".json"
+                baseURI,
+                Strings.toString(uint256(tokenLevel[_tokenId])),
+                "/",
+                Strings.toString(originSanctuaryTokenMap[_tokenId]),
+                ".json"
             )
         );
     }
