@@ -28,7 +28,7 @@ contract TestMintWithThreeUnboundedOrigin is MintWithThreeUnboundedOrigin {
         _mintWithMultiSanOrigin(notBoundTokens, user);
         uint256 _cur = 1;
         uint256 _new = 2;
-        uint256 token = notBoundTokens[0];
+        uint256 token = expectedMultiple[0];
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
         sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
         _checkSanctuaryTokenLevel(level, token);

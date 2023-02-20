@@ -5,7 +5,7 @@
 
 pragma solidity ^0.8.18;
 
-import {Base721, IERC721, ERC721} from "src/token/ERC721/Base721.sol";
+import {Base721, IERC721, ERC721, Strings} from "src/token/ERC721/Base721.sol";
 import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
 
 contract MusicBox is Base721, IMusicBox {
@@ -18,9 +18,8 @@ contract MusicBox is Base721, IMusicBox {
         string memory _symbol,
         string memory _contractURI,
         string memory _baseURI,
-        address _SANCTUARY_ADDRESS,
-        uint256 _MAX_SUPPLY
-    ) Base721(_name, _symbol, _contractURI, _baseURI, _MAX_SUPPLY) {
+        address _SANCTUARY_ADDRESS
+    ) Base721(_name, _symbol, _contractURI, _baseURI) {
         SANCTUARY_ADDRESS = _SANCTUARY_ADDRESS;
     }
 
@@ -31,14 +30,21 @@ contract MusicBox is Base721, IMusicBox {
     /// @param _amount The number of tokens to mint.
     function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel, uint256 _amount) external {
         if (_msgSender() != SANCTUARY_ADDRESS) revert OnlySanctuaryAllowedToMint();
-        if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
         unchecked {
             for (uint256 i = 0; i < _amount; i++) {
                 uint256 newId = _getTokenIdAndIncrement();
-                userMinted[_to]++;
                 tokenLevel[newId] = musicBoxLevel;
                 _safeMint(_to, newId);
             }
         }
+    }
+
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        if (!_exists(_tokenId)) revert TokenDoesNotExist();
+        return string(
+            abi.encodePacked(
+                baseURI, Strings.toString(uint256(tokenLevel[_tokenId])), "/", Strings.toString(_tokenId), ".json"
+            )
+        );
     }
 }

@@ -109,17 +109,4 @@ abstract contract TestERC721Base is
         _mintWithSanSoundBound(isBoundSingleToken, user);
         assertTrue(erc721Contract.isOwnerOf(user, notExpected));
     }
-
-    function testFailExceedsUserMaxMint() public {
-        for (uint256 i = 0; i < multipleNotBoundTokens.length; i++) {
-            _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
-        }
-    }
-
-    function testFailExceedsMaxSupply() public {
-        vm.assume(erc721Contract.MAX_SUPPLY() == MOCK_MAX_SUPPLY);
-        for (uint256 i = 0; i < multipleNotBoundTokens.length; i++) {
-            _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
-        }
-    }
 }

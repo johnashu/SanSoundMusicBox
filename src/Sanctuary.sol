@@ -4,7 +4,7 @@
 pragma solidity ^0.8.18;
 
 import {TokenLevels} from "src/levels/TokenLevels.sol";
-import {Base721, IERC721, ERC721} from "src/token/ERC721/Base721.sol";
+import {Base721, IERC721, ERC721, Strings} from "src/token/ERC721/Base721.sol";
 import {ISanOriginNFT} from "src/interfaces/SanSound/ISanOriginNFT.sol";
 import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
 import {MusicBox} from "src/MusicBox.sol";
@@ -15,8 +15,9 @@ contract Sanctuary is TokenLevels, Base721 {
     address public immutable SAN_ORIGIN_ADDRESS;
     address public immutable MUSIC_BOX_ADDRESS;
 
+    uint256 public constant MAX_SUPPLY = 3333;
+
     mapping(address ownerOfTokens => uint256[] tokensOwned) private _tokensOwnedByAddress;
-    mapping(uint256 tokenId => address tokenOwner) public ownerByToken;
 
     mapping(address contractAddress => mapping(uint256 tokenId => bool isUsed)) public usedTokens;
 
@@ -33,7 +34,7 @@ contract Sanctuary is TokenLevels, Base721 {
         string memory _baseURIMusicBox,
         address _SAN_ORIGIN_ADDRESS,
         uint256[NUM_OF_LEVELS] memory _levelPrices
-    ) Base721(_name, _symbol, _contractURI, _baseURI, 3333) TokenLevels(_levelPrices) {
+    ) Base721(_name, _symbol, _contractURI, _baseURI) TokenLevels(_levelPrices) {
         SAN_ORIGIN_ADDRESS = _SAN_ORIGIN_ADDRESS;
         isValidContract[_SAN_ORIGIN_ADDRESS] = true;
 
@@ -42,8 +43,7 @@ contract Sanctuary is TokenLevels, Base721 {
             _symbolMusicBox, 
             _contractURIMusicBox, 
             _baseURIMusicBox,          
-            address(this),
-            3333
+            address(this)
             );
 
         MUSIC_BOX_ADDRESS = address(musicBox);
@@ -52,10 +52,10 @@ contract Sanctuary is TokenLevels, Base721 {
 
     // GETTERS
 
-    /// @dev Override to Support Id<>Id assigments.
+    /// @dev returns an array of the tokens assigned to the user.
     /// @param _owner Address of the tokens requested.
-    /// @return tokens Tokens that address owns
-    function tokensOwnedByAddress(address _owner) public view returns (uint256[] memory) {
+    /// @return tokensOwned Tokens that address owns
+    function tokensOwnedByAddress(address _owner) public view returns (uint256[] memory tokensOwned) {
         if (_owner == address(0)) revert ZeroAddress();
         return _tokensOwnedByAddress[_owner];
     }
@@ -127,7 +127,7 @@ contract Sanctuary is TokenLevels, Base721 {
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
     function _processChecks(uint256[] calldata tokenIds, address _tokenAddress) private {
         if (tokenIds.length != ORIGIN_TOKENS_REQUIRED_TO_REBIRTH) revert MintAmountTokensIncorrect();
-        if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
+        if (totalSupply >= MAX_SUPPLY) revert MaxSupplyReached();
         if (balanceOf(_msgSender()) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
         unchecked {
             for (uint256 i = 0; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
@@ -140,7 +140,7 @@ contract Sanctuary is TokenLevels, Base721 {
     /// @param tokenId Tokens to Check.
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
     function _processChecks(uint256 tokenId, address _tokenAddress) private {
-        if (currentTokenId >= MAX_SUPPLY) revert MaxSupplyReached();
+        if (totalSupply >= MAX_SUPPLY) revert MaxSupplyReached();
         if (balanceOf(_msgSender()) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
         _checkUserOwnsToken(tokenId, _tokenAddress);
     }
@@ -189,19 +189,13 @@ contract Sanctuary is TokenLevels, Base721 {
         TokenLevel _newLevel,
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
-        // Upgrade
-        unchecked {
-            for (uint256 i = 0; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
-                _upgradeTokenLevel(originTokenIds[i], _newLevel, TokenLevel(0)); // curLevel MUST be 0 to mint..
-            }
-        }
         // Burn San Origin
         ISanOriginNFT(SAN_ORIGIN_ADDRESS).batchSafeTransferFrom(_msgSender(), _burnAddress(), originTokenIds, "");
 
         // Rebirth in the Santuary
         unchecked {
             for (uint256 i = 0; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
-                _rebirth(originTokenIds[i]);
+                _rebirth(_newLevel);
             }
         }
 
@@ -217,14 +211,11 @@ contract Sanctuary is TokenLevels, Base721 {
     function _burnMintRebirth(uint256 originTokenId, TokenLevel _newLevel, IMusicBox.MusicBoxLevel _musicBoxLevel)
         private
     {
-        // Upgrade
-        _upgradeTokenLevel(originTokenId, _newLevel, TokenLevel(0)); // curLevel MUST be 0 to mint..
-
         // Burn San Origin
         ISanOriginNFT(SAN_ORIGIN_ADDRESS).safeTransferFrom(_msgSender(), _burnAddress(), originTokenId, "");
 
         // Rebirth in the Santuary
-        _rebirth(originTokenId);
+        _rebirth(_newLevel);
 
         // Mint MusicBox NFT
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(_msgSender(), _musicBoxLevel, 1);
@@ -236,59 +227,26 @@ contract Sanctuary is TokenLevels, Base721 {
     /// @param to address to Approve
     /// @param tokenId tokenId to Approve.
     function approve(address to, uint256 tokenId) public override(IERC721, ERC721) {
-        if (currentTokenLevel[tokenId] > TokenLevel.Unbound) revert CannotApproveTokenLevel(to, tokenId);
+        if (tokenLevel[tokenId] > TokenLevel.Unbound) revert CannotApproveTokenLevel(to, tokenId);
         super.approve(to, tokenId);
     }
 
-    /// @dev Allow Unbound San Origin Tokens to be transferred during Mint. (Also prevents burning)
-    /// @param from Transfer from address.
-    /// @param to Transfer to address.
-    /// @param tokenId tokenId to Transfer.
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
-        if (currentTokenLevel[tokenId] > TokenLevel.Unbound) {
-            revert CannotTransferTokenLevelUpdatedToken(from, to, tokenId);
-        }
-        super._beforeTokenTransfer(from, to, tokenId);
-    }
-
-    // OVERRIDES for token Mappings
-
     /// @dev After mint, tokens are SouldBound and cannot be burned /tx.
-    /// @param tokenId id to mint
-    function _rebirth(uint256 tokenId) private {
-        if (_msgSender() == address(0)) revert ZeroAddress();
-        if (_exists(tokenId)) revert TokenAlreadyMinted(tokenId);
-        _tokensOwnedByAddress[_msgSender()].push(tokenId);
-        ownerByToken[tokenId] = _msgSender();
+    function _rebirth(TokenLevel _newLevel) private {
+        uint256 newId = _getTokenIdAndIncrement();
 
-        // We only need to check one to get the selector.
-        if (!_checkOnERC721Received(address(0), _msgSender(), tokenId, "")) {
-            revert nonERC721ReceiverImplementer();
-        }
+        // Upgrade
+        _upgradeTokenLevel(newId, _newLevel, TokenLevel(0)); // curLevel MUST be 0 to mint..
+        _tokensOwnedByAddress[_msgSender()].push(newId);
+        _safeMint(_msgSender(), newId);
     }
 
-    /// @dev Override to Support Id<>Id assigments.
-    /// @param _owner _owner address of the token passed.
-    /// @return tokens Number of tokens that address owns
-    function balanceOf(address _owner) public view virtual override(Base721) returns (uint256) {
-        if (_owner == address(0)) revert ZeroAddress();
-        return _tokensOwnedByAddress[_owner].length;
-    }
-
-    /// @dev Override to Support Id<>Id assigments.
-    /// @param tokenId token to find the address of.
-    /// @return _owner _owner address of the token passed.
-    function ownerOf(uint256 tokenId) public view virtual override(IERC721, ERC721) returns (address) {
-        address _owner = ownerByToken[tokenId];
-        if (_owner == address(0)) revert ZeroAddress();
-        return _owner;
-    }
-
-    /// @dev Override to Support Id<>Id assigments.
-    /// @param tokenId token to find the address of.
-    /// @return exists whether or not a tokenId exists or not.
-    function _exists(uint256 tokenId) internal view virtual override(ERC721) returns (bool) {
-        if (tokenId < _startingTokenID) return false;
-        return ownerByToken[tokenId] != address(0);
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        if (!_exists(_tokenId)) revert TokenDoesNotExist();
+        return string(
+            abi.encodePacked(
+                baseURI, Strings.toString(uint256(tokenLevel[_tokenId])), "/", Strings.toString(_tokenId), ".json"
+            )
+        );
     }
 }

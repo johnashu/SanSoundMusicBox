@@ -12,7 +12,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     uint256 public constant NUM_OF_LEVELS = 6;
 
     mapping(TokenLevel tokenLevel => uint256 price) public levelPrice;
-    mapping(uint256 tokenId => TokenLevel tokenLevel) public currentTokenLevel;
+    mapping(uint256 tokenId => TokenLevel tokenLevel) public tokenLevel;
 
     constructor(uint256[NUM_OF_LEVELS] memory _levelPrices) {
         unchecked {
@@ -31,7 +31,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
             uint256 price = levelPrice[_newLevel] - levelPrice[_currentLevel];
             if (msg.value != price) revert IncorrectPaymentAmount();
         }
-        currentTokenLevel[_tokenId] = _newLevel;
+        tokenLevel[_tokenId] = _newLevel;
         emit TokenLevelUpdated(_msgSender(), _tokenId, _newLevel, _currentLevel);
     }
 
@@ -40,13 +40,13 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     /// @param _tokenId Token to upgrade.
     /// @param _newLevel New level
     function upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel) public payable {
-        TokenLevel curLevel = currentTokenLevel[_tokenId];
+        TokenLevel curLevel = tokenLevel[_tokenId];
 
         if (ISanctuary(address(this)).ownerOf(_tokenId) != _msgSender()) revert TokenNotOwned();
         if (_newLevel == TokenLevel.Unbound) revert TokenUnBound();
         if (curLevel >= _newLevel) revert LevelAlreadyReached();
 
-        currentTokenLevel[_tokenId] = _newLevel;
+        tokenLevel[_tokenId] = _newLevel;
         _upgradeTokenLevel(_tokenId, _newLevel, curLevel);
     }
 
@@ -82,7 +82,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
         uint256[] memory tokenIds = ISanctuary(address(this)).tokensOwnedByAddress(_owner);
         unchecked {
             for (uint256 i; i < tokenCount; i++) {
-                TokenLevel level = currentTokenLevel[tokenIds[i]];
+                TokenLevel level = tokenLevel[tokenIds[i]];
                 if (level > userMaxLevel) userMaxLevel = level;
             }
         }

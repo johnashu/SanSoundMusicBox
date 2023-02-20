@@ -25,8 +25,8 @@ contract TestMintWithPartnerTokens is MintWithPartnerTokens {
         uint256 _cur = 1;
         uint256 _new = 2;
 
-        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(notBoundSingleToken, level);
-        _checkSanctuaryTokenLevel(level, notBoundSingleToken);
+        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(expectedSingle, level);
+        _checkSanctuaryTokenLevel(level, expectedSingle);
     }
 
     function testFailMintIsBound() public {

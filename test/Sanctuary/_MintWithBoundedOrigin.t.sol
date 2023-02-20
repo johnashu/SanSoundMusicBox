@@ -11,7 +11,7 @@ contract MintWithBoundedOrigin is TestBase {
         _approveToken(_toCheck);
 
         sanctuary.mintFromSoulbound{value: _getPrice(_new, _cur)}(_toCheck, level);
-        __checkAfterMint(_toCheck, level, user);
+        __checkAfterMint(_toCheck, expectedSingle, level, user);
         _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel.Legendary, 1, user);
     }
 }

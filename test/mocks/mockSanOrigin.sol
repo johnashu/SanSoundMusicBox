@@ -10,7 +10,7 @@ import {Base721, IERC721, ERC721} from "src/token/ERC721/Base721.sol";
 contract MockSanOrigin is Base721 {
     mapping(uint256 => uint256) public tokenLevel;
 
-    constructor() Base721("San Origin Mock", "SOM", "", "", 3333) {
+    constructor() Base721("San Origin Mock", "SOM", "", "") {
         for (uint256 i = 0; i < 42; i++) {
             _safeMint(msg.sender, i + 1);
 
@@ -23,7 +23,7 @@ contract MockSanOrigin is Base721 {
             if (i > 38) {
                 tokenLevel[i] = 3;
             }
-            isApprovedForAll(msg.sender, msg.sender);
+            setApprovalForAll(msg.sender, true);
         }
     }
 
@@ -40,11 +40,11 @@ contract MockSanOrigin is Base721 {
     }
 
     function _safeTransferFrom(address from, address to, uint256 tokenId) public {
-        _approve(msg.sender, tokenId);
+        approve(msg.sender, tokenId);
         safeTransferFrom(from, to, tokenId);
     }
 
     function mint() public {
-        _safeMint((msg.sender), totalSupply() + 1);
+        _safeMint((msg.sender), totalSupply + 1);
     }
 }

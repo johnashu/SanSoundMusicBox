@@ -44,11 +44,14 @@ abstract contract TestBase is Test {
 
     uint256[] noTokens;
 
-    uint256[][] multipleNotBoundTokens = [[4, 5, 16], [1, 2, 3]];
+    uint256[][] multipleNotBoundTokens = [[14, 15, 16], [7, 8, 9], [4, 5, 6], [1, 2, 3]];
 
     uint256 isBoundSingleToken = 21;
     uint256 notBoundSingleToken = 15;
     uint256 partnerToken = 28;
+
+    uint256[] expectedMultiple = [1, 2, 3];
+    uint256 expectedSingle = 1;
 
     function _setUp(address[] memory users) internal {
         _initOWNERs();
@@ -147,7 +150,7 @@ abstract contract TestBase is Test {
     }
 
     function _checkSanctuaryTokenLevel(ITokenLevels.TokenLevel level, uint256 token) internal view {
-        ITokenLevels.TokenLevel currentLevel = sanctuary.currentTokenLevel(token);
+        ITokenLevels.TokenLevel currentLevel = sanctuary.tokenLevel(token);
         if (currentLevel != level) revert ITokenLevels.TokenLevelMismatch();
     }
 
@@ -158,18 +161,28 @@ abstract contract TestBase is Test {
         if (currentLevel != level) revert ITokenLevels.TokenLevelMismatch();
     }
 
-    function _checkAfterMint(uint256[] memory tokenIds, ITokenLevels.TokenLevel level, address user) internal {
+    function _checkAfterMint(
+        uint256[] memory originTokenIds,
+        uint256[] memory sanctuaryTokenIds,
+        ITokenLevels.TokenLevel level,
+        address user
+    ) internal {
         // Check they are existing and are at the correct level requested.
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            __checkAfterMint(tokenIds[i], level, user);
+        for (uint256 i = 0; i < originTokenIds.length; i++) {
+            __checkAfterMint(originTokenIds[i], sanctuaryTokenIds[i], level, user);
         }
     }
 
-    function __checkAfterMint(uint256 tokenId, ITokenLevels.TokenLevel level, address user) internal {
+    function __checkAfterMint(
+        uint256 originTokenId,
+        uint256 sanctuaryTokenId,
+        ITokenLevels.TokenLevel level,
+        address user
+    ) internal {
         // Check they are existing and are at the correct level requested.
-        assertTrue(sanctuary.usedTokens(SAN_ORIGIN_ADDRESS, tokenId));
-        assertEq(sanctuary.ownerOf(tokenId), user);
-        _checkSanctuaryTokenLevel(level, tokenId);
+        assertTrue(sanctuary.usedTokens(SAN_ORIGIN_ADDRESS, originTokenId));
+        assertEq(sanctuary.ownerOf(sanctuaryTokenId), user);
+        _checkSanctuaryTokenLevel(level, sanctuaryTokenId);
     }
 
     function _failTransfer() internal {

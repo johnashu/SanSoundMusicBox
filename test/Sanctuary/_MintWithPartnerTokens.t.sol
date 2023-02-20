@@ -16,7 +16,7 @@ contract MintWithPartnerTokens is TestBase {
         _approveToken(_toCheckOrigin);
 
         sanctuary.mintFromPartner{value: _getPrice(_new, _cur)}(_toCheckOrigin, level, _toCheckPartner, _address);
-        __checkAfterMint(_toCheckOrigin, level, user);
+        __checkAfterMint(_toCheckOrigin, expectedSingle, level, user);
         _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel.Common, 1, user);
     }
 }

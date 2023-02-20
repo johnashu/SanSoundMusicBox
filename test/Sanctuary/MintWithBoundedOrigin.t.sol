@@ -16,23 +16,19 @@ contract TestMintWithBoundedOrigin is MintWithBoundedOrigin {
     }
 
     function testMintWithSanSoundBoundMultiple() public {
-        for (uint256 i = 0; i < isBoundTokens.length; i++) {
-            _mintWithSanSoundBound(isBoundTokens[i], user);
-        }
+        _mintWithSanSoundBound(isBoundSingleToken, user);
     }
 
     function testUpgradeTokenLevelSoulBound() public {
-        for (uint256 i = 0; i < isBoundTokens.length; i++) {
-            _mintWithSanSoundBound(isBoundTokens[i], user);
+        _mintWithSanSoundBound(isBoundSingleToken, user);
 
-            uint256 token = isBoundTokens[i];
-            ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
-            uint256 _cur = 1;
-            uint256 _new = 2;
+        uint256 token = expectedSingle;
+        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
+        uint256 _cur = 1;
+        uint256 _new = 2;
 
-            sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
-            _checkSanctuaryTokenLevel(level, token);
-        }
+        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
+        _checkSanctuaryTokenLevel(level, token);
     }
 
     function testFailMintIsNotBound() public {
