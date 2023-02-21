@@ -31,20 +31,21 @@ abstract contract TestBase is Test {
 
     uint256[6] _levelPrices;
 
-    uint256[] notBoundTokens = [4, 5, 16];
+    uint256[] notBoundTokens = [3330, 3331, 3332];
     uint256[] isBoundTokens = [21, 22, 23]; // middle will fail.
 
     uint256[] tooManyNotBoundTokens = [1, 2, 13, 14];
     uint256[] tooManyIsBoundTokens = [21, 22, 323, 34];
 
-    uint256[] notBoundTokensSingle = [13];
+    uint256[] notBoundTokensSingle = [3300];
     uint256[] isBoundTokensSingle = [38];
 
     uint256[] isBoundTokensMismatched = [38, 39, 40];
 
     uint256[] noTokens;
 
-    uint256[][] multipleNotBoundTokens = [[14, 15, 16], [7, 8, 9], [4, 5, 6], [1, 2, 3]];
+    uint256[][] multipleNotBoundTokens =
+        [[3330, 3331, 3332], [3130, 3231, 3032], [3300, 3311, 3322], [3030, 3231, 3222]];
 
     uint256 isBoundSingleToken = 21;
     uint256 notBoundSingleToken = 15;
@@ -120,6 +121,8 @@ abstract contract TestBase is Test {
             mockERC721Multi.transferAll(user, start, end);
 
             uint256 offset = 0;
+            uint256 split = 6666 / userLen;
+            emit log_uint(split);
             if (userLen == 1) {
                 offset = 1;
             }

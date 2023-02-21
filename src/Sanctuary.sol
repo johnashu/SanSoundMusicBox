@@ -17,8 +17,6 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     address public immutable SAN_ORIGIN_ADDRESS;
     address public immutable MUSIC_BOX_ADDRESS;
 
-    mapping(address ownerOfTokens => uint256[] tokensOwned) private _tokensOwnedByAddress;
-
     mapping(uint256 SanctuaryId => uint256 originId) public originSanctuaryTokenMap;
     mapping(address contractAddress => mapping(uint256 tokenId => bool isUsed)) public usedTokens;
 
@@ -55,7 +53,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @return tokensOwned Tokens that address owns
     function tokensOwnedByAddress(address _owner) public view returns (uint256[] memory tokensOwned) {
         if (_owner == address(0)) revert ZeroAddress();
-        return _tokensOwnedByAddress[_owner];
+        return walletOfOwner(_owner);
     }
 
     // SETTERS
@@ -228,16 +226,13 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
             for (uint256 i; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
                 uint256 newId = currentId + i + 1;
                 _ownerOf[newId] = msg.sender;
-                _tokensOwnedByAddress[msg.sender].push(newId);
                 originSanctuaryTokenMap[newId] = originTokenIds[i];
                 __upgradeTokenLevel(newId, _newLevel, TokenLevel.Unbound);
             }
         }
 
         // emit 1 log
-        emit ITokenLevels.TokenLevelsUpdated(
-            msg.sender, _tokensOwnedByAddress[msg.sender], _newLevel, TokenLevel.Unbound
-            );
+        emit ITokenLevels.TokenLevelsUpdated(msg.sender, originTokenIds, _newLevel, TokenLevel.Unbound);
         emit Rebirth(msg.sender, originTokenIds, currentId + 1, totalSupply);
     }
 
@@ -247,7 +242,6 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
 
         // Upgrade
         _upgradeTokenLevel(newId, _newLevel, TokenLevel.Unbound); // curLevel MUST be 0 to mint..
-        _tokensOwnedByAddress[msg.sender].push(newId);
         originSanctuaryTokenMap[newId] = originTokenId;
 
         // Counter overflow is incredibly unrealistic.

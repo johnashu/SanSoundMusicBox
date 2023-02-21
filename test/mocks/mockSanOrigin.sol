@@ -11,18 +11,19 @@ contract MockSanOrigin is Base721 {
     mapping(uint256 => uint256) public tokenLevel;
 
     constructor() Base721("SO Mock", "SOM", "https://www.example.com/") {
-        for (uint256 i; i < 42; i++) {
+        for (uint256 i; i < 3333; i++) {
             _safeMint(msg.sender, i + 1);
 
             // Soulbound Level 1
-            if (i > 20) {
+            if (i > 20 && i < 38) {
                 tokenLevel[i] = 1;
             }
 
             // Soulbound level 3
-            if (i > 38) {
+            if (i > 38 && i < 3000) {
                 tokenLevel[i] = 3;
             }
+
             setApprovalForAll(msg.sender, true);
         }
     }
