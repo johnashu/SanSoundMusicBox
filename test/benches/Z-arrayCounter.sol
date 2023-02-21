@@ -8,7 +8,7 @@ pragma solidity ^0.8.18;
 
 contract ArrayCounter {
     constructor() {
-        for (uint256 i = 0; i < 1000; i++) {
+        for (uint256 i; i < 1000; i++) {
             array.push(i);
         }
     }

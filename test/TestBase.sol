@@ -67,7 +67,7 @@ abstract contract TestBase is Test {
     }
 
     function _initUsers(address[] memory users) internal {
-        for (uint256 i = 0; i < users.length; i++) {
+        for (uint256 i; i < users.length; i++) {
             address user = users[i];
             vm.deal(user, 100 ether);
         }
@@ -94,11 +94,11 @@ abstract contract TestBase is Test {
             string("TestSanctuary"),
             string("TSSS"),
             string("https://example.com/"),
-            string(""),
+           
             string("TestMusicBox"),
             string("TSSMB"),
             string("https://example.com/"),
-            string(""),
+          
               SAN_ORIGIN_ADDRESS,
             _levelPrices
         );
@@ -111,7 +111,7 @@ abstract contract TestBase is Test {
     function _transferTokens(address[] memory users) internal {
         uint256 userLen = users.length;
         uint256 split = 40 / userLen;
-        for (uint256 i = 0; i < userLen; ++i) {
+        for (uint256 i; i < userLen; ++i) {
             address user = users[i];
             uint256 start = (i * split) + 1;
             uint256 end = split * (i + 1);
@@ -130,7 +130,7 @@ abstract contract TestBase is Test {
     }
 
     function _approveAllTokens(uint256[] memory tokenIds) internal {
-        for (uint256 i = 0; i < tokenIds.length; i++) {
+        for (uint256 i; i < tokenIds.length; i++) {
             _approveToken(tokenIds[i]);
         }
     }
@@ -168,7 +168,7 @@ abstract contract TestBase is Test {
         address user
     ) internal {
         // Check they are existing and are at the correct level requested.
-        for (uint256 i = 0; i < originTokenIds.length; i++) {
+        for (uint256 i; i < originTokenIds.length; i++) {
             __checkAfterMint(originTokenIds[i], sanctuaryTokenIds[i], level, user);
         }
     }

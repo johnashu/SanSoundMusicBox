@@ -29,7 +29,7 @@ contract TestLevels is MintWithBoundedOrigin {
         vm.stopPrank();
         vm.prank(OWNER);
         sanctuary.setLevelPrices(newLevelPrices);
-        for (uint256 i = 0; i < newLevelPrices.length; i++) {
+        for (uint256 i; i < newLevelPrices.length; i++) {
             if (sanctuary.levelPrice(ITokenLevels.TokenLevel(i)) != newLevelPrices[i]) revert();
         }
     }

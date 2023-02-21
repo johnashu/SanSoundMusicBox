@@ -132,8 +132,8 @@ interface IERC721 is IERC165 {
     error TokenAlreadyMinted();
     error TokenNotMinted();
     error IndexGreaterThanBalance();
-    error OwnerIndexOutOfBounds(  );
-    error NotAuthorised(  );
-    error NotOwner(  );   
+    error OwnerIndexOutOfBounds();
+    error NotAuthorised();
+    error NotOwner();
     error UnSafeRecipient();
 }

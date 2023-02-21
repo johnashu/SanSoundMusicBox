@@ -15,14 +15,14 @@ contract TestERC721Sanctuary is TestERC721Base {
     }
 
     function testFailExceedsUserMaxMint() public {
-        for (uint256 i = 0; i < multipleNotBoundTokens.length; i++) {
+        for (uint256 i; i < multipleNotBoundTokens.length; i++) {
             _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
         }
     }
 
     function testFailExceedsMaxSupply() public {
         vm.assume(sanctuary.MAX_SUPPLY() == MOCK_MAX_SUPPLY);
-        for (uint256 i = 0; i < multipleNotBoundTokens.length; i++) {
+        for (uint256 i; i < multipleNotBoundTokens.length; i++) {
             _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
         }
     }

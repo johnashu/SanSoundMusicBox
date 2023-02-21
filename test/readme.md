@@ -15,6 +15,10 @@ forge test --gas-report
 # Run tests..
 
 ```bash
+
+forge test --match-path test/Sanctuary/PureMintWithThreeUnboundedOrigin.t.sol --match-contract TestMintWithThreeUnboundedOrigin  --match-test "testMintWithMultiSanOrigin*" -vvvvv
+
+
 forge test --match-path test/Sanctuary/MintWithPartnerTokens.t.sol --match-contract TestMintWithPartnerTokens  --match-test "testUpgradeTokenLevelPartners*" -vvvvv
 
 forge test --match-path test/Sanctuary/MintWithThreeUnboundedOrigin.t.sol --match-contract TestMintWithThreeUnboundedOrigin  --match-test "testMintWithMultiSanOrigin*" -vvvvv

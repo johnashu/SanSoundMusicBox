@@ -2,7 +2,6 @@
 pragma solidity ^0.8.18;
 
 interface IBase721 {
-    
     error ExceedsMaxMintPerAddress();
     error MaxSupplyReached();
     error IncorrectPaymentAmount();
@@ -11,8 +10,4 @@ interface IBase721 {
     error MintAmountTokensIncorrect();
     error FailedToWithdraw();
     error NothingToWithdraw();
-    error ZeroAddress();
-    error ExceedsMaxRoyaltiesPercentage();
-    error TokenAlreadyMinted(uint256 tokenId);
-    error nonERC721ReceiverImplementer();
 }

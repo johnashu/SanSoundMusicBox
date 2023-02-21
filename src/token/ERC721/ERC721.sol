@@ -34,7 +34,7 @@ abstract contract ERC721 is IERC721 {
     }
 
     function balanceOf(address owner) public view virtual returns (uint256) {
-        if (owner == address(0))  revert ZeroAddress();
+        if (owner == address(0)) revert ZeroAddress();
 
         return _balanceOf[owner];
     }
@@ -56,8 +56,6 @@ abstract contract ERC721 is IERC721 {
         _startingTokenID = startingTokenID_;
     }
 
-
-
     /*//////////////////////////////////////////////////////////////
                               ERC721 LOGIC
     //////////////////////////////////////////////////////////////*/
@@ -69,7 +67,7 @@ abstract contract ERC721 is IERC721 {
     function approve(address spender, uint256 id) public virtual {
         address owner = _ownerOf[id];
 
-        if (msg.sender != owner || !isApprovedForAll[owner][msg.sender]) revert NotAuthorised();
+        if (!(msg.sender == owner || isApprovedForAll[owner][msg.sender])) revert NotAuthorised();
 
         getApproved[id] = spender;
 
@@ -83,14 +81,14 @@ abstract contract ERC721 is IERC721 {
     }
 
     function transferFrom(address from, address to, uint256 id) public virtual {
-         _canTransfer(id);
-        if(from != _ownerOf[id]) revert NotOwner();
+        _canTransfer(id);
+        if (from != _ownerOf[id]) revert NotOwner();
 
-        if(to == address(0)) revert ZeroAddress();
+        if (to == address(0)) revert ZeroAddress();
 
-        if(
-            msg.sender != from || !isApprovedForAll[from][msg.sender] || msg.sender != getApproved[id]
-        ) revert NotAuthorised();
+        if (!(msg.sender == from || isApprovedForAll[from][msg.sender] || msg.sender == getApproved[id])) {
+            revert NotAuthorised();
+        }
 
         // Underflow of the sender's balance is impossible because we check for
         // ownership above and the recipient's balance can't realistically overflow.
@@ -110,21 +108,29 @@ abstract contract ERC721 is IERC721 {
     function safeTransferFrom(address from, address to, uint256 id) public virtual {
         transferFrom(from, to, id);
 
-        if(
-            to.code.length != 0
-                || ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, "")
-                    != ERC721TokenReceiver.onERC721Received.selector
-        ) revert UnSafeRecipient();
+        if (
+            !(
+                to.code.length == 0
+                    || ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, "")
+                        == ERC721TokenReceiver.onERC721Received.selector
+            )
+        ) {
+            revert UnSafeRecipient();
+        }
     }
 
     function safeTransferFrom(address from, address to, uint256 id, bytes calldata data) public virtual {
         transferFrom(from, to, id);
 
-        if(
-            to.code.length != 0
-                || ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, data)
-                    != ERC721TokenReceiver.onERC721Received.selector
-        ) revert UnSafeRecipient();
+        if (
+            !(
+                to.code.length == 0
+                    || ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, data)
+                        == ERC721TokenReceiver.onERC721Received.selector
+            )
+        ) {
+            revert UnSafeRecipient();
+        }
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -142,7 +148,7 @@ abstract contract ERC721 is IERC721 {
     //////////////////////////////////////////////////////////////*/
 
     function _mint(address to, uint256 id) internal virtual {
-        if(to == address(0)) revert ZeroAddress();
+        if (to == address(0)) revert ZeroAddress();
 
         if (_ownerOf[id] != address(0)) revert TokenAlreadyMinted();
 
@@ -154,7 +160,6 @@ abstract contract ERC721 is IERC721 {
         _ownerOf[id] = to;
         emit Transfer(address(0), to, id);
     }
-
 
     function _burn(uint256 id) internal virtual {
         _canTransfer(id);
@@ -176,8 +181,6 @@ abstract contract ERC721 is IERC721 {
         emit Transfer(owner, address(0), id);
     }
 
-     
-
     /*//////////////////////////////////////////////////////////////
                         INTERNAL SAFE MINT LOGIC
     //////////////////////////////////////////////////////////////*/
@@ -186,27 +189,32 @@ abstract contract ERC721 is IERC721 {
         _mint(to, id);
 
         if (
-            to.code.length != 0
-                || ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), id, "")
-                    != ERC721TokenReceiver.onERC721Received.selector
-        ) revert UnSafeRecipient();
+            !(
+                to.code.length == 0
+                    || ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), id, "")
+                        == ERC721TokenReceiver.onERC721Received.selector
+            )
+        ) {
+            revert UnSafeRecipient();
+        }
     }
-
-
 
     function _safeMint(address to, uint256 id, bytes memory data) internal virtual {
         _mint(to, id);
 
-      if (
-            to.code.length != 0
-                || ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), id, data)
-                    != ERC721TokenReceiver.onERC721Received.selector
-        ) revert UnSafeRecipient();
+        if (
+            !(
+                to.code.length == 0
+                    || ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), id, data)
+                        == ERC721TokenReceiver.onERC721Received.selector
+            )
+        ) {
+            revert UnSafeRecipient();
+        }
     }
 
     /**
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning.
+     * @dev Hook that is called before any token transfer. This includes burning.
      */
     function _canTransfer(uint256 /*tokenId*/ ) internal virtual {}
 }

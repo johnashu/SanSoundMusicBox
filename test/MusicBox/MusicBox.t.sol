@@ -18,7 +18,7 @@ contract TestMusicBox is MintWithBoundedOrigin {
     function testFailMintFromSanctuary(address caller) public {
         vm.assume(caller != address(0));
         _mintWithSanSoundBound(isBoundSingleToken, user);
-        musicBox.mintFromSantuary(caller, IMusicBox.MusicBoxLevel.Rare, 1);
+        musicBox.mintFromSantuary(caller, IMusicBox.MusicBoxLevel.Rare);
     }
 
     function testOwnerOfMusicBox() public {

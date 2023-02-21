@@ -12,24 +12,20 @@ import {Ownable} from "src/utils/Ownable.sol";
  */
 
 abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
-
+    /// The maximum number of mints per address - Santuary dictates maximum for both as MusicBox cannot mint!
+    uint256 public constant MAX_MINT_PER_ADDRESS = 3;
     /// The base URI for token metadata.
-    string public baseURI;
-
-    /// The contract URI for contract-level metadata.
     string public baseURI;
 
     constructor(string memory _name, string memory _symbol, string memory _baseURI)
         ERC721(_name, _symbol, uint256(1))
     {
         baseURI = _baseURI;
-        
     }
 
     function _getTokenIdAndIncrement() internal returns (uint256) {
         return ++totalSupply;
     }
-
 
     /*//////////////////////////////////////////////////////////////
                               ERC721Enumerable LOGIC
@@ -48,8 +44,7 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
             }
         }
 
-        revert  OwnerIndexOutOfBounds();
-        
+        revert OwnerIndexOutOfBounds();
     }
 
     /**
@@ -89,7 +84,6 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
         return tokenIds;
     }
 
-
     /**
      * @notice (only owner) Sets the base URI for token metadata.
      * @param _newBaseURI The new base URI.
@@ -117,7 +111,6 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
         if (!success) revert FailedToWithdraw();
     }
 
-
     /// @param tokenId token to find the address of.
     /// @return exists whether or not a tokenId exists or not.
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
@@ -125,7 +118,6 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
         return ownerOf(tokenId) != address(0);
     }
 
- 
     // FALLBACK & RECEIVE
 
     // Function to receive Ether. msg.data must be empty

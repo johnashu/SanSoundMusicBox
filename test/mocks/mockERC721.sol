@@ -10,7 +10,7 @@ import {Ownable} from "src/utils/Ownable.sol";
 
 contract MockERC721 is ERC721, Ownable {
     constructor() ERC721("Mock1", "MK1", 1) {
-        for (uint256 i = 0; i < 42; i++) {
+        for (uint256 i; i < 42; i++) {
             _safeMint(msg.sender, i + 1);
         }
     }

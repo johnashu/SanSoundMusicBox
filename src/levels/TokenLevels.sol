@@ -16,7 +16,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
 
     constructor(uint256[NUM_OF_LEVELS] memory _levelPrices) {
         unchecked {
-            for (uint256 i = 0; i < NUM_OF_LEVELS; i++) {
+            for (uint256 i; i < NUM_OF_LEVELS; i++) {
                 levelPrice[TokenLevel(i)] = _levelPrices[i];
             }
         }
@@ -27,12 +27,20 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     /// @param _newLevel New level
     /// @param _currentLevel current level
     function _upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
+        __upgradeTokenLevel(_tokenId, _newLevel, _currentLevel);
+        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
+    }
+
+    /// @dev Check prices and do the upgrade.. Used by minting functions and publicly explosed function below.
+    /// @param _tokenId Token to upgrade.
+    /// @param _newLevel New level
+    /// @param _currentLevel current level
+    function __upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
         unchecked {
             uint256 price = levelPrice[_newLevel] - levelPrice[_currentLevel];
             if (msg.value != price) revert IncorrectPaymentAmount();
         }
         tokenLevel[_tokenId] = _newLevel;
-        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
     }
 
     /// @notice Upgrade a tokens Level
@@ -40,14 +48,14 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     /// @param _tokenId Token to upgrade.
     /// @param _newLevel New level
     function upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel) public payable {
-        TokenLevel curLevel = tokenLevel[_tokenId];
+        TokenLevel currentLevel = tokenLevel[_tokenId];
 
         if (ISanctuary(address(this)).ownerOf(_tokenId) != msg.sender) revert TokenNotOwned();
         if (_newLevel == TokenLevel.Unbound) revert TokenUnBound();
-        if (curLevel >= _newLevel) revert LevelAlreadyReached();
+        if (currentLevel >= _newLevel) revert LevelAlreadyReached();
 
         tokenLevel[_tokenId] = _newLevel;
-        _upgradeTokenLevel(_tokenId, _newLevel, curLevel);
+        _upgradeTokenLevel(_tokenId, _newLevel, currentLevel);
     }
 
     /// @dev Owner can set the levelPrices

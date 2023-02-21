@@ -27,14 +27,6 @@ abstract contract TestERC721Base is
         IERC721(mockERC721SingleAddress).safeTransferFrom(user, erc721ContractAddress, 1);
     }
 
-    function testSetRoyalties() public {
-        vm.expectRevert();
-        erc721Contract.setRoyalties(user, 900);
-        vm.stopPrank();
-        vm.prank(OWNER);
-        erc721Contract.setRoyalties(user, 900);
-    }
-
     function testWithdraw() public payable {
         uint256 deposit = 50 ether;
         uint256 withdraw = 10 ether;
@@ -64,14 +56,6 @@ abstract contract TestERC721Base is
 
         erc721Contract.safeWithdrawAll();
         assertEq(ownerBalance, OWNER.balance);
-    }
-
-    function testSetBaseURI() public {
-        string memory _newURI = "Test String";
-        vm.stopPrank();
-        vm.prank(OWNER);
-        erc721Contract.setBaseURI(_newURI);
-        assertEq(erc721Contract.baseURI(), _newURI);
     }
 
     function testSetBaseURI() public {
