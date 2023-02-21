@@ -27,14 +27,6 @@ abstract contract TestERC721Base is
         IERC721(mockERC721SingleAddress).safeTransferFrom(user, erc721ContractAddress, 1);
     }
 
-    function testSetRoyalties() public {
-        vm.expectRevert();
-        erc721Contract.setRoyalties(user, 900);
-        vm.stopPrank();
-        vm.prank(OWNER);
-        erc721Contract.setRoyalties(user, 900);
-    }
-
     function testWithdraw() public payable {
         uint256 deposit = 50 ether;
         uint256 withdraw = 10 ether;
@@ -74,14 +66,6 @@ abstract contract TestERC721Base is
         assertEq(erc721Contract.baseURI(), _newURI);
     }
 
-    function testSetContractURI() public {
-        string memory _newURI = "Test String";
-        vm.stopPrank();
-        vm.prank(OWNER);
-        erc721Contract.setContractURI(_newURI);
-        assertEq(erc721Contract.contractURI(), _newURI);
-    }
-
     function _runAllScenarios() public {
         _mintWithMultiSanOrigin(notBoundTokens, user);
         _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
@@ -108,18 +92,5 @@ abstract contract TestERC721Base is
     function testFailIsOwnerOf() public virtual {
         _mintWithSanSoundBound(isBoundSingleToken, user);
         assertTrue(erc721Contract.isOwnerOf(user, notExpected));
-    }
-
-    function testFailExceedsUserMaxMint() public {
-        for (uint256 i = 0; i < multipleNotBoundTokens.length; i++) {
-            _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
-        }
-    }
-
-    function testFailExceedsMaxSupply() public {
-        vm.assume(erc721Contract.MAX_SUPPLY() == MOCK_MAX_SUPPLY);
-        for (uint256 i = 0; i < multipleNotBoundTokens.length; i++) {
-            _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
-        }
     }
 }

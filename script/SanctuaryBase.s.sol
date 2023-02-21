@@ -10,11 +10,11 @@ contract SanctuaryScriptBase is Script {
             string("SanSoundSanctuary"),
             string("SSS"),
             string("https://example.com/"),
-            string(""),
+           
             string("SanSoundMusicBox"),
             string("SSMB"),
             string("https://example.com/"),
-            string(""),
+           
             SAN_ORIGIN_ADDRESS,
             _levelPrices
             );

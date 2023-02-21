@@ -12,11 +12,11 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     uint256 public constant NUM_OF_LEVELS = 6;
 
     mapping(TokenLevel tokenLevel => uint256 price) public levelPrice;
-    mapping(uint256 tokenId => TokenLevel tokenLevel) public currentTokenLevel;
+    mapping(uint256 tokenId => TokenLevel tokenLevel) public tokenLevel;
 
     constructor(uint256[NUM_OF_LEVELS] memory _levelPrices) {
         unchecked {
-            for (uint256 i = 0; i < NUM_OF_LEVELS; i++) {
+            for (uint256 i; i < NUM_OF_LEVELS; i++) {
                 levelPrice[TokenLevel(i)] = _levelPrices[i];
             }
         }
@@ -27,12 +27,20 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     /// @param _newLevel New level
     /// @param _currentLevel current level
     function _upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
+        __upgradeTokenLevel(_tokenId, _newLevel, _currentLevel);
+        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
+    }
+
+    /// @dev Check prices and do the upgrade.. Used by minting functions and publicly explosed function below.
+    /// @param _tokenId Token to upgrade.
+    /// @param _newLevel New level
+    /// @param _currentLevel current level
+    function __upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
         unchecked {
             uint256 price = levelPrice[_newLevel] - levelPrice[_currentLevel];
             if (msg.value != price) revert IncorrectPaymentAmount();
         }
-        currentTokenLevel[_tokenId] = _newLevel;
-        emit TokenLevelUpdated(_msgSender(), _tokenId, _newLevel, _currentLevel);
+        tokenLevel[_tokenId] = _newLevel;
     }
 
     /// @notice Upgrade a tokens Level
@@ -40,14 +48,14 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     /// @param _tokenId Token to upgrade.
     /// @param _newLevel New level
     function upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel) public payable {
-        TokenLevel curLevel = currentTokenLevel[_tokenId];
+        TokenLevel currentLevel = tokenLevel[_tokenId];
 
-        if (ISanctuary(address(this)).ownerOf(_tokenId) != _msgSender()) revert TokenNotOwned();
+        if (ISanctuary(address(this)).ownerOf(_tokenId) != msg.sender) revert TokenNotOwned();
         if (_newLevel == TokenLevel.Unbound) revert TokenUnBound();
-        if (curLevel >= _newLevel) revert LevelAlreadyReached();
+        if (currentLevel >= _newLevel) revert LevelAlreadyReached();
 
-        currentTokenLevel[_tokenId] = _newLevel;
-        _upgradeTokenLevel(_tokenId, _newLevel, curLevel);
+        tokenLevel[_tokenId] = _newLevel;
+        _upgradeTokenLevel(_tokenId, _newLevel, currentLevel);
     }
 
     /// @dev Owner can set the levelPrices
@@ -82,7 +90,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
         uint256[] memory tokenIds = ISanctuary(address(this)).tokensOwnedByAddress(_owner);
         unchecked {
             for (uint256 i; i < tokenCount; i++) {
-                TokenLevel level = currentTokenLevel[tokenIds[i]];
+                TokenLevel level = tokenLevel[tokenIds[i]];
                 if (level > userMaxLevel) userMaxLevel = level;
             }
         }

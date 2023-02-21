@@ -31,24 +31,28 @@ abstract contract TestBase is Test {
 
     uint256[6] _levelPrices;
 
-    uint256[] notBoundTokens = [4, 5, 16];
+    uint256[] notBoundTokens = [3330, 3331, 3332];
     uint256[] isBoundTokens = [21, 22, 23]; // middle will fail.
 
     uint256[] tooManyNotBoundTokens = [1, 2, 13, 14];
     uint256[] tooManyIsBoundTokens = [21, 22, 323, 34];
 
-    uint256[] notBoundTokensSingle = [13];
+    uint256[] notBoundTokensSingle = [3300];
     uint256[] isBoundTokensSingle = [38];
 
     uint256[] isBoundTokensMismatched = [38, 39, 40];
 
     uint256[] noTokens;
 
-    uint256[][] multipleNotBoundTokens = [[4, 5, 16], [1, 2, 3]];
+    uint256[][] multipleNotBoundTokens =
+        [[3330, 3331, 3332], [3130, 3231, 3032], [3300, 3311, 3322], [3030, 3231, 3222]];
 
     uint256 isBoundSingleToken = 21;
     uint256 notBoundSingleToken = 15;
     uint256 partnerToken = 28;
+
+    uint256[] expectedMultiple = [1, 2, 3];
+    uint256 expectedSingle = 1;
 
     function _setUp(address[] memory users) internal {
         _initOWNERs();
@@ -64,7 +68,7 @@ abstract contract TestBase is Test {
     }
 
     function _initUsers(address[] memory users) internal {
-        for (uint256 i = 0; i < users.length; i++) {
+        for (uint256 i; i < users.length; i++) {
             address user = users[i];
             vm.deal(user, 100 ether);
         }
@@ -91,11 +95,11 @@ abstract contract TestBase is Test {
             string("TestSanctuary"),
             string("TSSS"),
             string("https://example.com/"),
-            string(""),
+           
             string("TestMusicBox"),
             string("TSSMB"),
             string("https://example.com/"),
-            string(""),
+          
               SAN_ORIGIN_ADDRESS,
             _levelPrices
         );
@@ -108,7 +112,7 @@ abstract contract TestBase is Test {
     function _transferTokens(address[] memory users) internal {
         uint256 userLen = users.length;
         uint256 split = 40 / userLen;
-        for (uint256 i = 0; i < userLen; ++i) {
+        for (uint256 i; i < userLen; ++i) {
             address user = users[i];
             uint256 start = (i * split) + 1;
             uint256 end = split * (i + 1);
@@ -117,6 +121,8 @@ abstract contract TestBase is Test {
             mockERC721Multi.transferAll(user, start, end);
 
             uint256 offset = 0;
+            uint256 split = 6666 / userLen;
+            emit log_uint(split);
             if (userLen == 1) {
                 offset = 1;
             }
@@ -127,7 +133,7 @@ abstract contract TestBase is Test {
     }
 
     function _approveAllTokens(uint256[] memory tokenIds) internal {
-        for (uint256 i = 0; i < tokenIds.length; i++) {
+        for (uint256 i; i < tokenIds.length; i++) {
             _approveToken(tokenIds[i]);
         }
     }
@@ -147,7 +153,7 @@ abstract contract TestBase is Test {
     }
 
     function _checkSanctuaryTokenLevel(ITokenLevels.TokenLevel level, uint256 token) internal view {
-        ITokenLevels.TokenLevel currentLevel = sanctuary.currentTokenLevel(token);
+        ITokenLevels.TokenLevel currentLevel = sanctuary.tokenLevel(token);
         if (currentLevel != level) revert ITokenLevels.TokenLevelMismatch();
     }
 
@@ -158,18 +164,28 @@ abstract contract TestBase is Test {
         if (currentLevel != level) revert ITokenLevels.TokenLevelMismatch();
     }
 
-    function _checkAfterMint(uint256[] memory tokenIds, ITokenLevels.TokenLevel level, address user) internal {
+    function _checkAfterMint(
+        uint256[] memory originTokenIds,
+        uint256[] memory sanctuaryTokenIds,
+        ITokenLevels.TokenLevel level,
+        address user
+    ) internal {
         // Check they are existing and are at the correct level requested.
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            __checkAfterMint(tokenIds[i], level, user);
+        for (uint256 i; i < originTokenIds.length; i++) {
+            __checkAfterMint(originTokenIds[i], sanctuaryTokenIds[i], level, user);
         }
     }
 
-    function __checkAfterMint(uint256 tokenId, ITokenLevels.TokenLevel level, address user) internal {
+    function __checkAfterMint(
+        uint256 originTokenId,
+        uint256 sanctuaryTokenId,
+        ITokenLevels.TokenLevel level,
+        address user
+    ) internal {
         // Check they are existing and are at the correct level requested.
-        assertTrue(sanctuary.usedTokens(SAN_ORIGIN_ADDRESS, tokenId));
-        assertEq(sanctuary.ownerOf(tokenId), user);
-        _checkSanctuaryTokenLevel(level, tokenId);
+        assertTrue(sanctuary.usedTokens(SAN_ORIGIN_ADDRESS, originTokenId));
+        assertEq(sanctuary.ownerOf(sanctuaryTokenId), user);
+        _checkSanctuaryTokenLevel(level, sanctuaryTokenId);
     }
 
     function _failTransfer() internal {

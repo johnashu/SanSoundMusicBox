@@ -12,7 +12,7 @@ contract MintWithThreeUnboundedOrigin is TestBase {
         _approveAllTokens(tokens);
         // Mint the Tokens
         sanctuary.mintWith3UnboundSanOrigin{value: _getPrice(_new, _cur)}(tokens, level);
-        _checkAfterMint(tokens, level, user);
+        _checkAfterMint(tokens, expectedMultiple, level, user);
         _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel.Rare, 1, user);
     }
 }

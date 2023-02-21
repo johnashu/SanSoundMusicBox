@@ -5,24 +5,24 @@
 
 pragma solidity ^0.8.18;
 
-import {ERC721Enumerable, ERC721} from "src/token/ERC721/ERC721Enumerable.sol";
+import {ERC721} from "src/token/ERC721/ERC721.sol";
 import {Ownable} from "src/utils/Ownable.sol";
 
-contract MockERC721 is ERC721Enumerable, Ownable {
+contract MockERC721 is ERC721, Ownable {
     constructor() ERC721("Mock1", "MK1", 1) {
-        for (uint256 i = 0; i < 42; i++) {
+        for (uint256 i; i < 42; i++) {
             _safeMint(msg.sender, i + 1);
         }
     }
 
     function transferAll(address to, uint256 start, uint256 end) public {
         for (uint256 i = start; i < end; i++) {
-            safeTransferFrom(_msgSender(), to, i);
+            safeTransferFrom(msg.sender, to, i);
         }
     }
 
     function _safeTransferFrom(address from, address to, uint256 tokenId) public {
-        _approve(msg.sender, tokenId);
+        approve(msg.sender, tokenId);
         safeTransferFrom(from, to, tokenId);
     }
 

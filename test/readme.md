@@ -15,6 +15,10 @@ forge test --gas-report
 # Run tests..
 
 ```bash
+
+forge test --match-path test/Sanctuary/PureMintWithThreeUnboundedOrigin.t.sol --match-contract TestMintWithThreeUnboundedOrigin  --match-test "testMintWithMultiSanOrigin*" -vvvvv
+
+
 forge test --match-path test/Sanctuary/MintWithPartnerTokens.t.sol --match-contract TestMintWithPartnerTokens  --match-test "testUpgradeTokenLevelPartners*" -vvvvv
 
 forge test --match-path test/Sanctuary/MintWithThreeUnboundedOrigin.t.sol --match-contract TestMintWithThreeUnboundedOrigin  --match-test "testMintWithMultiSanOrigin*" -vvvvv
@@ -54,7 +58,7 @@ forge test --list --json --match-test "testFail*" | tail -n 1 | json_pp
 * notBound = [452, 472, 1173, 1388, 1682, 1720, 1851, 2027, 2263, 2275, 2755, 3248, 3277, 3689, 3721, 3811, 4268, 4964, 4965, 4966, 5082, 5474, 5557, 5622, 5826, 5844, 5845, 5976, 6035, 6168, 6206, 6208, 6237, 6244, 6271, 6272, 6277, 6289, 6323, 6391, 6412, 6422, 6455, 6456, 7168, 7178, 8400, 8509]
 
 
-```solidity
+```javascript
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
@@ -71,12 +75,6 @@ contract TestMainNet is TestBase {
         initShared();
         sanOriginAddress = 0x33333333333371718A3C2bB63E5F3b94C9bC13bE;
 
-        notBoundTokens = [452, 472, 6271];
-        isBoundTokens = [452, 1055, 3829]; // middle will fail.
-
-        notBoundSingleToken = [452];
-        isBoundSingleToken = [1055];
-        deployContracts();
     }
 }
 

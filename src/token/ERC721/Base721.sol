@@ -2,8 +2,7 @@
 pragma solidity ^0.8.18;
 
 import {IBase721} from "src/interfaces/ERC721/IBase721.sol";
-import {ERC721Enumerable, ERC721, IERC721, Strings} from "src/token/ERC721/ERC721Enumerable.sol";
-import {ERC2981ContractWideRoyalties, ERC2981Base, ERC165} from "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
+import {ERC721, IERC721, Strings} from "src/token/ERC721/ERC721.sol";
 import {TokenRescuer} from "src/token/rescue/TokenRescuer.sol";
 import {Ownable} from "src/utils/Ownable.sol";
 
@@ -12,51 +11,40 @@ import {Ownable} from "src/utils/Ownable.sol";
  * @author Maffaz
  */
 
-abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981ContractWideRoyalties {
-    uint256 public immutable MAX_SUPPLY;
-
-    /// The maximum ERC-2981 royalties percentage (two decimals).
-    uint256 public constant MAX_ROYALTIES_PCT = 930; // 9.3%
-
-    /// The maximum number of mints per address
+abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
+    /// The maximum number of mints per address - Santuary dictates maximum for both as MusicBox cannot mint!
     uint256 public constant MAX_MINT_PER_ADDRESS = 3;
-
     /// The base URI for token metadata.
     string public baseURI;
 
-    /// The contract URI for contract-level metadata.
-    string public contractURI;
-
-    // Current Token Id. Init at 0 but first mint will be Id = 1.
-    uint256 public currentTokenId;
-
-    /**
-     * @notice The total tokens minted by an address. Overriding contracts can decide to use or not.
-     */
-    mapping(address tokenOwner => uint256 totalMinted) internal userMinted;
-
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        string memory _contractURI,
-        string memory _baseURI,
-        uint256 _MAX_SUPPLY
-    ) ERC721(_name, _symbol, uint256(1)) {
-        contractURI = _contractURI;
+    constructor(string memory _name, string memory _symbol, string memory _baseURI)
+        ERC721(_name, _symbol, uint256(1))
+    {
         baseURI = _baseURI;
-        MAX_SUPPLY = _MAX_SUPPLY;
-    }
-
-    /**
-     * @dev See {IERC721-balanceOf}.
-     */
-    function balanceOf(address owner) public view virtual override(IERC721, ERC721) returns (uint256) {
-        if (owner == address(0)) revert ZeroAddress();
-        return userMinted[owner];
     }
 
     function _getTokenIdAndIncrement() internal returns (uint256) {
-        return ++currentTokenId;
+        return ++totalSupply;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                              ERC721Enumerable LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual returns (uint256 tokenId) {
+        if (index > balanceOf(owner)) revert IndexGreaterThanBalance();
+
+        uint256 count;
+        unchecked {
+            for (uint256 i = 1; i < totalSupply + 1; i++) {
+                if (owner == ownerOf(i)) {
+                    if (count == index) return i;
+                    else count++;
+                }
+            }
+        }
+
+        revert OwnerIndexOutOfBounds();
     }
 
     /**
@@ -97,14 +85,6 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
     }
 
     /**
-     * @notice (only owner) Sets the contract URI for contract metadata.
-     * @param _newContractURI The new contract URI.
-     */
-    function setContractURI(string calldata _newContractURI) external onlyOwner {
-        contractURI = _newContractURI;
-    }
-
-    /**
      * @notice (only owner) Sets the base URI for token metadata.
      * @param _newBaseURI The new base URI.
      */
@@ -127,67 +107,15 @@ abstract contract Base721 is TokenRescuer, ERC721Enumerable, IBase721, ERC2981Co
      * @param _weiAmount The amount of ether (in wei) to withdraw.
      */
     function withdraw(uint256 _weiAmount) public onlyOwner {
-        (bool success,) = payable(_msgSender()).call{value: _weiAmount}("");
+        (bool success,) = payable(msg.sender).call{value: _weiAmount}("");
         if (!success) revert FailedToWithdraw();
     }
 
-    /**
-     * @notice (only owner) Sets ERC-2981 royalties recipient and percentage.
-     * @param _recipient The address to which to send royalties.
-     * @param _value The royalties percentage (two decimals, e.g. 1000 = 10%).
-     */
-    function setRoyalties(address _recipient, uint256 _value) external onlyOwner {
-        if (_value > MAX_ROYALTIES_PCT) revert ExceedsMaxRoyaltiesPercentage();
-        _setRoyalties(_recipient, _value);
-    }
-
-    /**
-     * @notice Transfers multiple tokens from `_from` to `_to`.
-     * @param _from The address from which to transfer tokens.
-     * @param _to The address to which to transfer tokens.
-     * @param _tokenIds An array of token IDs to transfer.
-     */
-    function batchTransferFrom(address _from, address _to, uint256[] calldata _tokenIds) external {
-        unchecked {
-            for (uint256 i = 0; i < _tokenIds.length; i++) {
-                transferFrom(_from, _to, _tokenIds[i]);
-            }
-        }
-    }
-
-    /**
-     * @notice Safely transfers multiple tokens from `_from` to `_to`.
-     * @param _from The address from which to transfer tokens.
-     * @param _to The address to which to transfer tokens.
-     * @param _tokenIds An array of token IDs to transfer.
-     */
-    function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIds, bytes calldata _data)
-        external
-    {
-        unchecked {
-            for (uint256 i = 0; i < _tokenIds.length; i++) {
-                safeTransferFrom(_from, _to, _tokenIds[i], _data);
-            }
-        }
-    }
-
-    // Overrides.
-
-    /**
-     * @inheritdoc ERC165
-     */
-    function supportsInterface(bytes4 _interfaceId)
-        public
-        view
-        override(ERC721Enumerable, ERC2981Base)
-        returns (bool)
-    {
-        return super.supportsInterface(_interfaceId);
-    }
-
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        if (!_exists(_tokenId)) revert TokenDoesNotExist();
-        return string(abi.encodePacked(baseURI, "/", Strings.toString(_tokenId), ".json"));
+    /// @param tokenId token to find the address of.
+    /// @return exists whether or not a tokenId exists or not.
+    function _exists(uint256 tokenId) internal view virtual returns (bool) {
+        if (tokenId < _startingTokenID) return false;
+        return ownerOf(tokenId) != address(0);
     }
 
     // FALLBACK & RECEIVE

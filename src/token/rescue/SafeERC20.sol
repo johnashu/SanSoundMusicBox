@@ -18,11 +18,7 @@ import "src/utils/Address.sol";
 library SafeERC20 {
     using Address for address;
 
-    function safeTransfer(
-        IStuckERC20 token,
-        address to,
-        uint256 value
-    ) internal {
+    function safeTransfer(IStuckERC20 token, address to, uint256 value) internal {
         _callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
     }
 
