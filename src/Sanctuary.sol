@@ -10,6 +10,8 @@ import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
 import {MusicBox} from "src/MusicBox.sol";
 
 contract Sanctuary is TokenLevels, Base721 {
+    /// The maximum number of mints per address - Santuary dictates maximum for both as MusicBox cannot mint!
+    uint256 public constant MAX_MINT_PER_ADDRESS = 3;
     uint128 public constant ORIGIN_TOKENS_REQUIRED_TO_REBIRTH = 3;
 
     address public immutable SAN_ORIGIN_ADDRESS;
@@ -27,23 +29,20 @@ contract Sanctuary is TokenLevels, Base721 {
     constructor(
         string memory _name,
         string memory _symbol,
-        string memory _contractURI,
         string memory _baseURI,
         string memory _nameMusicBox,
         string memory _symbolMusicBox,
-        string memory _contractURIMusicBox,
         string memory _baseURIMusicBox,
         address _SAN_ORIGIN_ADDRESS,
         uint256[NUM_OF_LEVELS] memory _levelPrices
-    ) Base721(_name, _symbol, _contractURI, _baseURI) TokenLevels(_levelPrices) {
+    ) Base721(_name, _symbol, _baseURI) TokenLevels(_levelPrices) {
         SAN_ORIGIN_ADDRESS = _SAN_ORIGIN_ADDRESS;
         isValidContract[_SAN_ORIGIN_ADDRESS] = true;
 
         MusicBox musicBox = new MusicBox( 
             _nameMusicBox, 
             _symbolMusicBox, 
-            _contractURIMusicBox, 
-            _baseURIMusicBox,          
+            _baseURIMusicBox, 
             address(this)
             );
 
@@ -83,7 +82,7 @@ contract Sanctuary is TokenLevels, Base721 {
         _processChecks(originTokenId, SAN_ORIGIN_ADDRESS);
         _checkOriginTokensAreBound(originTokenId);
         _burnMintRebirth(originTokenId, _newLevel, IMusicBox.MusicBoxLevel.Legendary);
-        emit RebirthFromSoulBound(_msgSender(), originTokenId);
+        emit RebirthFromSoulBound(msg.sender, originTokenId);
     }
 
     /// @notice Send three SAN Origin NFTs to the Sanctuary receive a Rare SAN Music Box NFT
@@ -93,7 +92,7 @@ contract Sanctuary is TokenLevels, Base721 {
         _processChecks(originTokenIds, SAN_ORIGIN_ADDRESS);
         _checkOriginTokensNotBound(originTokenIds);
         _burnMintRebirth(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel.Rare);
-        emit RebirthFrom3SanOrigin(_msgSender(), originTokenIds);
+        emit RebirthFrom3SanOrigin(msg.sender, originTokenIds);
     }
 
     /// @notice Rebirth and mint from a partner, Send a Scout SAN Origin NFT to the Sanctuary, which
@@ -117,7 +116,7 @@ contract Sanctuary is TokenLevels, Base721 {
         _processChecks(partnerTokenId, _partnerAddress);
         _checkOriginTokensNotBound(originTokenId);
         _burnMintRebirth(originTokenId, _newLevel, IMusicBox.MusicBoxLevel.Common);
-        emit RebirthFromPartnerAndOrigin(_msgSender(), originTokenId);
+        emit RebirthFromPartnerAndOrigin(msg.sender, originTokenId);
     }
 
     // PRIVATE FUNCTIONS
@@ -129,7 +128,7 @@ contract Sanctuary is TokenLevels, Base721 {
     function _processChecks(uint256[] calldata tokenIds, address _tokenAddress) private {
         if (tokenIds.length != ORIGIN_TOKENS_REQUIRED_TO_REBIRTH) revert MintAmountTokensIncorrect();
         if (totalSupply >= MAX_SUPPLY) revert MaxSupplyReached();
-        if (balanceOf(_msgSender()) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
+        if (balanceOf(msg.sender) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
         unchecked {
             for (uint256 i = 0; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
                 _checkUserOwnsToken(tokenIds[i], _tokenAddress);
@@ -142,7 +141,7 @@ contract Sanctuary is TokenLevels, Base721 {
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
     function _processChecks(uint256 tokenId, address _tokenAddress) private {
         if (totalSupply >= MAX_SUPPLY) revert MaxSupplyReached();
-        if (balanceOf(_msgSender()) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
+        if (balanceOf(msg.sender) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
 
         _checkUserOwnsToken(tokenId, _tokenAddress);
     }
@@ -152,7 +151,7 @@ contract Sanctuary is TokenLevels, Base721 {
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
     function _checkUserOwnsToken(uint256 tokenId, address _tokenAddress) private {
         if (usedTokens[_tokenAddress][tokenId] != false) revert TokenAlreadyUsed();
-        if (IERC721(_tokenAddress).ownerOf(tokenId) != _msgSender()) revert TokenNotOwned();
+        if (IERC721(_tokenAddress).ownerOf(tokenId) != msg.sender) revert TokenNotOwned();
         usedTokens[_tokenAddress][tokenId] = true;
     }
 
@@ -192,7 +191,7 @@ contract Sanctuary is TokenLevels, Base721 {
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
         // Burn San Origin
-        ISanOriginNFT(SAN_ORIGIN_ADDRESS).batchSafeTransferFrom(_msgSender(), _burnAddress(), originTokenIds, "");
+        ISanOriginNFT(SAN_ORIGIN_ADDRESS).batchSafeTransferFrom(msg.sender, _burnAddress(), originTokenIds, "");
 
         // Rebirth in the Santuary
         unchecked {
@@ -202,7 +201,7 @@ contract Sanctuary is TokenLevels, Base721 {
         }
 
         // Mint MusicBox NFT
-        IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(_msgSender(), _musicBoxLevel, ORIGIN_TOKENS_REQUIRED_TO_REBIRTH);
+        IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(msg.sender, _musicBoxLevel, ORIGIN_TOKENS_REQUIRED_TO_REBIRTH);
     }
 
     /// @dev Finalise the storage values and upgrade the tokens.
@@ -214,24 +213,36 @@ contract Sanctuary is TokenLevels, Base721 {
         private
     {
         // Burn San Origin
-        ISanOriginNFT(SAN_ORIGIN_ADDRESS).safeTransferFrom(_msgSender(), _burnAddress(), originTokenId, "");
+        ISanOriginNFT(SAN_ORIGIN_ADDRESS).safeTransferFrom(msg.sender, _burnAddress(), originTokenId, "");
 
         // Rebirth in the Santuary
         _rebirth(_newLevel, originTokenId);
 
         // Mint MusicBox NFT
-        IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(_msgSender(), _musicBoxLevel, 1);
+        IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(msg.sender, _musicBoxLevel, 1);
     }
 
-    // OVERRIDES for Soulbinding
+    function _batchMint() private {
+        if(msg.sender == address(0)) revert ZeroAddress();
+        uint currentId = totalSupply;
 
-    /// @dev Allow Unbound San Origin Tokens to be approved during Mint.
-    /// @param to address to Approve
-    /// @param tokenId tokenId to Approve.
-    function approve(address to, uint256 tokenId) public override(IERC721, ERC721) {
-        if (tokenLevel[tokenId] > TokenLevel.Unbound) revert CannotApproveTokenLevel(to, tokenId);
-        super.approve(to, tokenId);
+        // Counter overflow is incredibly unrealistic.
+        // Update balance once
+        unchecked {
+            _balanceOf[msg.sender] += ORIGIN_TOKENS_REQUIRED_TO_REBIRTH;
+            totalSupply += ORIGIN_TOKENS_REQUIRED_TO_REBIRTH;
+       
+
+        for (uint i = 0; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
+            _ownerOf[currentId + 1] = msg.sender; 
+            }     
+
+        }         
+
+        // emit 1 log
+        emit BatchTransfer(address(0), msg.sender, totalSupply + 1, totalSupply + ORIGIN_TOKENS_REQUIRED_TO_REBIRTH);
     }
+
 
     /// @dev After mint, tokens are SouldBound and cannot be burned /tx.
     function _rebirth(TokenLevel _newLevel, uint256 originTokenId) private {
@@ -239,10 +250,12 @@ contract Sanctuary is TokenLevels, Base721 {
 
         // Upgrade
         _upgradeTokenLevel(newId, _newLevel, TokenLevel(0)); // curLevel MUST be 0 to mint..
-        _tokensOwnedByAddress[_msgSender()].push(newId);
+        _tokensOwnedByAddress[msg.sender].push(newId);
         originSanctuaryTokenMap[newId] = originTokenId;
-        _safeMint(_msgSender(), newId);
+        _safeMint(msg.sender, newId);
     }
+    
+    // OVERRIDES
 
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         if (!_exists(_tokenId)) revert TokenDoesNotExist();

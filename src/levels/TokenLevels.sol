@@ -32,7 +32,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
             if (msg.value != price) revert IncorrectPaymentAmount();
         }
         tokenLevel[_tokenId] = _newLevel;
-        emit TokenLevelUpdated(_msgSender(), _tokenId, _newLevel, _currentLevel);
+        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
     }
 
     /// @notice Upgrade a tokens Level
@@ -42,7 +42,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     function upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel) public payable {
         TokenLevel curLevel = tokenLevel[_tokenId];
 
-        if (ISanctuary(address(this)).ownerOf(_tokenId) != _msgSender()) revert TokenNotOwned();
+        if (ISanctuary(address(this)).ownerOf(_tokenId) != msg.sender) revert TokenNotOwned();
         if (_newLevel == TokenLevel.Unbound) revert TokenUnBound();
         if (curLevel >= _newLevel) revert LevelAlreadyReached();
 

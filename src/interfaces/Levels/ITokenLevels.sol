@@ -20,7 +20,6 @@ interface ITokenLevels {
 
     event RebirthFrom3SanOrigin(address indexed TokenOwnerAddress, uint256[] originTokenIds);
 
-    event RebirthFromPartnerAndOrigin(address indexed TokenOwnerAddress, uint256[] originTokenIds);
     event RebirthFromPartnerAndOrigin(address indexed TokenOwnerAddress, uint256 originTokenId);
 
     event TokenLevelUpdated(

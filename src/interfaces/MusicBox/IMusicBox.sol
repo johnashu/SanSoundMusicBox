@@ -8,7 +8,16 @@ interface IMusicBox {
         Legendary
     }
 
+    function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIds, bytes calldata _data)
+        external;
+
+        event BatchTransfer(address indexed from, address indexed to, uint256[] _tokenIds);
+
+
     function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel, uint256 _amount) external;
 
     error OnlySanctuaryAllowedToMint();
+    error LockupTimeZero();
+    error TokenLocked();
+    error WrongCallingAddress();
 }

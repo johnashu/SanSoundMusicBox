@@ -17,7 +17,7 @@ contract MockERC721 is ERC721, Ownable {
 
     function transferAll(address to, uint256 start, uint256 end) public {
         for (uint256 i = start; i < end; i++) {
-            safeTransferFrom(_msgSender(), to, i);
+            safeTransferFrom(msg.sender, to, i);
         }
     }
 

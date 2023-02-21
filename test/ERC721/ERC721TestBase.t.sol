@@ -74,12 +74,12 @@ abstract contract TestERC721Base is
         assertEq(erc721Contract.baseURI(), _newURI);
     }
 
-    function testSetContractURI() public {
+    function testSetBaseURI() public {
         string memory _newURI = "Test String";
         vm.stopPrank();
         vm.prank(OWNER);
-        erc721Contract.setContractURI(_newURI);
-        assertEq(erc721Contract.contractURI(), _newURI);
+        erc721Contract.setBaseURI(_newURI);
+        assertEq(erc721Contract.baseURI(), _newURI);
     }
 
     function _runAllScenarios() public {

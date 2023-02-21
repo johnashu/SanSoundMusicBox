@@ -3,12 +3,6 @@ pragma solidity ^0.8.18;
 
 import {IBase721} from "src/interfaces/ERC721/IBase721.sol";
 import {ERC721, IERC721, Strings} from "src/token/ERC721/ERC721.sol";
-import {
-    ERC2981ContractWideRoyalties,
-    ERC2981Base,
-    ERC165,
-    IERC165
-} from "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
 import {TokenRescuer} from "src/token/rescue/TokenRescuer.sol";
 import {Ownable} from "src/utils/Ownable.sol";
 
@@ -17,28 +11,45 @@ import {Ownable} from "src/utils/Ownable.sol";
  * @author Maffaz
  */
 
-abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721, ERC2981ContractWideRoyalties {
-    /// The maximum ERC-2981 royalties percentage (two decimals).
-    uint256 public constant MAX_ROYALTIES_PCT = 930; // 9.3%
-
-    /// The maximum number of mints per address
-    uint256 public constant MAX_MINT_PER_ADDRESS = 3;
+abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
 
     /// The base URI for token metadata.
     string public baseURI;
 
     /// The contract URI for contract-level metadata.
-    string public contractURI;
+    string public baseURI;
 
-    constructor(string memory _name, string memory _symbol, string memory _contractURI, string memory _baseURI)
+    constructor(string memory _name, string memory _symbol, string memory _baseURI)
         ERC721(_name, _symbol, uint256(1))
     {
-        contractURI = _contractURI;
         baseURI = _baseURI;
+        
     }
 
     function _getTokenIdAndIncrement() internal returns (uint256) {
         return ++totalSupply;
+    }
+
+
+    /*//////////////////////////////////////////////////////////////
+                              ERC721Enumerable LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual returns (uint256 tokenId) {
+        if (index > balanceOf(owner)) revert IndexGreaterThanBalance();
+
+        uint256 count;
+        unchecked {
+            for (uint256 i = 1; i < totalSupply + 1; i++) {
+                if (owner == ownerOf(i)) {
+                    if (count == index) return i;
+                    else count++;
+                }
+            }
+        }
+
+        revert  OwnerIndexOutOfBounds();
+        
     }
 
     /**
@@ -78,13 +89,6 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721, ERC2981Con
         return tokenIds;
     }
 
-    /**
-     * @notice (only owner) Sets the contract URI for contract metadata.
-     * @param _newContractURI The new contract URI.
-     */
-    function setContractURI(string calldata _newContractURI) external onlyOwner {
-        contractURI = _newContractURI;
-    }
 
     /**
      * @notice (only owner) Sets the base URI for token metadata.
@@ -109,51 +113,11 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721, ERC2981Con
      * @param _weiAmount The amount of ether (in wei) to withdraw.
      */
     function withdraw(uint256 _weiAmount) public onlyOwner {
-        (bool success,) = payable(_msgSender()).call{value: _weiAmount}("");
+        (bool success,) = payable(msg.sender).call{value: _weiAmount}("");
         if (!success) revert FailedToWithdraw();
     }
 
-    /**
-     * @notice (only owner) Sets ERC-2981 royalties recipient and percentage.
-     * @param _recipient The address to which to send royalties.
-     * @param _value The royalties percentage (two decimals, e.g. 1000 = 10%).
-     */
-    function setRoyalties(address _recipient, uint256 _value) external onlyOwner {
-        if (_value > MAX_ROYALTIES_PCT) revert ExceedsMaxRoyaltiesPercentage();
-        _setRoyalties(_recipient, _value);
-    }
 
-    /**
-     * @notice Transfers multiple tokens from `_from` to `_to`.
-     * @param _from The address from which to transfer tokens.
-     * @param _to The address to which to transfer tokens.
-     * @param _tokenIds An array of token IDs to transfer.
-     */
-    function batchTransferFrom(address _from, address _to, uint256[] calldata _tokenIds) external {
-        unchecked {
-            for (uint256 i = 0; i < _tokenIds.length; i++) {
-                transferFrom(_from, _to, _tokenIds[i]);
-            }
-        }
-    }
-
-    /**
-     * @notice Safely transfers multiple tokens from `_from` to `_to`.
-     * @param _from The address from which to transfer tokens.
-     * @param _to The address to which to transfer tokens.
-     * @param _tokenIds An array of token IDs to transfer.
-     */
-    function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIds, bytes calldata _data)
-        external
-    {
-        unchecked {
-            for (uint256 i = 0; i < _tokenIds.length; i++) {
-                safeTransferFrom(_from, _to, _tokenIds[i], _data);
-            }
-        }
-    }
-
-    /// @dev Override to Support Id<>Id assigments.
     /// @param tokenId token to find the address of.
     /// @return exists whether or not a tokenId exists or not.
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
@@ -161,17 +125,7 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721, ERC2981Con
         return ownerOf(tokenId) != address(0);
     }
 
-    // Overrides.
-
-    function supportsInterface(bytes4 _interfaceId) public view override(IERC165, ERC2981Base, ERC721) returns (bool) {
-        return super.supportsInterface(_interfaceId);
-    }
-
-    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
-        if (!_exists(_tokenId)) revert TokenDoesNotExist();
-        return string(abi.encodePacked(baseURI, "/", Strings.toString(_tokenId), ".json"));
-    }
-
+ 
     // FALLBACK & RECEIVE
 
     // Function to receive Ether. msg.data must be empty
