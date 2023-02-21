@@ -17,8 +17,6 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     address public immutable SAN_ORIGIN_ADDRESS;
     address public immutable MUSIC_BOX_ADDRESS;
 
-    uint256 public constant MAX_SUPPLY = 3333;
-
     mapping(address ownerOfTokens => uint256[] tokensOwned) private _tokensOwnedByAddress;
 
     mapping(uint256 SanctuaryId => uint256 originId) public originSanctuaryTokenMap;
@@ -124,7 +122,6 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
     function _processChecks(uint256[] calldata tokenIds, address _tokenAddress) private {
         if (tokenIds.length != ORIGIN_TOKENS_REQUIRED_TO_REBIRTH) revert MintAmountTokensIncorrect();
-        if (totalSupply >= MAX_SUPPLY) revert MaxSupplyReached();
         if (balanceOf(msg.sender) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
         unchecked {
             for (uint256 i; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
@@ -137,9 +134,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @param tokenId Tokens to Check.
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
     function _processChecks(uint256 tokenId, address _tokenAddress) private {
-        if (totalSupply >= MAX_SUPPLY) revert MaxSupplyReached();
         if (balanceOf(msg.sender) >= MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
-
         _checkUserOwnsToken(tokenId, _tokenAddress);
     }
 
@@ -147,7 +142,6 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @param tokenId Token to Check.
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
     function _checkUserOwnsToken(uint256 tokenId, address _tokenAddress) private {
-        if (msg.sender == address(0)) revert ZeroAddress(); // The only truly shared location for this check.
         if (usedTokens[_tokenAddress][tokenId] != false) revert TokenAlreadyUsed();
         if (IERC721(_tokenAddress).ownerOf(tokenId) != msg.sender) revert TokenNotOwned();
         usedTokens[_tokenAddress][tokenId] = true;
@@ -188,6 +182,8 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         TokenLevel _newLevel,
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
+        if (msg.sender == address(0)) revert ZeroAddress(); // The only truly shared location for this check.
+
         // Burn San Origin
         ISanOriginNFT(SAN_ORIGIN_ADDRESS).batchSafeTransferFrom(msg.sender, _burnAddress(), originTokenIds, "");
 
@@ -206,6 +202,8 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     function _burnMintRebirth(uint256 originTokenId, TokenLevel _newLevel, IMusicBox.MusicBoxLevel _musicBoxLevel)
         private
     {
+        if (msg.sender == address(0)) revert ZeroAddress();
+
         // Burn San Origin
         ISanOriginNFT(SAN_ORIGIN_ADDRESS).safeTransferFrom(msg.sender, _burnAddress(), originTokenId, "");
 

@@ -20,10 +20,11 @@ contract TestERC721Sanctuary is TestERC721Base {
         }
     }
 
-    function testFailExceedsMaxSupply() public {
-        vm.assume(sanctuary.MAX_SUPPLY() == MOCK_MAX_SUPPLY);
-        for (uint256 i; i < multipleNotBoundTokens.length; i++) {
-            _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
-        }
-    }
+    // M<AX SUPPLY IS DETERMINED BY SAN ORIGIN CONTRACT
+    // function testFailExceedsMaxSupply() public {
+    //     vm.assume(sanctuary.MAX_SUPPLY() == MOCK_MAX_SUPPLY);
+    //     for (uint256 i; i < multipleNotBoundTokens.length; i++) {
+    //         _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
+    //     }
+    // }
 }
