@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 
 interface IBase721 {
-    error ExceedsMaxMintPerAddress();
+    error AmountExceedsMaxSupply();
     error MaxSupplyReached();
     error IncorrectPaymentAmount();
     error TokenDoesNotExist();

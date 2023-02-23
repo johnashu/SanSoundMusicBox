@@ -25,27 +25,24 @@ contract TestMintWithThreeUnboundedOrigin is MintWithThreeUnboundedOrigin {
     }
 
     function testUpgradeTokenLevelThreeUnbound() public {
-        _mintWithMultiSanOrigin(notBoundTokens, user);
-        uint256 _cur = 1;
-        uint256 _new = 2;
-        uint256 token = expectedMultiple[0];
-        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
-        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
-        _checkSanctuaryTokenLevel(level, token);
+        testMintWithMultiSanOrigin();
+        _upgradeTokenLevelSoulBound(expectedMultiple[0], 1, 2);
     }
 
     function testFailMintIsBound() public {
-        sanctuary.mintWith3UnboundSanOrigin{value: _getPrice(1, 0)}(isBoundTokens, ITokenLevels.TokenLevel(1));
+        sanctuary.mintWith3UnboundSanOrigin{value: _getPrice(1, 0)}(isBoundTokens, ITokenLevels.TokenLevel.Rebirthed);
     }
 
     function testFailMintNotOwned() public {
         vm.stopPrank();
         vm.prank(address(1));
-        sanctuary.mintWith3UnboundSanOrigin{value: _getPrice(1, 0)}(isBoundTokens, ITokenLevels.TokenLevel(1));
+        sanctuary.mintWith3UnboundSanOrigin{value: _getPrice(1, 0)}(isBoundTokens, ITokenLevels.TokenLevel.Rebirthed);
     }
 
-    function testFailTransferWhenSoulBound() public {
-        testUpgradeTokenLevelThreeUnbound();
+    function testUnableToApproveOrTransfersWhenSoulBound() public {
+        testMintWithMultiSanOrigin();
+        _failTransfer();
+        _upgradeTokenLevelSoulBound(expectedMultiple[0], 1, 2);
         _failTransfer();
     }
 

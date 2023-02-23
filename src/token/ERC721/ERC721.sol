@@ -30,7 +30,7 @@ abstract contract ERC721 is IERC721 {
     mapping(address => uint256) internal _balanceOf;
 
     function ownerOf(uint256 id) public view virtual returns (address owner) {
-        require((owner = _ownerOf[id]) != address(0), "NOT_MINTED");
+        if ((owner = _ownerOf[id]) == address(0)) revert TokenNotMinted();
     }
 
     function balanceOf(address owner) public view virtual returns (uint256) {
@@ -59,10 +59,6 @@ abstract contract ERC721 is IERC721 {
     /*//////////////////////////////////////////////////////////////
                               ERC721 LOGIC
     //////////////////////////////////////////////////////////////*/
-
-    function _burnAddress() internal view virtual returns (address) {
-        return address(0x000000000000000000000000000000000000dEaD);
-    }
 
     function approve(address spender, uint256 id) public virtual {
         address owner = _ownerOf[id];
@@ -159,26 +155,6 @@ abstract contract ERC721 is IERC721 {
 
         _ownerOf[id] = to;
         emit Transfer(address(0), to, id);
-    }
-
-    function _burn(uint256 id) internal virtual {
-        _canTransfer(id);
-        address owner = _ownerOf[id];
-
-        if (owner == address(0)) revert TokenNotMinted();
-
-        // Ownership check above ensures no underflow.
-        unchecked {
-            _balanceOf[owner]--;
-        }
-
-        delete _ownerOf[id];
-
-        delete getApproved[id];
-
-        totalSupply--;
-
-        emit Transfer(owner, address(0), id);
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -26,8 +26,8 @@ interface ITokenLevels {
 
     function upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel) external payable;
 
-    error CannotApproveTokenLevel(address to, uint256 tokenId);
-    error CannotTransferTokenLevelUpdatedToken(address from, address to, uint256 tokenId);
+    error CannotApproveBoundedToken();
+    error CannotTransferBoundedToken();
 
     error InvalidNumberOfLevelPrices();
     error LevelAlreadyReached();

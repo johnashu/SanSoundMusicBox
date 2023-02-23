@@ -66,12 +66,6 @@ abstract contract TestERC721Base is
         assertEq(erc721Contract.baseURI(), _newURI);
     }
 
-    function _runAllScenarios() public {
-        _mintWithMultiSanOrigin(notBoundTokens, user);
-        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
-        _mintWithSanSoundBound(isBoundSingleToken, user);
-    }
-
     function testWalletOfOwner() public virtual {
         _mintWithSanSoundBound(isBoundSingleToken, user);
         uint256[] memory tokenIds = erc721Contract.walletOfOwner(user);
@@ -92,5 +86,11 @@ abstract contract TestERC721Base is
     function testFailIsOwnerOf() public virtual {
         _mintWithSanSoundBound(isBoundSingleToken, user);
         assertTrue(erc721Contract.isOwnerOf(user, notExpected));
+    }
+
+    function _runAllScenarios() public {
+        _mintWithMultiSanOrigin(notBoundTokens, user);
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
+        _mintWithSanSoundBound(isBoundSingleToken, user);
     }
 }
