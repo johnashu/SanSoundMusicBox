@@ -20,13 +20,8 @@ contract TestMintWithPartnerTokens is MintWithPartnerTokens {
     }
 
     function testUpgradeTokenLevelPartners() public {
-        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
-        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
-        uint256 _cur = 1;
-        uint256 _new = 2;
-
-        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(expectedSingle, level);
-        _checkSanctuaryTokenLevel(level, expectedSingle);
+        testMintWithPartnerSingle();
+        _upgradeTokenLevelSoulBound(expectedSingle, 1, 2);
     }
 
     function testFailMintIsBound() public {
@@ -37,8 +32,10 @@ contract TestMintWithPartnerTokens is MintWithPartnerTokens {
         _mintWithPartner(mockERC721MultiAddress, partnerToken, notBoundSingleToken, makeAddr("PartnerNoTokensOwned"));
     }
 
-    function testFailTransferWhenSoulBound() public {
-        testUpgradeTokenLevelPartners();
+    function testUnableToApproveOrTransfersWhenSoulBound() public {
+        testMintWithPartnerSingle();
+        _failTransfer();
+        _upgradeTokenLevelSoulBound(expectedSingle, 1, 2);
         _failTransfer();
     }
 }

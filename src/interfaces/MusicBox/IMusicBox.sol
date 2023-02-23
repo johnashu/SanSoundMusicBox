@@ -3,9 +3,11 @@ pragma solidity ^0.8.18;
 
 interface IMusicBox {
     enum MusicBoxLevel {
+        NoLevel,
         Common,
         Rare,
-        Legendary
+        Legendary,
+        Locked
     }
 
     function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIds, bytes calldata _data)

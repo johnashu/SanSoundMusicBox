@@ -40,13 +40,6 @@ contract MockSanOrigin is Base721 {
         if (_to == address(0)) revert ZeroAddress();
         uint256 _amount = _tokenIds.length;
 
-        // Underflow of the sender's balance is impossible because we check for
-        // ownership above and the recipient's balance can't realistically overflow.
-        // We can save some gas here by updating all in one go.
-        unchecked {
-            _balanceOf[_from] -= _amount;
-            _balanceOf[_to] += _amount;
-        }
         unchecked {
             for (uint256 i; i < _amount; i++) {
                 uint256 id = _tokenIds[i];
@@ -62,6 +55,13 @@ contract MockSanOrigin is Base721 {
 
                 delete getApproved[id];
             }
+        }
+        // Underflow of the sender's balance is impossible because we check for
+        // ownership above and the recipient's balance can't realistically overflow.
+        // We can save some gas here by updating all in one go.
+        unchecked {
+            _balanceOf[_from] -= _amount;
+            _balanceOf[_to] += _amount;
         }
     }
 

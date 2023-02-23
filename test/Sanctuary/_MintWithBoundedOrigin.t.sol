@@ -5,8 +5,8 @@ import {TestBase, ITokenLevels, IMusicBox, MusicBox} from "test/TestBase.sol";
 
 contract MintWithBoundedOrigin is TestBase {
     function _mintWithSanSoundBound(uint256 _toCheck, address user) internal {
-        uint256 _cur = 0;
-        uint256 _new = 1;
+        uint256 _cur = 1;
+        uint256 _new = 2;
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
         _approveToken(_toCheck);
 

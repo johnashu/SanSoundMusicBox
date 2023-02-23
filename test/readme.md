@@ -23,13 +23,13 @@ forge test --match-path test/Sanctuary/MintWithPartnerTokens.t.sol --match-contr
 
 forge test --match-path test/Sanctuary/MintWithThreeUnboundedOrigin.t.sol --match-contract TestMintWithThreeUnboundedOrigin  --match-test "testMintWithMultiSanOrigin*" -vvvvv
 
-forge test --match-path test/Sanctuary/MintWithBoundedOrigin.t.sol --match-contract TestMintWithBoundedOrigin  --match-test "testMintWithSanSoundBoundSingle*" -vvvvv
+forge test --match-path test/Sanctuary/MintWithBoundedOrigin.t.sol --match-contract TestMintWithBoundedOrigin  --match-test "testFailTransferWhenSoulBound*" -vvvvv
 
 forge test --match-path test/Common.t.sol --match-contract TestCommon --match-test "testSendNFTToSanctuaryAddress*" -vvvvv
 
 forge test --match-path test/ERC721/ERC721.t.sol --match-contract TestERC721  --match-test "testWalletOfOwner*" -vvvvv
 
-forge test --match-path test/Levels/TokenLevels.t.sol --match-contract TestLevels  --match-test "testUserMaxTokenLevel*" -vvvvv
+forge test --match-path test/Levels/TokenLevels.t.sol --match-contract TestLevels  --match-test "testFailUpgradeTokenLevelAlreadyReached*" -vvvvv
 
 forge test --match-path test/ERC721/ERC721MusicBox.t.sol --match-contract TestERC721MusicBox  --match-test "testWalletOfOwner*" -vvvvv
 

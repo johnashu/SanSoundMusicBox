@@ -15,34 +15,29 @@ contract TestMintWithBoundedOrigin is MintWithBoundedOrigin {
         vm.startPrank(user);
     }
 
-    function testMintWithSanSoundBoundMultiple() public {
+    function testMintWithSanSoundBound() public {
         _mintWithSanSoundBound(isBoundSingleToken, user);
     }
 
     function testUpgradeTokenLevelSoulBound() public {
-        _mintWithSanSoundBound(isBoundSingleToken, user);
-
-        uint256 token = expectedSingle;
-        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(2);
-        uint256 _cur = 1;
-        uint256 _new = 2;
-
-        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
-        _checkSanctuaryTokenLevel(level, token);
+        testMintWithSanSoundBound();
+        _upgradeTokenLevelSoulBound(expectedSingle, 2, 3);
     }
 
     function testFailMintIsNotBound() public {
-        sanctuary.mintFromSoulbound{value: _getPrice(1, 0)}(notBoundSingleToken, ITokenLevels.TokenLevel(1));
+        sanctuary.mintFromSoulbound{value: _getPrice(1, 0)}(notBoundSingleToken, ITokenLevels.TokenLevel.Rebirthed);
     }
 
     function testFailMintNotOwned() public {
         vm.stopPrank();
         vm.prank(address(1));
-        sanctuary.mintFromSoulbound{value: _getPrice(1, 0)}(isBoundSingleToken, ITokenLevels.TokenLevel(1));
+        sanctuary.mintFromSoulbound{value: _getPrice(1, 0)}(isBoundSingleToken, ITokenLevels.TokenLevel.Rebirthed);
     }
 
-    function testFailTransferWhenSoulBound() public {
-        testUpgradeTokenLevelSoulBound();
+    function testUnableToApproveOrTransfersWhenSoulBound() public {
+        testMintWithSanSoundBound();
+        _failTransfer();
+        _upgradeTokenLevelSoulBound(expectedSingle, 2, 3);
         _failTransfer();
     }
 }

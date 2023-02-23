@@ -55,7 +55,7 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
      */
     function isOwnerOf(address _account, uint256[] calldata tokenIds) public view returns (bool) {
         uint256 len = tokenIds.length;
-        if (len > MAX_MINT_PER_ADDRESS) revert ExceedsMaxMintPerAddress();
+        if (len > totalSupply) revert AmountExceedsMaxSupply();
         unchecked {
             for (uint256 i; i < len; ++i) {
                 if (ownerOf(tokenIds[i]) != _account) {

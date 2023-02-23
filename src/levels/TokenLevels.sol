@@ -22,42 +22,6 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
         }
     }
 
-    /// @dev Check prices and do the upgrade.. Used by minting functions and publicly explosed function below.
-    /// @param _tokenId Token to upgrade.
-    /// @param _newLevel New level
-    /// @param _currentLevel current level
-    function _upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
-        __upgradeTokenLevel(_tokenId, _newLevel, _currentLevel);
-        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
-    }
-
-    /// @dev Check prices and do the upgrade.. Used by minting functions and publicly explosed function below.
-    /// @param _tokenId Token to upgrade.
-    /// @param _newLevel New level
-    /// @param _currentLevel current level
-    function __upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
-        unchecked {
-            uint256 price = levelPrice[_newLevel] - levelPrice[_currentLevel];
-            if (msg.value != price) revert IncorrectPaymentAmount();
-        }
-        tokenLevel[_tokenId] = _newLevel;
-    }
-
-    /// @notice Upgrade a tokens Level
-    /// @dev Public facing function to upgrade a tokens level.
-    /// @param _tokenId Token to upgrade.
-    /// @param _newLevel New level
-    function upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel) public payable {
-        TokenLevel currentLevel = tokenLevel[_tokenId];
-
-        if (ISanctuary(address(this)).ownerOf(_tokenId) != msg.sender) revert TokenNotOwned();
-        if (_newLevel == TokenLevel.Unbound) revert TokenUnBound();
-        if (currentLevel >= _newLevel) revert LevelAlreadyReached();
-
-        tokenLevel[_tokenId] = _newLevel;
-        _upgradeTokenLevel(_tokenId, _newLevel, currentLevel);
-    }
-
     /// @dev Owner can set the levelPrices
     /// @param _newPrices An array of length(NUM_OF_LEVELS) of New level prices.
     function setLevelPrices(uint256[NUM_OF_LEVELS] calldata _newPrices) public onlyOwner {
@@ -82,7 +46,6 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     /// @param _owner Address to check the Level of.
     /// @return userMaxLevel The Maximum level of that owner.
     function userMaxTokenLevel(address _owner) public view returns (TokenLevel) {
-        // Use token count here as we have a MAX_MINT_PER USER in place in the sanctuary.
         uint256 tokenCount = ISanctuary(address(this)).balanceOf(_owner);
         if (tokenCount == 0) return TokenLevel.Unbound;
 
@@ -95,5 +58,40 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
             }
         }
         return userMaxLevel;
+    }
+
+    /// @notice Upgrade a tokens Level
+    /// @dev Public facing function to upgrade a tokens level.
+    /// @param _tokenId Token to upgrade.
+    /// @param _newLevel New level
+    function upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel) public payable {
+        if (ISanctuary(address(this)).ownerOf(_tokenId) != msg.sender) revert TokenNotOwned();
+        if (_newLevel == TokenLevel.Unbound) revert TokenUnBound();
+
+        TokenLevel currentLevel = tokenLevel[_tokenId];
+        if (currentLevel >= _newLevel) revert LevelAlreadyReached();
+
+        _upgradeTokenLevel(_tokenId, _newLevel, currentLevel);
+    }
+
+    /// @dev Check prices and do the upgrade.. Used by minting functions and publicly explosed function below.
+    /// @param _tokenId Token to upgrade.
+    /// @param _newLevel New level
+    /// @param _currentLevel current level
+    function _upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
+        __upgradeTokenLevel(_tokenId, _newLevel, _currentLevel);
+        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
+    }
+
+    /// @dev Check prices and do the upgrade.. Used by minting functions and publicly explosed function below.
+    /// @param _tokenId Token to upgrade.
+    /// @param _newLevel New level
+    /// @param _currentLevel current level
+    function __upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
+        tokenLevel[_tokenId] = _newLevel;
+        unchecked {
+            uint256 price = levelPrice[_newLevel] - levelPrice[_currentLevel];
+            if (msg.value != price) revert IncorrectPaymentAmount();
+        }
     }
 }

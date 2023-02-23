@@ -152,16 +152,18 @@ abstract contract TestBase is Test {
         return _levelPrices[_new] - _levelPrices[_cur];
     }
 
-    function _checkSanctuaryTokenLevel(ITokenLevels.TokenLevel level, uint256 token) internal view {
+    function _checkSanctuaryTokenLevel(ITokenLevels.TokenLevel level, uint256 token) internal {
         ITokenLevels.TokenLevel currentLevel = sanctuary.tokenLevel(token);
-        if (currentLevel != level) revert ITokenLevels.TokenLevelMismatch();
+        assertTrue(uint256(currentLevel) == uint256(level));
+        assertTrue(currentLevel == level);
     }
 
     function _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel level, uint256 token, address user) internal {
         // Check MusicBox Token is minted and Level.
         IMusicBox.MusicBoxLevel currentLevel = musicBox.tokenLevel(token);
         assertEq(musicBox.ownerOf(token), user);
-        if (currentLevel != level) revert ITokenLevels.TokenLevelMismatch();
+        assertTrue(uint256(currentLevel) == uint256(level));
+        assertTrue(currentLevel == level);
     }
 
     function _checkAfterMint(
@@ -189,7 +191,21 @@ abstract contract TestBase is Test {
     }
 
     function _failTransfer() internal {
+        vm.expectRevert();
+        sanctuary.approve(msg.sender, 1);
+        vm.expectRevert();
+        sanctuary.setApprovalForAll(msg.sender, true);
+        vm.expectRevert();
         sanctuary.transferFrom(msg.sender, address(0x1), 1);
-        sanctuary.transferFrom(msg.sender, address(0), 1);
+        vm.expectRevert();
+        sanctuary.safeTransferFrom(msg.sender, address(0x1), 1);
+        vm.expectRevert();
+        sanctuary.safeTransferFrom(msg.sender, address(0x1), 1, "");
+    }
+
+    function _upgradeTokenLevelSoulBound(uint256 token, uint256 _cur, uint256 _new) public {
+        ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
+        sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
+        _checkSanctuaryTokenLevel(level, token);
     }
 }

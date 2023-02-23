@@ -19,12 +19,6 @@ contract TestLevels is MintWithBoundedOrigin {
         vm.startPrank(user);
     }
 
-    function testFailSetLevelPricesPriceIncrease() public {
-        vm.stopPrank();
-        vm.prank(OWNER);
-        sanctuary.setLevelPrices(incorrectLevelPrices);
-    }
-
     function testSetLevelPrices() public {
         vm.stopPrank();
         vm.prank(OWNER);
@@ -32,6 +26,12 @@ contract TestLevels is MintWithBoundedOrigin {
         for (uint256 i; i < newLevelPrices.length; i++) {
             if (sanctuary.levelPrice(ITokenLevels.TokenLevel(i)) != newLevelPrices[i]) revert();
         }
+    }
+
+    function testFailSetLevelPricesPriceIncrease() public {
+        vm.stopPrank();
+        vm.prank(OWNER);
+        sanctuary.setLevelPrices(incorrectLevelPrices);
     }
 
     function testFailSetLevelPricesNotOwner(address caller) public {
@@ -43,6 +43,31 @@ contract TestLevels is MintWithBoundedOrigin {
     function testUserMaxTokenLevel() public {
         _mintWithSanSoundBound(isBoundSingleToken, user);
         ITokenLevels.TokenLevel maxLevel = sanctuary.userMaxTokenLevel(user);
-        if (ITokenLevels.TokenLevel(1) != maxLevel) revert("Token Level Mismatch");
+        assertTrue(ITokenLevels.TokenLevel.Citizen == maxLevel);
+    }
+
+    function testFailUserMaxTokenLevelNoTokens() public {
+        _mintWithSanSoundBound(isBoundSingleToken, user);
+        vm.stopPrank();
+        vm.startPrank(makeAddr("NoTokensUser"));
+        ITokenLevels.TokenLevel maxLevel = sanctuary.userMaxTokenLevel(user);
+        assertTrue(ITokenLevels.TokenLevel.Unbound == maxLevel);
+    }
+
+    function testFailUpgradeTokenTokenNotOwned(address caller) public {
+        _mintWithSanSoundBound(isBoundSingleToken, user);
+        vm.stopPrank();
+        vm.prank(caller);
+        sanctuary.upgradeTokenLevel(1, ITokenLevels.TokenLevel.Citizen);
+    }
+
+    function testFailUpgradeTokenTokenUnBound() public {
+        _mintWithSanSoundBound(isBoundSingleToken, user);
+        sanctuary.upgradeTokenLevel(1, ITokenLevels.TokenLevel.Unbound);
+    }
+
+    function testFailUpgradeTokenLevelAlreadyReached(address caller) public {
+        _mintWithSanSoundBound(isBoundSingleToken, user);
+        sanctuary.upgradeTokenLevel(1, ITokenLevels.TokenLevel.Rebirthed);
     }
 }
