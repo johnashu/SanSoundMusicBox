@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 
 import {TestBase, ITokenLevels, IERC721} from "test/TestBase.sol";
-import {Base721} from "src/token/ERC721/Base721.sol";
+import {Strings, Base721} from "src/token/ERC721/Base721.sol";
 import {MintWithBoundedOrigin} from "test/Sanctuary/_MintWithBoundedOrigin.t.sol";
 import {MintWithThreeUnboundedOrigin} from "test/Sanctuary/_MintWithThreeUnboundedOrigin.t.sol";
 import {MintWithPartnerTokens} from "test/Sanctuary/_MintWithPartnerTokens.t.sol";

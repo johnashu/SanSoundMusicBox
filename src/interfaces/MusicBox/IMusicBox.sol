@@ -14,6 +14,7 @@ interface IMusicBox {
         external;
 
     event BatchTransfer(address indexed from, address indexed to, uint256[] _tokenIds);
+    event TokenLockedUp(address indexed tokenOwner, uint256 indexed tokenId, uint256 _lockupTime);
 
     function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel) external;
 
@@ -23,4 +24,5 @@ interface IMusicBox {
     error LockupTimeZero();
     error TokenLocked();
     error WrongCallingAddress();
+    error MusicBoxMintFailed();
 }

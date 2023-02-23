@@ -118,6 +118,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @dev used for the 'mint 3 from san origin' option.
     /// @param originTokenIds Tokens to Check.
     function _processChecks(uint256[] calldata originTokenIds) private {
+        if (msg.sender == address(0)) revert ZeroAddress();
         if (originTokenIds.length != ORIGIN_TOKENS_REQUIRED_TO_REBIRTH) revert MintAmountTokensIncorrect();
         unchecked {
             for (uint256 i; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
@@ -131,6 +132,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @param tokenId Tokens to Check.
     /// @param _tokenAddress Address or contract to check (San Origin / Partners).
     function _processChecks(uint256 tokenId, address _tokenAddress) private {
+        if (msg.sender == address(0)) revert ZeroAddress();
         _checkUserOwnsToken(tokenId, _tokenAddress);
     }
 
@@ -169,8 +171,6 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         TokenLevel _newLevel,
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
-        if (msg.sender == address(0)) revert ZeroAddress();
-
         // Burn San Origin
         ISanOriginNFT(SAN_ORIGIN_ADDRESS).batchSafeTransferFrom(msg.sender, BURN_ADDRESS, originTokenIds, "");
 
@@ -192,8 +192,6 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         TokenLevel _currentLevel,
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
-        if (msg.sender == address(0)) revert ZeroAddress();
-
         // Burn San Origin
         ISanOriginNFT(SAN_ORIGIN_ADDRESS).safeTransferFrom(msg.sender, BURN_ADDRESS, originTokenId, "");
 

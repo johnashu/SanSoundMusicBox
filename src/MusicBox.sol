@@ -41,18 +41,20 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
 
     /// @notice Locks up a MusicBox token for a specific time period
     /// @dev musicBoxLevel will be set to 'Locked' and this level will prevent any transfers.
-    /// @param _lockupTime a parameter just like in doxygen (must be followed by parameter name)
-    /// @param tokenId the return variables of a contract’s function state variable
-    function setLockupTime(uint256 _lockupTime, uint256 tokenId) external {
+    /// @param _lockupTime Lockup time to Soulbind for.
+    /// @param tokenId Token Id to Lock.
+    /// @param tokenOwner Owner of the token to check.
+    function setLockupTime(uint256 _lockupTime, uint256 tokenId, address tokenOwner) external {
         if (msg.sender != charactersAddress) revert WrongCallingAddress();
         if (_lockupTime == 0) revert LockupTimeZero();
-        if (ownerOf(tokenId) == address(0)) revert TokenNotMinted();
+        if (ownerOf(tokenId) != tokenOwner) revert NotOwner();
 
         lockupTime[tokenId] = _lockupTime;
         tokenLevel[tokenId] = MusicBoxLevel.Locked;
+        emit TokenLockedUp(tokenOwner, tokenId, _lockupTime);
     }
 
-    /// @notice Mints a new token received from the Sanctuary Contract.
+    /// @notice Mints a new token received from the Sanctuary Contract.  Sanctuary will perform checks.
     /// @dev The Sanctuary Contract deploys and sets its address in this contract.  Only that address can mint to it.
     /// @param _to Address to send the minted Token to.
     /// @param musicBoxLevel MusicBox level Common, Rare, Epic as sent by the Sanctuary.

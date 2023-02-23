@@ -31,7 +31,9 @@ forge test --match-path test/ERC721/ERC721.t.sol --match-contract TestERC721  --
 
 forge test --match-path test/Levels/TokenLevels.t.sol --match-contract TestLevels  --match-test "testFailUpgradeTokenLevelAlreadyReached*" -vvvvv
 
-forge test --match-path test/ERC721/ERC721MusicBox.t.sol --match-contract TestERC721MusicBox  --match-test "testWalletOfOwner*" -vvvvv
+forge test --match-path test/ERC721/ERC721MusicBox.t.sol --match-contract TestERC721MusicBox  --match-test "testGetURI*" -vvvvv
+
+forge test --match-path test/ERC721/ERC721Sanctuary.t.sol --match-contract TestERC721Sanctuary  --match-test "testGetURI*" -vvvvv
 
 ```
 
