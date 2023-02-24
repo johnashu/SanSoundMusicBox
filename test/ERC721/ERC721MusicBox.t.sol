@@ -23,19 +23,9 @@ contract TestERC721MusicBox is TestERC721Base {
     }
 
     function testGetURI() public {
-        _mintWithMultiSanOrigin(notBoundTokens, user);
         uint256 tokenId = 1;
         uint256 tokenLevel = 2;
-        string memory _expectedURI = string(
-            abi.encodePacked(
-                "https://example.com/", Strings.toString(tokenLevel), "/", Strings.toString(tokenId), ".json"
-            )
-        );
-
-        string memory receivedUri = erc721Contract.tokenURI(tokenId);
-
-        emit log_string(_expectedURI);
-        emit log_string(receivedUri);
-        assertEq(receivedUri, _expectedURI);
+        _mintWithMultiSanOrigin(notBoundTokens, user);
+        _getURI(tokenId, tokenId, tokenLevel);
     }
 }

@@ -93,4 +93,18 @@ abstract contract TestERC721Base is
         _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
         _mintWithSanSoundBound(isBoundSingleToken, user);
     }
+
+    function _getURI(uint256 tokenId, uint256 tokenIdStr, uint256 tokenLevel) internal {
+        string memory _expectedURI = string(
+            abi.encodePacked(
+                "https://example.com/", Strings.toString(tokenLevel), "/", Strings.toString(tokenIdStr), ".json"
+            )
+        );
+
+        string memory receivedUri = erc721Contract.tokenURI(tokenId);
+
+        emit log_string(_expectedURI);
+        emit log_string(receivedUri);
+        assertEq(receivedUri, _expectedURI);
+    }
 }

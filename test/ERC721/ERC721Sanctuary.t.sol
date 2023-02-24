@@ -17,19 +17,8 @@ contract TestERC721Sanctuary is TestERC721Base {
     function testGetURI() public {
         _mintWithMultiSanOrigin(notBoundTokens, user);
         for (uint256 i = 0; i < notBoundTokens.length; i++) {
-            uint256 tokenId = notBoundTokens[i];
             uint256 tokenLevel = 1;
-            string memory _expectedURI = string(
-                abi.encodePacked(
-                    "https://example.com/", Strings.toString(tokenLevel), "/", Strings.toString(tokenId), ".json"
-                )
-            );
-
-            string memory receivedUri = erc721Contract.tokenURI(expectedMultiple[i]);
-
-            emit log_string(_expectedURI);
-            emit log_string(receivedUri);
-            assertEq(receivedUri, _expectedURI);
+            _getURI(expectedMultiple[i], notBoundTokens[i], tokenLevel);
         }
     }
 
