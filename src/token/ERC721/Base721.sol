@@ -12,19 +12,37 @@ import {Ownable} from "src/utils/Ownable.sol";
  */
 
 abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
-    /// The maximum number of mints per address - Santuary dictates maximum for both as MusicBox cannot mint!
-    uint256 public constant MAX_MINT_PER_ADDRESS = 3;
     /// The base URI for token metadata.
     string public baseURI;
+    /// The contract URI for contract-level metadata.
+    string public contractURI;
 
-    constructor(string memory _name, string memory _symbol, string memory _baseURI)
+    constructor(string memory _name, string memory _symbol, string memory _baseURI, string memory _contractURI)
         ERC721(_name, _symbol, uint256(1))
     {
+        contractURI = _contractURI;
         baseURI = _baseURI;
     }
 
     function _getTokenIdAndIncrement() internal returns (uint256) {
         return ++totalSupply;
+    }
+
+    /**
+     * @notice (only owner) Sets the base URI for token metadata.
+     * @param _newBaseURI The new base URI.
+     */
+
+    function setBaseURI(string calldata _newBaseURI) external onlyOwner {
+        baseURI = _newBaseURI;
+    }
+
+    /**
+     * @notice (only owner) Sets the contract URI for contract metadata.
+     * @param _newContractURI The new contract URI.
+     */
+    function setContractURI(string calldata _newContractURI) external onlyOwner {
+        contractURI = _newContractURI;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -55,7 +73,7 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
      */
     function isOwnerOf(address _account, uint256[] calldata tokenIds) public view returns (bool) {
         uint256 len = tokenIds.length;
-        if (len > totalSupply) revert AmountExceedsMaxSupply();
+        if (len > totalSupply) revert AmountExceedsSupply();
         unchecked {
             for (uint256 i; i < len; ++i) {
                 if (ownerOf(tokenIds[i]) != _account) {
@@ -82,14 +100,6 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
             }
         }
         return tokenIds;
-    }
-
-    /**
-     * @notice (only owner) Sets the base URI for token metadata.
-     * @param _newBaseURI The new base URI.
-     */
-    function setBaseURI(string calldata _newBaseURI) external onlyOwner {
-        baseURI = _newBaseURI;
     }
 
     /**

@@ -14,18 +14,10 @@ contract TestERC721MusicBox is TestERC721Base {
         erc721ContractAddress = musicBoxAddress;
     }
 
-    function testSetRoyalties() public {
-        vm.expectRevert();
-        musicBox.setRoyalties(user, 900);
-        vm.stopPrank();
-        vm.prank(OWNER);
-        musicBox.setRoyalties(user, 900);
-    }
-
-    function testGetURI() public {
+    function testGetBaseURI() public {
         uint256 tokenId = 1;
         uint256 tokenLevel = 2;
         _mintWithMultiSanOrigin(notBoundTokens, user);
-        _getURI(tokenId, tokenId, tokenLevel);
+        _getBaseURI(tokenId, tokenId, tokenLevel);
     }
 }

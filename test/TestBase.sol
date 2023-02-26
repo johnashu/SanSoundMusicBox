@@ -19,6 +19,11 @@ abstract contract TestBase is Test {
     MockERC721 mockERC721Multi;
     MockSanOrigin mockSanOrigin;
 
+    string startBaseURI = "https://base-uri.com/";
+    string newBaseURI = "https://NEW-BASE-URI.com/";
+    string startContractURI = "https://contract-uri.com/";
+    string newContractURI = "https://NEW-CONTRACT-URI.com/";
+
     address mockERC721SingleAddress;
     address mockERC721MultiAddress;
 
@@ -28,6 +33,7 @@ abstract contract TestBase is Test {
     address SANCTUARY_ADDRESS;
 
     address OWNER = makeAddr("Owner");
+    address noTokensUser = makeAddr("NoTokensUser");
 
     uint256[6] _levelPrices;
 
@@ -44,8 +50,14 @@ abstract contract TestBase is Test {
 
     uint256[] noTokens;
 
-    uint256[][] multipleNotBoundTokens =
-        [[3330, 3331, 3332], [3130, 3231, 3032], [3300, 3311, 3322], [3030, 3231, 3222]];
+    uint256[][] multipleNotBoundTokens = [
+        [3330, 3331, 3332],
+        [3130, 3231, 3032],
+        [3300, 3311, 3322],
+        [4330, 4331, 4332],
+        [4130, 4231, 4032],
+        [4300, 4311, 4322]
+    ];
 
     uint256 isBoundSingleToken = 21;
     uint256 notBoundSingleToken = 15;
@@ -94,11 +106,13 @@ abstract contract TestBase is Test {
         sanctuary = new Sanctuary(
             string("TestSanctuary"),
             string("TSSS"),
-            string("https://example.com/"),
+            string(startBaseURI),
+            string(startContractURI),
            
             string("TestMusicBox"),
             string("TSSMB"),
-            string("https://example.com/"),
+            string(startBaseURI),
+            string(startContractURI),
           
               SAN_ORIGIN_ADDRESS,
             _levelPrices
@@ -121,7 +135,7 @@ abstract contract TestBase is Test {
             mockERC721Multi.transferAll(user, start, end);
 
             uint256 offset = 0;
-            uint256 split = 6666 / userLen;
+            uint256 split = 10000 / userLen;
             emit log_uint(split);
             if (userLen == 1) {
                 offset = 1;

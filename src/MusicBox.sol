@@ -23,14 +23,18 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
     uint256 public constant MAX_ROYALTIES_PCT = 930; // 9.3%
 
     address public immutable SANCTUARY_ADDRESS;
-    address private charactersAddress;
+    address public charactersAddress;
 
     mapping(uint256 tokenId => uint256 lockupTime) public lockupTime;
     mapping(uint256 tokenId => MusicBoxLevel) public tokenLevel;
 
-    constructor(string memory _name, string memory _symbol, string memory _baseURI, address _SANCTUARY_ADDRESS)
-        Base721(_name, _symbol, _baseURI)
-    {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        string memory _baseURI,
+        string memory _contractURI,
+        address _SANCTUARY_ADDRESS
+    ) Base721(_name, _symbol, _baseURI, _contractURI) {
         SANCTUARY_ADDRESS = _SANCTUARY_ADDRESS;
     }
 
@@ -172,7 +176,7 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
     }
 
     function _canTransfer(uint256 tokenId) internal view override {
-        if (block.timestamp > lockupTime[tokenId]) revert TokenLocked();
+        if (block.timestamp < lockupTime[tokenId]) revert TokenLocked();
     }
 
     // Overrides.

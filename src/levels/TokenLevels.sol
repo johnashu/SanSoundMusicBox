@@ -34,9 +34,6 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
 
                 levelPrice[TokenLevel(i)] = _newPrices[i];
                 previousPrice = _newPrices[i];
-                if (i == NUM_OF_LEVELS - 1) {
-                    break;
-                }
             }
         }
     }
@@ -79,19 +76,11 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     /// @param _newLevel New level
     /// @param _currentLevel current level
     function _upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
-        __upgradeTokenLevel(_tokenId, _newLevel, _currentLevel);
-        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
-    }
-
-    /// @dev Check prices and do the upgrade.. Used by minting functions and publicly explosed function below.
-    /// @param _tokenId Token to upgrade.
-    /// @param _newLevel New level
-    /// @param _currentLevel current level
-    function __upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
         tokenLevel[_tokenId] = _newLevel;
         unchecked {
             uint256 price = levelPrice[_newLevel] - levelPrice[_currentLevel];
             if (msg.value != price) revert IncorrectPaymentAmount();
         }
+        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
     }
 }

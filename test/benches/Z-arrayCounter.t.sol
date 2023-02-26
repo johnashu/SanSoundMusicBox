@@ -10,6 +10,7 @@ contract ArrayCounter {
     constructor() {
         for (uint256 i; i < 1000; i++) {
             array.push(i);
+            ownerByTokenMap[i] = msg.sender;
         }
     }
 
@@ -55,6 +56,19 @@ contract ArrayCounter {
             }
         }
     }
+
+    function tokenOfOwnerByIndexMapped(address owner) public view returns (uint256) {
+        uint256 count;
+        unchecked {
+            for (uint256 i; i < _owners.length; i++) {
+                if (owner == ownerByTokenMap[i]) {
+                    return i;
+                } else {
+                    count++;
+                }
+            }
+        }
+    }
 }
 
 contract TestArrayCounter is Test {
@@ -68,6 +82,12 @@ contract TestArrayCounter is Test {
     function testTokenOfOwnerByIndex() public {
         for (uint256 i; i < 10000; i++) {
             ac.tokenOfOwnerByIndex(findMe);
+        }
+    }
+
+    function testTokenOfOwnerByMapped() public {
+        for (uint256 i; i < 10000; i++) {
+            ac.tokenOfOwnerByIndexMapped(findMe);
         }
     }
 
@@ -91,9 +111,13 @@ contract TestArrayCounter is Test {
         }
     }
 
+    function testAddOwnerByTokenArraySingle() public {
+        ac.addOwnerByTokenArray(findMe);
+    }
+
     function testAddOwnerByTokenArray() public {
         for (uint256 i; i < 10000; i++) {
-            if (i == 5000) {
+            if (i == 9999) {
                 ac.addOwnerByTokenArray(findMe);
             } else {
                 ac.addOwnerByTokenArray(msg.sender);

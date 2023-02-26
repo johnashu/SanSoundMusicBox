@@ -10,8 +10,8 @@ import {Base721, IERC721, ERC721} from "src/token/ERC721/Base721.sol";
 contract MockSanOrigin is Base721 {
     mapping(uint256 => uint256) public tokenLevel;
 
-    constructor() Base721("SO Mock", "SOM", "https://www.example.com/") {
-        for (uint256 i; i < 3333; i++) {
+    constructor() Base721("SO Mock", "SOM", "https://base-uri.com/", "https://contract-uri.com/") {
+        for (uint256 i; i < 10000; i++) {
             _safeMint(msg.sender, i + 1);
 
             // Soulbound Level 1

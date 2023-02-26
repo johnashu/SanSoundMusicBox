@@ -17,14 +17,13 @@ interface ITokenLevels {
     }
 
     event TokenLevelUpdated(
-        address indexed TokenOwnerAddress, uint256 indexed tokenId, TokenLevel newLevel, TokenLevel previousLevel
+        address indexed TokenOwnerAddress,
+        uint256 indexed tokenId,
+        TokenLevel indexed newLevel,
+        TokenLevel previousLevel
     );
 
-    event TokenLevelsUpdated(
-        address indexed TokenOwnerAddress, uint256[] indexed tokenIds, TokenLevel newLevel, TokenLevel previousLevel
-    );
-
-    function upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel) external payable;
+    function upgradeTokenLevel(uint256 _tokenId, TokenLevel newLevel) external payable;
 
     error CannotApproveBoundedToken();
     error CannotTransferBoundedToken();

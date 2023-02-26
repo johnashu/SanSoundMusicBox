@@ -27,12 +27,14 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         string memory _name,
         string memory _symbol,
         string memory _baseURI,
+        string memory _contractURI,
         string memory _nameMusicBox,
         string memory _symbolMusicBox,
         string memory _baseURIMusicBox,
+        string memory _contractURIMusicBox,
         address _SAN_ORIGIN_ADDRESS,
         uint256[NUM_OF_LEVELS] memory _levelPrices
-    ) Base721(_name, _symbol, _baseURI) TokenLevels(_levelPrices) {
+    ) Base721(_name, _symbol, _baseURI, _contractURI) TokenLevels(_levelPrices) {
         SAN_ORIGIN_ADDRESS = _SAN_ORIGIN_ADDRESS;
         isValidContract[_SAN_ORIGIN_ADDRESS] = true;
 
@@ -40,6 +42,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
             _nameMusicBox, 
             _symbolMusicBox, 
             _baseURIMusicBox, 
+            _contractURIMusicBox,
             address(this)
             );
 
@@ -149,8 +152,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @dev Make sure all token passed are SoulBound.
     /// @param tokenId San Origin Id(s) to Rebirth.
     function _checkOriginTokensAreBound(uint256 tokenId) private view returns (uint256 level) {
-        uint256 level = ISanOriginNFT(SAN_ORIGIN_ADDRESS).tokenLevel(tokenId);
-        if (level == 0) revert TokenUnBound();
+        if ((level = ISanOriginNFT(SAN_ORIGIN_ADDRESS).tokenLevel(tokenId)) == 0) revert TokenUnBound();
     }
 
     /// @dev Check the Soulbound status of the San Origin Token passed.
@@ -217,13 +219,10 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
                 uint256 newId = currentId + i + 1;
                 _ownerOf[newId] = msg.sender;
                 originSanctuaryTokenMap[newId] = originTokenIds[i];
-                __upgradeTokenLevel(newId, _newLevel, TokenLevel.Unbound);
+                _upgradeTokenLevel(newId, _newLevel, TokenLevel.Unbound);
+                emit Rebirth(msg.sender, originTokenIds[i], newId);
             }
         }
-
-        // emit 1 log
-        emit ITokenLevels.TokenLevelsUpdated(msg.sender, originTokenIds, _newLevel, TokenLevel.Unbound);
-        emit Rebirth(msg.sender, originTokenIds, currentId + 1, totalSupply);
     }
 
     /// @dev After mint, tokens are SouldBound and cannot be burned /tx.

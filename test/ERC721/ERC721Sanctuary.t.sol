@@ -14,11 +14,11 @@ contract TestERC721Sanctuary is TestERC721Base {
         erc721ContractAddress = SANCTUARY_ADDRESS;
     }
 
-    function testGetURI() public {
+    function testGetBaseURI() public {
         _mintWithMultiSanOrigin(notBoundTokens, user);
         for (uint256 i = 0; i < notBoundTokens.length; i++) {
             uint256 tokenLevel = 1;
-            _getURI(expectedMultiple[i], notBoundTokens[i], tokenLevel);
+            _getBaseURI(expectedMultiple[i], notBoundTokens[i], tokenLevel);
         }
     }
 
