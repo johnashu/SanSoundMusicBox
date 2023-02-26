@@ -53,8 +53,10 @@ abstract contract TestERC721Base is
 
     function testTokenOfOwnerByIndex() public {
         _mintWithMultiSanOrigin(notBoundTokens, user);
-        uint256 tokenId = musicBox.tokenOfOwnerByIndex(user, 0);
-        assertEq(tokenId, 1);
+        uint256 tokenId = erc721Contract.tokenOfOwnerByIndex(user, 0);
+        uint256 expected = 1;
+        // emit log_uint(musicBo)
+        assertEq(tokenId, expected);
     }
 
     function testFailTokenOfOwnerByIndex_IndexGreaterThanBalance() public {

@@ -64,9 +64,15 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
     /// @param musicBoxLevel MusicBox level Common, Rare, Epic as sent by the Sanctuary.
     function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel) external {
         if (msg.sender != SANCTUARY_ADDRESS) revert OnlySanctuaryAllowedToMint();
+        if (_to == address(0)) revert ZeroAddress();
+
         uint256 newId = _getTokenIdAndIncrement();
+        if (_ownerOf[newId] != address(0)) revert TokenAlreadyMinted();
+
+        _ownerOf[newId] = _to;
         tokenLevel[newId] = musicBoxLevel;
-        _safeMint(_to, newId);
+
+        emit MintMusicBox(address(0), _to, newId, musicBoxLevel);
     }
 
     /**
@@ -86,39 +92,11 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
      * @param _tokenIds An array of token IDs to transfer.
      */
     function batchTransferFrom(address _from, address _to, uint256[] calldata _tokenIds) public {
-        if (_to == address(0)) revert ZeroAddress();
-        uint256 _amount = _tokenIds.length;
-
         unchecked {
-            for (uint256 i; i < _amount; i++) {
-                _canTransfer(_tokenIds[i]);
-
-                if (_from != _ownerOf[_tokenIds[i]]) revert NotOwner();
-
-                if (
-                    !(
-                        msg.sender == _from || !isApprovedForAll[_from][msg.sender]
-                            || msg.sender == getApproved[_tokenIds[i]]
-                    )
-                ) {
-                    revert NotAuthorised();
-                }
-
-                _ownerOf[_tokenIds[i]] = _to;
-
-                delete getApproved[_tokenIds[i]];
+            for (uint256 i; i < _tokenIds.length; i++) {
+                transferFrom(_from, _to, _tokenIds[i]);
             }
         }
-
-        // Underflow of the sender's balance is impossible because we check for
-        // ownership above and the recipient's balance can't realistically overflow.
-        // We can save some gas here by updating all in one go.
-        unchecked {
-            _balanceOf[_from] -= _amount;
-            _balanceOf[_to] += _amount;
-        }
-
-        emit BatchTransfer(_from, _to, _tokenIds);
     }
 
     /**
@@ -130,49 +108,11 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
     function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIds, bytes calldata _data)
         public
     {
-        if (_to == address(0)) revert ZeroAddress();
-        uint256 _amount = _tokenIds.length;
-
         unchecked {
-            for (uint256 i; i < _amount; i++) {
-                _canTransfer(_tokenIds[i]);
-
-                if (_from != _ownerOf[_tokenIds[i]]) revert NotOwner();
-
-                if (
-                    !(
-                        msg.sender == _from || !isApprovedForAll[_from][msg.sender]
-                            || msg.sender == getApproved[_tokenIds[i]]
-                    )
-                ) {
-                    revert NotAuthorised();
-                }
-
-                _ownerOf[_tokenIds[i]] = _to;
-
-                delete getApproved[_tokenIds[i]];
-
-                if (
-                    !(
-                        _to.code.length == 0
-                            || ERC721TokenReceiver(_to).onERC721Received(msg.sender, _from, _tokenIds[i], _data)
-                                == ERC721TokenReceiver.onERC721Received.selector
-                    )
-                ) {
-                    revert UnSafeRecipient();
-                }
+            for (uint256 i; i < _tokenIds.length; i++) {
+                safeTransferFrom(_from, _to, _tokenIds[i]);
             }
         }
-
-        // Underflow of the sender's balance is impossible because we check for
-        // ownership above and the recipient's balance can't realistically overflow.
-        // We can save some gas here by updating all in one go.
-        unchecked {
-            _balanceOf[_from] -= _amount;
-            _balanceOf[_to] += _amount;
-        }
-
-        emit BatchTransfer(_from, _to, _tokenIds);
     }
 
     function _canTransfer(uint256 tokenId) internal view override {

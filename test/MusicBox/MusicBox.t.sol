@@ -14,7 +14,7 @@ contract TestMusicBox is MintWithThreeUnboundedOrigin {
     address[] users;
 
     uint256[] batchFails = [1];
-    uint256[] mulitpleMusicBox = [1, 2, 3, 4, 5, 6];
+    uint256[] mulitpleMusicBox = [1, 2, 3];
 
     function setUp() public {
         user = makeAddr("MusicBoxUser");
@@ -134,23 +134,23 @@ contract TestMusicBox is MintWithThreeUnboundedOrigin {
         musicBox.safeTransferFrom(user, address(1), 6, "");
     }
 
+    function testBatchSafeTransferFrom() public {
+        // Fails covered in `testSetLockUpTime`
+        for (uint256 i; i < multipleNotBoundTokens.length; i++) {
+            _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
+        }
+
+        musicBox.batchSafeTransferFrom(user, address(1), mulitpleMusicBox, "");
+        mockSanOrigin.batchSafeTransferFrom(user, address(1), mulitpleMusicBox, "");
+    }
+
     function testBatchTransferFrom() public {
         // Fails covered in `testSetLockUpTime`
         for (uint256 i; i < multipleNotBoundTokens.length; i++) {
             _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
         }
 
-        musicBox.setApprovalForAll(user, true);
-        musicBox.batchSafeTransferFrom(user, address(1), mulitpleMusicBox, "");
-    }
-
-    function testSafeBatchTransferFrom() public {
-        // Fails covered in `testSetLockUpTime`
-        for (uint256 i; i < multipleNotBoundTokens.length; i++) {
-            _mintWithMultiSanOrigin(multipleNotBoundTokens[i], user);
-        }
-
-        musicBox.setApprovalForAll(user, true);
         musicBox.batchTransferFrom(user, address(1), mulitpleMusicBox);
+        mockSanOrigin.batchTransferFrom(user, address(1), mulitpleMusicBox);
     }
 }

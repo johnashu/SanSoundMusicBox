@@ -25,11 +25,11 @@ contract TestMintWithPartnerTokens is MintWithPartnerTokens {
     }
 
     function testFailMintIsBound() public {
-        _mintWithPartner(mockERC721MultiAddress, partnerToken, isBoundSingleToken, user);
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, isBoundSingleToken, user);
     }
 
     function testFailMintNotOwnedOrigin() public {
-        _mintWithPartner(mockERC721MultiAddress, partnerToken, notBoundSingleToken, makeAddr("PartnerNoTokensOwned"));
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, makeAddr("PartnerNoTokensOwned"));
     }
 
     function testUnableToApproveOrTransfersWhenSoulBound() public {

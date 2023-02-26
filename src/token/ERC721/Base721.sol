@@ -18,7 +18,7 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
     string public contractURI;
 
     constructor(string memory _name, string memory _symbol, string memory _baseURI, string memory _contractURI)
-        ERC721(_name, _symbol, uint256(1))
+        ERC721(_name, _symbol, 1)
     {
         contractURI = _contractURI;
         baseURI = _baseURI;
@@ -54,8 +54,8 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
 
         uint256 count;
         unchecked {
-            for (uint256 i = 1; i < totalSupply + 1; i++) {
-                if (owner == ownerOf(i)) {
+            for (uint256 i; i <= totalSupply; i++) {
+                if (owner == _ownerOf[i]) {
                     if (count == index) return i;
                     else count++;
                 }
@@ -75,8 +75,8 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
         uint256 len = tokenIds.length;
         if (len > totalSupply) revert AmountExceedsSupply();
         unchecked {
-            for (uint256 i; i < len; ++i) {
-                if (ownerOf(tokenIds[i]) != _account) {
+            for (uint256 i; i < len; i++) {
+                if (_ownerOf[tokenIds[i]] != _account) {
                     return false;
                 }
             }

@@ -16,7 +16,6 @@ abstract contract TestBase is Test {
     Sanctuary sanctuary;
     MusicBox musicBox;
     MockERC721 mockERC721Single;
-    MockERC721 mockERC721Multi;
     MockSanOrigin mockSanOrigin;
 
     string startBaseURI = "https://base-uri.com/";
@@ -25,7 +24,6 @@ abstract contract TestBase is Test {
     string newContractURI = "https://NEW-CONTRACT-URI.com/";
 
     address mockERC721SingleAddress;
-    address mockERC721MultiAddress;
 
     address SAN_ORIGIN_ADDRESS;
     address payable musicBoxAddress;
@@ -101,8 +99,7 @@ abstract contract TestBase is Test {
 
         mockERC721Single = new MockERC721();
         mockERC721SingleAddress = address(mockERC721Single);
-        mockERC721Multi = new MockERC721();
-        mockERC721MultiAddress = address(mockERC721Multi);
+
         sanctuary = new Sanctuary(
             string("TestSanctuary"),
             string("TSSS"),
@@ -132,7 +129,6 @@ abstract contract TestBase is Test {
             uint256 end = split * (i + 1);
 
             mockERC721Single.transferAll(user, start, end);
-            mockERC721Multi.transferAll(user, start, end);
 
             uint256 offset = 0;
             uint256 split = 10000 / userLen;
@@ -175,9 +171,9 @@ abstract contract TestBase is Test {
     function _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel level, uint256 token, address user) internal {
         // Check MusicBox Token is minted and Level.
         IMusicBox.MusicBoxLevel currentLevel = musicBox.tokenLevel(token);
+
         assertEq(musicBox.ownerOf(token), user);
         assertTrue(uint256(currentLevel) == uint256(level));
-        assertTrue(currentLevel == level);
     }
 
     function _checkAfterMint(
