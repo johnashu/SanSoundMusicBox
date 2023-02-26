@@ -15,6 +15,9 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     uint96 public constant ORIGIN_TOKENS_REQUIRED_TO_REBIRTH = 3;
     address BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
+    /// The maximum token supply.  We do not use it as this is set in San Origin but we leave it for reading from external..
+    uint256 public constant MAX_SUPPLY = 10000;
+
     address public immutable SAN_ORIGIN_ADDRESS;
     address public immutable MUSIC_BOX_ADDRESS;
 
