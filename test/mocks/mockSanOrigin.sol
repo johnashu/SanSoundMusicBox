@@ -13,7 +13,7 @@ contract MockSanOrigin is SANOrigin {
     constructor()
         SANOrigin("SO Mock", "SOM", 1, address(1), "https://base-uri.com/", "https://contract-uri.com/", levelPrices)
     {
-        for (uint256 i; i < 10000; i++) {
+        for (uint256 i; i < 10001; i++) {
             _safeMint(msg.sender, i + 1);
         }
     }
@@ -27,6 +27,29 @@ contract MockSanOrigin is SANOrigin {
 
             // Soulbound level 3
             if (i > 38 && i < 3000) {
+                tokenLevel[i] = SoulboundLevel.Three;
+            }
+        }
+    }
+
+    function makeAllBound() public {
+        for (uint256 i; i < 10001; i++) {
+            // Soulbound Level 1
+            if (i < 2501) {
+                tokenLevel[i] = SoulboundLevel.One;
+            }
+            // Soulbound Level 2
+            if (i > 2500 && i < 5001) {
+                tokenLevel[i] = SoulboundLevel.Two;
+            }
+
+            // Soulbound level 3
+            if (i > 5000 && i < 7501) {
+                tokenLevel[i] = SoulboundLevel.Three;
+            }
+
+            // Soulbound level 4
+            if (i > 7500 && i < 10001) {
                 tokenLevel[i] = SoulboundLevel.Three;
             }
         }

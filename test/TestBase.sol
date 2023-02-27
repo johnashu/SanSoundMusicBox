@@ -75,13 +75,13 @@ abstract contract TestBase is Test {
 
     function _initOWNERs() internal {
         vm.startPrank(OWNER); // OWNER becomes the owner of everything..
-        vm.deal(OWNER, 100 ether);
+        vm.deal(OWNER, 10000 ether);
     }
 
     function _initUsers(address[] memory users) internal {
         for (uint256 i; i < users.length; i++) {
             address user = users[i];
-            vm.deal(user, 100 ether);
+            vm.deal(user, 10000 ether);
         }
     }
 
@@ -132,7 +132,7 @@ abstract contract TestBase is Test {
             mockERC721Single.transferAll(user, start, end);
 
             uint256 offset = 0;
-            uint256 split = 10000 / userLen;
+            uint256 split = 20000 / userLen;
             emit log_uint(split);
             if (userLen == 1) {
                 offset = 1;

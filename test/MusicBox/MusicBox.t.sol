@@ -14,7 +14,7 @@ contract TestMusicBox is MintWithThreeUnboundedOrigin {
     address[] users;
 
     uint256[] batchFails = [1];
-    uint256[] mulitpleMusicBox = [1, 2, 3];
+    uint256[] mulitpleMusicBox = [1, 2, 3, 4, 5, 6];
 
     function setUp() public {
         user = makeAddr("MusicBoxUser");

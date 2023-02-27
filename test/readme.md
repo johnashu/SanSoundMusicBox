@@ -16,8 +16,11 @@ forge test --gas-report
 
 ```bash
 
-forge test --match-path test/Sanctuary/PureMintWithThreeUnboundedOrigin.t.sol --match-contract TestMintWithThreeUnboundedOrigin  --match-test "testMAXMintWithMultiSanOrigin*" -vvvvv
+forge test --match-path test/Sanctuary/MaxMintWithThreeUnboundedOrigin.t.sol --match-contract TestMaxMintWithThreeUnboundedOrigin  --match-test "testMAXMintWithMultiSanOrigin*" -vvvvv
 
+forge test --match-path test/Sanctuary/MaxMintWithBoundedOrigin.t.sol --match-contract TestMaxMintWithBoundedOrigin  --match-test "testMAXMintWithBoundedOrigin*" -vvvvv
+
+forge test --match-path test/Sanctuary/MaxMintWithPartnerTokens.t.sol --match-contract TestMaxMintWithPartnerTokens  --match-test "testMAXMintWithPartnerTokens*" -vvvvv
 
 forge test --match-path test/Sanctuary/MintWithPartnerTokens.t.sol --match-contract TestMintWithPartnerTokens  --match-test "testUpgradeTokenLevelPartners*" -vvvvv
 
@@ -27,13 +30,12 @@ forge test --match-path test/Sanctuary/MintWithBoundedOrigin.t.sol --match-contr
 
 forge test --match-path test/MusicBox/MusicBox.t.sol --match-contract TestMusicBox  --match-test "testTransferFrom" -vvvvv
 
-forge test --match-path test/Common.t.sol --match-contract TestCommon --match-test "testSendNFTToSanctuaryAddress*" -vvvvv
 
 forge test --match-path test/ERC721/ERC721TestBase.t.sol --match-contract TestERC721Base  --match-test "*" -vvvvv
 
 forge test --match-path test/Levels/TokenLevels.t.sol --match-contract TestLevels  --match-test "testFailUpgradeTokenLevelAlreadyReached*" -vvvvv
 
-forge test --match-path test/ERC721/ERC721MusicBox.t.sol --match-contract TestERC721MusicBox  --match-test "testFailIsOwnerOf_AmountExceedsSupply*" -vvvvv
+forge test --match-path test/ERC721/ERC721MusicBox.t.sol --match-contract TestERC721MusicBox  --match-test "testFailSendNftToErc721ContractWithNoERC721Receiver*" -vvvvv
 
 forge test --match-path test/ERC721/ERC721Sanctuary.t.sol --match-contract TestERC721Sanctuary  --match-test "testFailIsOwnerOf_AmountExceedsSupply*" -vvvvv
 

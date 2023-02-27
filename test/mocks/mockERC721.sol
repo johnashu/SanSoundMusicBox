@@ -10,12 +10,15 @@ import {Ownable} from "src/utils/Ownable.sol";
 
 contract MockERC721 is ERC721, Ownable {
     constructor() ERC721("Mock1", "MK1", 1) {
-        for (uint256 i; i < 42; i++) {
+        for (uint256 i; i < 10001; i++) {
             _mint(msg.sender, i + 1);
         }
     }
 
     function transferAll(address to, uint256 start, uint256 end) public {
+        if (end > 10000) {
+            end = 10000;
+        }
         for (uint256 i = start; i < end; i++) {
             transferFrom(msg.sender, to, i);
         }

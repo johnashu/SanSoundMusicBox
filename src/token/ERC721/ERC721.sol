@@ -10,7 +10,7 @@ import {Strings} from "src/utils/Strings.sol";
 import {Address} from "src/utils/Address.sol";
 
 abstract contract ERC721 is IERC721 {
-    // using Address for address;
+    using Address for address;
     using Strings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -185,7 +185,7 @@ abstract contract ERC721 is IERC721 {
     // }
 
     /**
-     * @dev Hook that is called before any token transfer. This includes burning.
+     * @dev Hook that is called before any token transfer.
      */
     function _canTransfer(uint256 /*tokenId*/ ) internal virtual {}
 }

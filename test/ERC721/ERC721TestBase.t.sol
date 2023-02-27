@@ -22,11 +22,11 @@ abstract contract TestERC721Base is
     uint256[] public expected = [1];
     uint256[] public notExpected = [10009];
 
-    function _runAllScenarios() public {
-        _mintWithMultiSanOrigin(notBoundTokens, user);
-        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
-        _mintWithSanSoundBound(isBoundSingleToken, user);
-    }
+    // function _runAllScenarios() public {
+    //     _mintWithMultiSanOrigin(notBoundTokens, user);
+    //     _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
+    //     _mintWithSanSoundBound(isBoundSingleToken, user);
+    // }
 
     function testFailSendNftToErc721ContractWithNoERC721Receiver() public {
         IERC721(mockERC721SingleAddress).approve(erc721ContractAddress, 1);

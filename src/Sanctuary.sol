@@ -81,8 +81,8 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @param originTokenIds San Origin Id(s) to Rebirth
     /// @param _newLevel Token level requested
     function mintWith3UnboundSanOrigin(uint256[] calldata originTokenIds, TokenLevel _newLevel) public payable {
-        _processChecks(originTokenIds);
-        _burnMintRebirth(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel.Rare);
+        _processChecks3Unbound(originTokenIds);
+        _batchBurnMintRebirth(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel.Rare);
     }
 
     /// @notice Soulbind an existing SAN Origin NFT to receive a Legendary SAN Music Box NFT.
@@ -94,7 +94,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         _mintRebirth(
             originTokenId,
             _newLevel,
-            TokenLevel(_checkOriginTokensAreBound(originTokenId)),
+            TokenLevel(_checkOriginTokensAreBound(originTokenId) + 1), // we have 1 extra level (Rebirthed)
             IMusicBox.MusicBoxLevel.Legendary
         );
     }
@@ -129,7 +129,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @dev Checks the caller owns the tokens and adds to `usedTokens` or reverts
     /// @dev used for the 'mint 3 from san origin' option.
     /// @param originTokenIds Tokens to Check.
-    function _processChecks(uint256[] calldata originTokenIds) private {
+    function _processChecks3Unbound(uint256[] calldata originTokenIds) private {
         if (originTokenIds.length != ORIGIN_TOKENS_REQUIRED_TO_REBIRTH) revert MintAmountTokensIncorrect();
         unchecked {
             for (uint256 i; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
@@ -165,10 +165,10 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
 
     /// @dev Finalise the storage values and upgrade the tokens.
     /// @dev Transfer San Origin NFT to the 'BURN_ADDRESS' and Mint a new 'SoulBound' Santuary NFT and MusicBox NFT.
-    /// @param originTokenIds OriginTokens to Burn and Ids to mint with.
-    /// @param _newLevel Level to upgrade with - All tokens must be at the same level to tx the Soulbound level from San Origin -> Sanctuary.
-    /// @param _musicBoxLevel Common, Rare or Epic depending on the source of the mint.
-    function _burnMintRebirth(
+    /// @param originTokenIds OriginTokens to Burn.
+    /// @param _newLevel Level to upgrade to.
+    /// @param _musicBoxLevel  Rare due to the source of the mint.
+    function _batchBurnMintRebirth(
         uint256[] calldata originTokenIds,
         TokenLevel _newLevel,
         IMusicBox.MusicBoxLevel _musicBoxLevel
@@ -183,11 +183,11 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(msg.sender, _musicBoxLevel);
     }
 
-    /// @dev Finalise the storage values and upgrade the tokens.
+    /// @dev Finalise the storage values and upgrade the token.
     /// @dev Transfer San Origin NFT to the 'BURN_ADDRESS' and Mint a new 'SoulBound' Santuary NFT and MusicBox NFT.
-    /// @param originTokenId OriginTokens to Burn and Ids to mint with.
-    /// @param _newLevel Level to upgrade with - All tokens must be at the same level to tx the Soulbound level from San Origin -> Sanctuary.
-    /// @param _musicBoxLevel Common, Rare or Epic depending on the source of the mint.
+    /// @param originTokenId OriginToken to Burn.
+    /// @param _newLevel Level to upgrade with.
+    /// @param _musicBoxLevel Common or Legendary depending on the source of the mint.
     function _mintRebirth(
         uint256 originTokenId,
         TokenLevel _newLevel,
@@ -195,7 +195,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
         // Rebirth in the Santuary
-        _rebirth(_newLevel, _currentLevel, originTokenId);
+        _rebirth(_newLevel, _currentLevel, originTokenId, _getTokenIdAndIncrement());
 
         // Mint MusicBox NFT
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(msg.sender, _musicBoxLevel);
@@ -204,26 +204,18 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     function _batchRebirth(TokenLevel _newLevel, uint256[] calldata originTokenIds) private {
         uint256 currentId = totalSupply;
 
-        // Update balance once
         unchecked {
+            // Update supply once
             totalSupply += ORIGIN_TOKENS_REQUIRED_TO_REBIRTH;
 
             for (uint256 i; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
-                uint256 newId = currentId + i + 1;
-                _ownerOf[newId] = msg.sender;
-                originSanctuaryTokenMap[newId] = originTokenIds[i];
-                _upgradeTokenLevel(newId, _newLevel, TokenLevel.Unbound);
-                emit Rebirth(msg.sender, originTokenIds[i], newId);
-                emit Transfer(address(0), msg.sender, newId);
+                _rebirth(_newLevel, TokenLevel.Unbound, originTokenIds[i], currentId + i + 1);
             }
         }
     }
 
     /// @dev After mint, tokens are SouldBound and cannot be burned /tx.
-    function _rebirth(TokenLevel _newLevel, TokenLevel _currentLevel, uint256 originTokenId) private {
-        uint256 newId = _getTokenIdAndIncrement();
-
-        // Upgrade
+    function _rebirth(TokenLevel _newLevel, TokenLevel _currentLevel, uint256 originTokenId, uint256 newId) private {
         _upgradeTokenLevel(newId, _newLevel, _currentLevel);
         originSanctuaryTokenMap[newId] = originTokenId;
 
@@ -233,7 +225,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         emit Transfer(address(0), msg.sender, newId);
     }
 
-    // overrides
+    // Overrides
 
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         if (!_exists(_tokenId)) revert TokenDoesNotExist();
