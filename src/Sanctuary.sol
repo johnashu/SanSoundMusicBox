@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 /// @title San Sound Sanctuary Rebirth NFT
 /// @author Maffaz
+
+// We wont check to see if the token is already minted as we calculate from the supply and increment.
+// We dont check Owner as it comes from msg.sender AND external tokenId
+
 pragma solidity ^0.8.18;
 
 import {TokenLevels} from "src/levels/TokenLevels.sol";
@@ -14,9 +18,6 @@ import {MusicBox} from "src/MusicBox.sol";
 contract Sanctuary is TokenLevels, IRebirth, Base721 {
     uint96 public constant ORIGIN_TOKENS_REQUIRED_TO_REBIRTH = 3;
     address BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
-
-    /// The maximum token supply.  We do not use it as this is set in San Origin but we leave it for reading from external..
-    uint256 public constant MAX_SUPPLY = 10000;
 
     address public immutable SAN_ORIGIN_ADDRESS;
     address public immutable MUSIC_BOX_ADDRESS;
@@ -65,7 +66,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
 
     // SETTERS
     /// @notice Update a partner address
-    /// @dev SAN_ORIGIN_ADDRESS is added in construction so we dont want to change it.  Same with 0 address.
+    /// @dev SAN_ORIGIN_ADDRESS is added in construction so we cant change it.
     /// @param _partnerAddress Address of the Partner Contract.
     /// @param _isValid true to be valid (add) or false to be invalid
     function updatePartnerAddress(address _partnerAddress, bool _isValid) public onlyOwner {
@@ -76,23 +77,26 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     }
 
     // MINT FUNCTIONS
-
-    /// @notice Soulbind an existing SAN Origin NFT to receive a Legendary SAN Music Box NFT.
-    /// @dev Checks Soulbind and then mints.
-    /// @param originTokenId San Origin Id to Rebirth
-    /// @param _newLevel Token level requested
-    function mintFromSoulbound(uint256 originTokenId, TokenLevel _newLevel) public payable {
-        _processChecks(originTokenId, SAN_ORIGIN_ADDRESS);
-        TokenLevel _currentLevel = TokenLevel(_checkOriginTokensAreBound(originTokenId));
-        _burnMintRebirth(originTokenId, _newLevel, _currentLevel, IMusicBox.MusicBoxLevel.Legendary);
-    }
-
     /// @notice Send three SAN Origin NFTs to the Sanctuary receive a Rare SAN Music Box NFT
     /// @param originTokenIds San Origin Id(s) to Rebirth
     /// @param _newLevel Token level requested
     function mintWith3UnboundSanOrigin(uint256[] calldata originTokenIds, TokenLevel _newLevel) public payable {
         _processChecks(originTokenIds);
         _burnMintRebirth(originTokenIds, _newLevel, IMusicBox.MusicBoxLevel.Rare);
+    }
+
+    /// @notice Soulbind an existing SAN Origin NFT to receive a Legendary SAN Music Box NFT.
+    /// @dev Checks Soulbind and then mints.
+    /// @param originTokenId San Origin Id to Rebirth
+    /// @param _newLevel Token level requested
+    function mintFromSoulbound(uint256 originTokenId, TokenLevel _newLevel) public payable {
+        _checkUserOwnsToken(originTokenId, SAN_ORIGIN_ADDRESS);
+        _mintRebirth(
+            originTokenId,
+            _newLevel,
+            TokenLevel(_checkOriginTokensAreBound(originTokenId)),
+            IMusicBox.MusicBoxLevel.Legendary
+        );
     }
 
     /// @notice Rebirth and mint from a partner, Send a Scout SAN Origin NFT to the Sanctuary, which
@@ -112,10 +116,12 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         {
             revert contractAddressNotValid();
         }
-        _processChecks(originTokenId, SAN_ORIGIN_ADDRESS);
-        _processChecks(partnerTokenId, _partnerAddress);
+        _checkUserOwnsToken(originTokenId, SAN_ORIGIN_ADDRESS);
+        _checkUserOwnsToken(partnerTokenId, _partnerAddress);
         _checkOriginTokensNotBound(originTokenId);
-        _burnMintRebirth(originTokenId, _newLevel, TokenLevel.Unbound, IMusicBox.MusicBoxLevel.Common);
+        // Burn San Origin
+        ISanOriginNFT(SAN_ORIGIN_ADDRESS).safeTransferFrom(msg.sender, BURN_ADDRESS, originTokenId, "");
+        _mintRebirth(originTokenId, _newLevel, TokenLevel.Unbound, IMusicBox.MusicBoxLevel.Common);
     }
 
     // PRIVATE FUNCTIONS
@@ -131,13 +137,6 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
                 _checkOriginTokensNotBound(originTokenIds[i]);
             }
         }
-    }
-
-    /// @dev Checks the caller owns the tokenId and adds to `usedTokens` or reverts
-    /// @param tokenId Tokens to Check.
-    /// @param _tokenAddress Address or contract to check (San Origin / Partners).
-    function _processChecks(uint256 tokenId, address _tokenAddress) private {
-        _checkUserOwnsToken(tokenId, _tokenAddress);
     }
 
     /// @dev Checks the caller owns the token and adds to `usedTokens` or reverts
@@ -189,15 +188,12 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     /// @param originTokenId OriginTokens to Burn and Ids to mint with.
     /// @param _newLevel Level to upgrade with - All tokens must be at the same level to tx the Soulbound level from San Origin -> Sanctuary.
     /// @param _musicBoxLevel Common, Rare or Epic depending on the source of the mint.
-    function _burnMintRebirth(
+    function _mintRebirth(
         uint256 originTokenId,
         TokenLevel _newLevel,
         TokenLevel _currentLevel,
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
-        // Burn San Origin
-        ISanOriginNFT(SAN_ORIGIN_ADDRESS).safeTransferFrom(msg.sender, BURN_ADDRESS, originTokenId, "");
-
         // Rebirth in the Santuary
         _rebirth(_newLevel, _currentLevel, originTokenId);
 
@@ -208,10 +204,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     function _batchRebirth(TokenLevel _newLevel, uint256[] calldata originTokenIds) private {
         uint256 currentId = totalSupply;
 
-        // Counter overflow is incredibly unrealistic.
         // Update balance once
-
-        // We wont check to see if the token is already minted as we calculate from the supply and increment.
         unchecked {
             totalSupply += ORIGIN_TOKENS_REQUIRED_TO_REBIRTH;
 
@@ -221,6 +214,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
                 originSanctuaryTokenMap[newId] = originTokenIds[i];
                 _upgradeTokenLevel(newId, _newLevel, TokenLevel.Unbound);
                 emit Rebirth(msg.sender, originTokenIds[i], newId);
+                emit Transfer(address(0), msg.sender, newId);
             }
         }
     }
@@ -236,6 +230,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         _ownerOf[newId] = msg.sender;
 
         emit Rebirth(msg.sender, originTokenId, newId);
+        emit Transfer(address(0), msg.sender, newId);
     }
 
     // overrides

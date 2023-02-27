@@ -19,7 +19,7 @@ contract TestMusicBox is MintWithThreeUnboundedOrigin {
     function setUp() public {
         user = makeAddr("MusicBoxUser");
         users.push(user);
-        _setUp(users);
+        _setUp(users, true);
         vm.stopPrank();
         vm.startPrank(user);
     }

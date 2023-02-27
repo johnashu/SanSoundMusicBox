@@ -70,7 +70,7 @@ abstract contract TestERC721Base is
     }
 
     function testIsOwnerOf() public virtual {
-        _mintWithSanSoundBound(isBoundSingleToken, user);
+        _mintWithMultiSanOrigin(notBoundTokens, user);
         assertTrue(erc721Contract.isOwnerOf(user, expected));
     }
 
@@ -80,18 +80,18 @@ abstract contract TestERC721Base is
     }
 
     function testFailIsOwnerOf_AmountExceedsSupply() public virtual {
-        _mintWithSanSoundBound(isBoundSingleToken, user);
+        _mintWithMultiSanOrigin(notBoundTokens, user);
         assertTrue(erc721Contract.isOwnerOf(user, tooManyIsBoundTokens));
     }
 
     function testWalletOfOwner() public virtual {
-        _mintWithSanSoundBound(isBoundSingleToken, user);
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
         uint256[] memory tokenIds = erc721Contract.walletOfOwner(user);
         assertEq(tokenIds, expected);
     }
 
     function testWalletOfOwnerZeroOwned() public virtual {
-        _mintWithSanSoundBound(isBoundSingleToken, user);
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
         uint256[] memory tokenIds = erc721Contract.walletOfOwner(noTokensUser);
         assertEq(tokenIds, noTokens);
     }

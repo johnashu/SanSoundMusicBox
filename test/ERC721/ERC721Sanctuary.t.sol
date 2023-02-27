@@ -7,7 +7,7 @@ contract TestERC721Sanctuary is TestERC721Base {
     function setUp() public {
         user = makeAddr("ERC721SanctuaryUser");
         users.push(user);
-        _setUp(users);
+        _setUp(users, true);
         vm.stopPrank();
         vm.startPrank(user);
         erc721Contract = sanctuary;

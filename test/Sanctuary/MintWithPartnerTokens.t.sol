@@ -10,7 +10,7 @@ contract TestMintWithPartnerTokens is MintWithPartnerTokens {
     function setUp() public {
         user = makeAddr("PartnerTokensUser");
         users.push(user);
-        _setUp(users);
+        _setUp(users, true);
         vm.stopPrank();
         vm.startPrank(user);
     }

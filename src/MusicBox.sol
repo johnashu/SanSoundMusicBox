@@ -9,12 +9,7 @@ pragma solidity ^0.8.18;
 
 import {Base721, IERC721, ERC721, Strings} from "src/token/ERC721/Base721.sol";
 import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
-import {
-    ERC2981ContractWideRoyalties,
-    ERC2981Base,
-    ERC165,
-    IERC165
-} from "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
+import {ERC2981ContractWideRoyalties, ERC2981Base} from "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
 
 import {ERC721TokenReceiver} from "src/token/ERC721/ERC721.sol";
 
@@ -129,7 +124,7 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
         );
     }
 
-    function supportsInterface(bytes4 _interfaceId) public view override(IERC165, ERC2981Base, ERC721) returns (bool) {
+    function supportsInterface(bytes4 _interfaceId) public view override(ERC2981Base, ERC721) returns (bool) {
         return super.supportsInterface(_interfaceId);
     }
 }

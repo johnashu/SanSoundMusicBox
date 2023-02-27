@@ -7,7 +7,7 @@ contract TestERC721MusicBox is TestERC721Base {
     function setUp() public {
         user = makeAddr("ERC721MusicBoxUser");
         users.push(user);
-        _setUp(users);
+        _setUp(users, true);
         vm.stopPrank();
         vm.startPrank(user);
         erc721Contract = musicBox;

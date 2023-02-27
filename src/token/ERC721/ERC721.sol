@@ -5,12 +5,12 @@ pragma solidity 0.8.18;
 /// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC721.sol)
 /// Maffaz - totalSupply / Custom Errors / Strings & Address Imports..
 
-import "src/interfaces/ERC721/IERC721.sol";
-import "src/utils/Strings.sol";
-import "src/utils/Address.sol";
+import {IERC721} from "src/interfaces/ERC721/IERC721.sol";
+import {Strings} from "src/utils/Strings.sol";
+import {Address} from "src/utils/Address.sol";
 
 abstract contract ERC721 is IERC721 {
-    using Address for address;
+    // using Address for address;
     using Strings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -35,7 +35,7 @@ abstract contract ERC721 is IERC721 {
         if ((owner = _ownerOf[id]) == address(0)) revert TokenNotMinted();
     }
 
-    // Use the old OZ implementation here are we are not using it internally and will save mint gas.
+    // Use the old OZ implementation here as we are not using it internally and will save mint gas.
     // External contracts will be querying the Soulbound levels and max supply = 10k.
     function balanceOf(address owner) public view virtual override returns (uint256) {
         if (owner == address(0)) revert ZeroAddress();

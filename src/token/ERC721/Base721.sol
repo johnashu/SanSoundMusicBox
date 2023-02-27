@@ -12,6 +12,8 @@ import {Ownable} from "src/utils/Ownable.sol";
  */
 
 abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
+    /// The maximum token supply.  We do not use it as this is set in San Origin but we leave it for reading from external..
+    uint256 public constant MAX_SUPPLY = 10000;
     /// The base URI for token metadata.
     string public baseURI;
     /// The contract URI for contract-level metadata.

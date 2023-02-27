@@ -10,7 +10,7 @@ contract TestMintWithBoundedOrigin is MintWithBoundedOrigin {
     function setUp() public {
         user = makeAddr("OriginBoundedUser");
         users.push(user);
-        _setUp(users);
+        _setUp(users, true);
         vm.stopPrank();
         vm.startPrank(user);
     }

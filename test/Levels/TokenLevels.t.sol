@@ -14,7 +14,7 @@ contract TestLevels is MintWithBoundedOrigin {
     function setUp() public {
         user = makeAddr("TokensLevelUser");
         users.push(user);
-        _setUp(users);
+        _setUp(users, true);
         vm.stopPrank();
         vm.startPrank(user);
     }

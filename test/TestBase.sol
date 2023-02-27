@@ -64,12 +64,13 @@ abstract contract TestBase is Test {
     uint256[] expectedMultiple = [1, 2, 3];
     uint256 expectedSingle = 1;
 
-    function _setUp(address[] memory users) internal {
+    function _setUp(address[] memory users, bool bind) internal {
         _initOWNERs();
         _initUsers(users);
         _initShared();
         _deployContracts();
         _transferTokens(users);
+        if (bind) mockSanOrigin.makeBound();
     }
 
     function _initOWNERs() internal {
@@ -217,5 +218,25 @@ abstract contract TestBase is Test {
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
         sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
         _checkSanctuaryTokenLevel(level, token);
+    }
+
+    error InputOutOfRange(uint256 range, uint256 min, uint256 max);
+
+    function uint256Sequential(uint256 start, uint256 end) public returns (uint256[] memory) {
+        uint256 range = (end - start) + 1;
+        // emit log_uint(start);
+        // emit log_uint(end);
+        // emit log_uint(range);
+        if (end == 0) {
+            revert InputOutOfRange(range, 1, uint256(0xf));
+        }
+        uint256 index;
+        uint256[] memory arr = new uint256[](range);
+        unchecked {
+            for (uint256 i = start; i < end + 1; i++) {
+                arr[index++] = i;
+            }
+        }
+        return arr;
     }
 }

@@ -8,15 +8,18 @@ pragma solidity ^0.8.18;
 import "test/Mocks/_SANOrigin.sol";
 
 contract MockSanOrigin is SANOrigin {
-    constructor() SANOrigin("SO Mock", "SOM", 1, address(1), "https://base-uri.com/", "https://contract-uri.com/") {
+    uint256[] levelPrices = [0, 0, 0, 0];
+
+    constructor()
+        SANOrigin("SO Mock", "SOM", 1, address(1), "https://base-uri.com/", "https://contract-uri.com/", levelPrices)
+    {
         for (uint256 i; i < 10000; i++) {
-            levelPrice[SoulboundLevel.One] = 0;
-            levelPrice[SoulboundLevel.Two] = 0;
-            levelPrice[SoulboundLevel.Three] = 0;
-            levelPrice[SoulboundLevel.Four] = 0;
-
             _safeMint(msg.sender, i + 1);
+        }
+    }
 
+    function makeBound() public {
+        for (uint256 i; i < 10000; i++) {
             // Soulbound Level 1
             if (i > 20 && i < 38) {
                 tokenLevel[i] = SoulboundLevel.One;
@@ -42,11 +45,6 @@ contract MockSanOrigin is SANOrigin {
     }
 
     function _safeTransferFrom(address from, address to, uint256 tokenId) public {
-        // approve(to, tokenId);
         safeTransferFrom(from, to, tokenId);
     }
-
-    // function mint() public {
-    //     _safeMint((msg.sender), totalSupply + 1);
-    // }
 }

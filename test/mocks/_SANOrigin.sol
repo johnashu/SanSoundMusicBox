@@ -1572,15 +1572,13 @@ contract SANOrigin is SAN721, SANSoulbindable {
         uint256 _startingTokenID,
         address _couponSigner,
         string memory _contractURI,
-        string memory _baseURI
-    )
-        // uint256[] memory _levelPrices
-        SAN721(_name, _symbol, _startingTokenID, _couponSigner, _contractURI, _baseURI)
-    {
-        // levelPrice[SoulboundLevel.One] = _levelPrices[0];
-        // levelPrice[SoulboundLevel.Two] = _levelPrices[1];
-        // levelPrice[SoulboundLevel.Three] = _levelPrices[2];
-        // levelPrice[SoulboundLevel.Four] = _levelPrices[3];
+        string memory _baseURI,
+        uint256[] memory _levelPrices
+    ) SAN721(_name, _symbol, _startingTokenID, _couponSigner, _contractURI, _baseURI) {
+        levelPrice[SoulboundLevel.One] = _levelPrices[0];
+        levelPrice[SoulboundLevel.Two] = _levelPrices[1];
+        levelPrice[SoulboundLevel.Three] = _levelPrices[2];
+        levelPrice[SoulboundLevel.Four] = _levelPrices[3];
     }
 
     function soulbind(uint256 _tokenID, SoulboundLevel _newLevel) external payable {
@@ -1722,16 +1720,16 @@ contract SANOrigin is SAN721, SANSoulbindable {
     }
 
     function approve(address to, uint256 tokenId) public override(IERC721, ERC721) {
-        // if (tokenLevel[tokenId] > SoulboundLevel.Unbound) {
-        //     revert CannotApproveSoulboundToken();
-        // }
+        if (tokenLevel[tokenId] > SoulboundLevel.Unbound) {
+            revert CannotApproveSoulboundToken();
+        }
         super.approve(to, tokenId);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
-        // if (tokenLevel[tokenId] > SoulboundLevel.Unbound) {
-        //     revert CannotTransferSoulboundToken();
-        // }
+        if (tokenLevel[tokenId] > SoulboundLevel.Unbound) {
+            revert CannotTransferSoulboundToken();
+        }
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
