@@ -17,7 +17,7 @@ import {MusicBox} from "src/MusicBox.sol";
 
 contract Sanctuary is TokenLevels, IRebirth, Base721 {
     uint96 public constant ORIGIN_TOKENS_REQUIRED_TO_REBIRTH = 3;
-    address BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+    address constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
     address public immutable SAN_ORIGIN_ADDRESS;
     address public immutable MUSIC_BOX_ADDRESS;
@@ -39,6 +39,7 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         address _SAN_ORIGIN_ADDRESS,
         uint256[NUM_OF_LEVELS] memory _levelPrices
     ) Base721(_name, _symbol, _baseURI, _contractURI) TokenLevels(_levelPrices) {
+        if (_SAN_ORIGIN_ADDRESS == address(0)) revert ZeroAddress();
         SAN_ORIGIN_ADDRESS = _SAN_ORIGIN_ADDRESS;
         isValidContract[_SAN_ORIGIN_ADDRESS] = true;
 
@@ -57,11 +58,11 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
     // GETTERS
 
     /// @dev returns an array of the tokens assigned to the user.
-    /// @param _owner Address of the tokens requested.
+    /// @param _tokenOwner Address of the tokens requested.
     /// @return tokensOwned Tokens that address owns
-    function tokensOwnedByAddress(address _owner) public view returns (uint256[] memory tokensOwned) {
-        if (_owner == address(0)) revert ZeroAddress();
-        return walletOfOwner(_owner);
+    function tokensOwnedByAddress(address _tokenOwner) public view returns (uint256[] memory tokensOwned) {
+        if (_tokenOwner == address(0)) revert ZeroAddress();
+        return walletOfOwner(_tokenOwner);
     }
 
     // SETTERS
@@ -197,29 +198,33 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         // Rebirth in the Santuary
         _rebirth(_newLevel, _currentLevel, originTokenId, _getTokenIdAndIncrement());
 
+        _checkTokenPrice(_newLevel, _currentLevel);
+
         // Mint MusicBox NFT
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(msg.sender, _musicBoxLevel);
     }
 
     function _batchRebirth(TokenLevel _newLevel, uint256[] calldata originTokenIds) private {
         uint256 currentId = totalSupply;
+        _checkTokenPrice(_newLevel, ITokenLevels.TokenLevel.Unbound);
 
         unchecked {
             // Update supply once
             totalSupply += ORIGIN_TOKENS_REQUIRED_TO_REBIRTH;
 
             for (uint256 i; i < ORIGIN_TOKENS_REQUIRED_TO_REBIRTH; i++) {
-                _rebirth(_newLevel, TokenLevel.Unbound, originTokenIds[i], currentId + i + 1);
+                _rebirth(_newLevel, ITokenLevels.TokenLevel.Unbound, originTokenIds[i], currentId + i + 1);
             }
         }
     }
 
     /// @dev After mint, tokens are SouldBound and cannot be burned /tx.
     function _rebirth(TokenLevel _newLevel, TokenLevel _currentLevel, uint256 originTokenId, uint256 newId) private {
-        _upgradeTokenLevel(newId, _newLevel, _currentLevel);
         originSanctuaryTokenMap[newId] = originTokenId;
 
         _ownerOf[newId] = msg.sender;
+
+        _upgradeTokenLevel(newId, _newLevel, _currentLevel);
 
         emit Rebirth(msg.sender, originTokenId, newId);
         emit Transfer(address(0), msg.sender, newId);

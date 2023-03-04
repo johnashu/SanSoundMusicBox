@@ -51,13 +51,13 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
                               ERC721Enumerable LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual returns (uint256 tokenId) {
-        if (index > balanceOf(owner)) revert IndexGreaterThanBalance();
+    function tokenOfOwnerByIndex(address _tokenOwner, uint256 index) public view virtual returns (uint256 tokenId) {
+        if (index > balanceOf(_tokenOwner)) revert IndexGreaterThanBalance();
 
-        uint256 count;
+        uint256 count = 0;
         unchecked {
-            for (uint256 i; i <= totalSupply; i++) {
-                if (owner == _ownerOf[i]) {
+            for (uint256 i = 0; i <= totalSupply; i++) {
+                if (_tokenOwner == _ownerOf[i]) {
                     if (count == index) return i;
                     else count++;
                 }
@@ -87,18 +87,18 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
     }
 
     /**
-     * @notice Returns an array of all token IDs owned by `_owner`.
-     * @param _owner The address for which to return all owned token IDs.
-     * @return An array of all token IDs owned by `_owner`.
+     * @notice Returns an array of all token IDs owned by `_tokenOwner`.
+     * @param _tokenOwner The address for which to return all owned token IDs.
+     * @return An array of all token IDs owned by `_tokenOwner`.
      */
-    function walletOfOwner(address _owner) public view returns (uint256[] memory) {
-        uint256 tokenCount = balanceOf(_owner);
+    function walletOfOwner(address _tokenOwner) public view returns (uint256[] memory) {
+        uint256 tokenCount = balanceOf(_tokenOwner);
         if (tokenCount == 0) return new uint256[](0);
 
         uint256[] memory tokenIds = new uint256[](tokenCount);
         unchecked {
             for (uint256 i; i < tokenCount; i++) {
-                tokenIds[i] = tokenOfOwnerByIndex(_owner, i);
+                tokenIds[i] = tokenOfOwnerByIndex(_tokenOwner, i);
             }
         }
         return tokenIds;

@@ -40,14 +40,14 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
 
     /// @notice Find the Max Soulbound level of a user.
     /// @dev Explain to a developer any extra details.
-    /// @param _owner Address to check the Level of.
+    /// @param _tokenOwner Address to check the Level of.
     /// @return userMaxLevel The Maximum level of that owner.
-    function userMaxTokenLevel(address _owner) public view returns (TokenLevel) {
-        uint256 tokenCount = ISanctuary(address(this)).balanceOf(_owner);
+    function userMaxTokenLevel(address _tokenOwner) public view returns (TokenLevel) {
+        uint256 tokenCount = ISanctuary(address(this)).balanceOf(_tokenOwner);
         if (tokenCount == 0) return TokenLevel.Unbound;
 
         TokenLevel userMaxLevel;
-        uint256[] memory tokenIds = ISanctuary(address(this)).tokensOwnedByAddress(_owner);
+        uint256[] memory tokenIds = ISanctuary(address(this)).tokensOwnedByAddress(_tokenOwner);
         unchecked {
             for (uint256 i; i < tokenCount; i++) {
                 TokenLevel level = tokenLevel[tokenIds[i]];
@@ -67,7 +67,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
 
         TokenLevel currentLevel = tokenLevel[_tokenId];
         if (currentLevel >= _newLevel) revert LevelAlreadyReached();
-
+        _checkTokenPrice(_newLevel, currentLevel);
         _upgradeTokenLevel(_tokenId, _newLevel, currentLevel);
     }
 
@@ -77,10 +77,16 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     /// @param _currentLevel current level
     function _upgradeTokenLevel(uint256 _tokenId, TokenLevel _newLevel, TokenLevel _currentLevel) internal {
         tokenLevel[_tokenId] = _newLevel;
+        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
+    }
+
+    /// @dev Check prices.. Used by minting functions and publicly explosed function below.
+    /// @param _newLevel New level
+    /// @param _currentLevel current level
+    function _checkTokenPrice(TokenLevel _newLevel, TokenLevel _currentLevel) internal {
         unchecked {
             uint256 price = levelPrice[_newLevel] - levelPrice[_currentLevel];
             if (msg.value != price) revert IncorrectPaymentAmount();
         }
-        emit TokenLevelUpdated(msg.sender, _tokenId, _newLevel, _currentLevel);
     }
 }

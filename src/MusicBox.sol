@@ -30,6 +30,7 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
         string memory _contractURI,
         address _SANCTUARY_ADDRESS
     ) Base721(_name, _symbol, _baseURI, _contractURI) {
+        if (_SANCTUARY_ADDRESS == address(0)) revert ZeroAddress();
         SANCTUARY_ADDRESS = _SANCTUARY_ADDRESS;
     }
 

@@ -1,0 +1,113 @@
+{
+    "elements": [
+        {
+            "type": "variable",
+            "name": "SAN_ORIGIN_ADDRESS",
+            "source_mapping": {
+                "start": 191,
+                "length": 26,
+                "filename_relative": "script/Sanctuary.s.sol",
+                "filename_absolute": "C:\\Users\\maffaz\\Documents\\GIT\\Solidity\\FoundryFolder\\SanSound\\SanSoundMusicBox\\script\\Sanctuary.s.sol",
+                "filename_short": "script/Sanctuary.s.sol",
+                "is_dependency": false,
+                "lines": [
+                    7
+                ],
+                "starting_column": 5,
+                "ending_column": 31
+            },
+            "type_specific_fields": {
+                "parent": {
+                    "type": "contract",
+                    "name": "SanctuaryScriptMainNet",
+                    "source_mapping": {
+                        "start": 130,
+                        "length": 406,
+                        "filename_relative": "script/Sanctuary.s.sol",
+                        "filename_absolute": "C:\\Users\\maffaz\\Documents\\GIT\\Solidity\\FoundryFolder\\SanSound\\SanSoundMusicBox\\script\\Sanctuary.s.sol",
+                        "filename_short": "script/Sanctuary.s.sol",
+                        "is_dependency": false,
+                        "lines": [
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12,
+                            13,
+                            14,
+                            15,
+                            16,
+                            17,
+                            18
+                        ],
+                        "starting_column": 1,
+                        "ending_column": 2
+                    }
+                }
+            }
+        },
+        {
+            "type": "function",
+            "name": "run",
+            "source_mapping": {
+                "start": 306,
+                "length": 228,
+                "filename_relative": "script/Sanctuary.s.sol",
+                "filename_absolute": "C:\\Users\\maffaz\\Documents\\GIT\\Solidity\\FoundryFolder\\SanSound\\SanSoundMusicBox\\script\\Sanctuary.s.sol",
+                "filename_short": "script/Sanctuary.s.sol",
+                "is_dependency": false,
+                "lines": [
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17
+                ],
+                "starting_column": 5,
+                "ending_column": 6
+            },
+            "type_specific_fields": {
+                "parent": {
+                    "type": "contract",
+                    "name": "SanctuaryScriptMainNet",
+                    "source_mapping": {
+                        "start": 130,
+                        "length": 406,
+                        "filename_relative": "script/Sanctuary.s.sol",
+                        "filename_absolute": "C:\\Users\\maffaz\\Documents\\GIT\\Solidity\\FoundryFolder\\SanSound\\SanSoundMusicBox\\script\\Sanctuary.s.sol",
+                        "filename_short": "script/Sanctuary.s.sol",
+                        "is_dependency": false,
+                        "lines": [
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12,
+                            13,
+                            14,
+                            15,
+                            16,
+                            17,
+                            18
+                        ],
+                        "starting_column": 1,
+                        "ending_column": 2
+                    }
+                },
+                "signature": "run()"
+            }
+        }
+    ],
+    "description": "SanctuaryScriptMainNet.SAN_ORIGIN_ADDRESS (script/Sanctuary.s.sol#7) is never initialized. It is used in:\n\t- SanctuaryScriptMainNet.run() (script/Sanctuary.s.sol#12-17)\n",
+    "markdown": "[SanctuaryScriptMainNet.SAN_ORIGIN_ADDRESS](script/Sanctuary.s.sol#L7) is never initialized. It is used in:\n\t- [SanctuaryScriptMainNet.run()](script/Sanctuary.s.sol#L12-L17)\n",
+    "first_markdown_element": "script/Sanctuary.s.sol#L7",
+    "id": "9a30910807ce0335589410a95171fe39b3b704d1a1097a45790dd8a7a105c742",
+    "check": "uninitialized-state",
+    "impact": "High",
+    "confidence": "High"
+}
