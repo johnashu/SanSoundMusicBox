@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {ITokenLevels} from "src/interfaces/Levels/ITokenLevels.sol";
 import {ISanctuary} from "src/interfaces/Sanctuary/ISanctuary.sol";

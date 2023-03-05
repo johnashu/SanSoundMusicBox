@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.7.0) (utils/Strings.sol)
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.18;
 
 /**
  * @dev String operations.
@@ -43,7 +43,7 @@ library Strings {
             return "0x00";
         }
         uint256 temp = value;
-        uint256 length = 0;
+        uint256 length;
         while (temp != 0) {
             length++;
             temp >>= 8;

@@ -2,7 +2,7 @@
 // Based on OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
 // With renounceOwnership() removed
 
-pragma solidity ^0.8.12;
+pragma solidity 0.8.18;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where

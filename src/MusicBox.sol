@@ -5,7 +5,7 @@
 
 // LOCKUP AND CHANGE BASEURI
 
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {Base721, IERC721, ERC721, Strings} from "src/token/ERC721/Base721.sol";
 import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
@@ -88,8 +88,9 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
      * @param _tokenIds An array of token IDs to transfer.
      */
     function batchTransferFrom(address _from, address _to, uint256[] calldata _tokenIds) public {
+        uint256 len = _tokenIds.length;
         unchecked {
-            for (uint256 i; i < _tokenIds.length; i++) {
+            for (uint256 i; i < len; i++) {
                 transferFrom(_from, _to, _tokenIds[i]);
             }
         }
@@ -104,8 +105,9 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
     function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIds, bytes calldata _data)
         public
     {
+        uint256 len = _tokenIds.length;
         unchecked {
-            for (uint256 i; i < _tokenIds.length; i++) {
+            for (uint256 i; i < len; i++) {
                 safeTransferFrom(_from, _to, _tokenIds[i]);
             }
         }

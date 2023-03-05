@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {TestERC721Base, Strings} from "test/ERC721/ERC721TestBase.t.sol";
 

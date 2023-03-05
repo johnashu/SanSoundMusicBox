@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {IBase721} from "src/interfaces/ERC721/IBase721.sol";
 import {ERC721, IERC721, Strings} from "src/token/ERC721/ERC721.sol";
@@ -54,9 +54,9 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
     function tokenOfOwnerByIndex(address _tokenOwner, uint256 index) public view virtual returns (uint256 tokenId) {
         if (index > balanceOf(_tokenOwner)) revert IndexGreaterThanBalance();
 
-        uint256 count = 0;
+        uint256 count;
         unchecked {
-            for (uint256 i = 0; i <= totalSupply; i++) {
+            for (uint256 i; i <= totalSupply; i++) {
                 if (_tokenOwner == _ownerOf[i]) {
                     if (count == index) return i;
                     else count++;

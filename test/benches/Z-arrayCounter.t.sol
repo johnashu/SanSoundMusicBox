@@ -4,7 +4,7 @@
 /// @author Maffaz
 import {Test} from "lib/forge-std/src/Test.sol";
 
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 contract ArrayCounter {
     constructor() {

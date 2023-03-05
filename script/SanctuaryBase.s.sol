@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+pragma solidity 0.8.18;
 
 import "lib/forge-std/src/Script.sol";
 import {Sanctuary} from "src/Sanctuary.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {TestBase, ITokenLevels, IERC721} from "test/TestBase.sol";
 import {Strings, Base721} from "src/token/ERC721/Base721.sol";

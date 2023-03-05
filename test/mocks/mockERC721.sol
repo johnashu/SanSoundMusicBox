@@ -3,7 +3,7 @@
 /// @title Mock ERC721
 /// @author Maffaz
 
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {ERC721} from "src/token/ERC721/ERC721.sol";
 import {Ownable} from "src/utils/Ownable.sol";

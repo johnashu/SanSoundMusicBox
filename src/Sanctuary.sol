@@ -5,7 +5,7 @@
 // We wont check to see if the token is already minted as we calculate from the supply and increment.
 // We dont check Owner as it comes from msg.sender AND external tokenId
 
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {TokenLevels} from "src/levels/TokenLevels.sol";
 import {IRebirth} from "src/interfaces/Sanctuary/IRebirth.sol";

@@ -3,7 +3,7 @@
 /// @title Mock ERC721
 /// @author Maffaz
 
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import "test/Mocks/_SANOrigin.sol";
 
