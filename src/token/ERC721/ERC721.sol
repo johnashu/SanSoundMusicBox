@@ -36,13 +36,13 @@ abstract contract ERC721 is IERC721 {
 
     // Use the old OZ implementation here as we are not using it internally and will save mint gas.
     // External contracts will be querying the Soulbound levels and max supply = 10k.
-    function balanceOf(address owner) public view virtual override returns (uint256) {
+    function balanceOf(address owner) public view virtual override returns (uint256 count) {
         if (owner == address(0)) revert ZeroAddress();
-        uint256 count;
-        for (uint256 i; i <= totalSupply; i++) {
-            if (owner == _ownerOf[i]) count++;
+        unchecked {
+            for (uint256 i; i <= totalSupply; i++) {
+                if (owner == _ownerOf[i]) count++;
+            }
         }
-        return count;
     }
 
     /*//////////////////////////////////////////////////////////////
