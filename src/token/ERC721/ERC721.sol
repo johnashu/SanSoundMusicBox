@@ -19,7 +19,6 @@ abstract contract ERC721 is IERC721 {
     uint256 internal immutable _startingTokenID;
 
     string public name;
-
     string public symbol;
     uint256 public totalSupply;
 

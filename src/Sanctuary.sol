@@ -120,9 +120,9 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         _checkUserOwnsToken(originTokenId, SAN_ORIGIN_ADDRESS);
         _checkUserOwnsToken(partnerTokenId, _partnerAddress);
         _checkOriginTokensNotBound(originTokenId);
+        _mintRebirth(originTokenId, _newLevel, TokenLevel.Unbound, IMusicBox.MusicBoxLevel.Common);
         // Burn San Origin
         ISanOriginNFT(SAN_ORIGIN_ADDRESS).safeTransferFrom(msg.sender, BURN_ADDRESS, originTokenId, "");
-        _mintRebirth(originTokenId, _newLevel, TokenLevel.Unbound, IMusicBox.MusicBoxLevel.Common);
     }
 
     // PRIVATE FUNCTIONS
@@ -174,11 +174,13 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         TokenLevel _newLevel,
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
-        // Burn San Origin
-        ISanOriginNFT(SAN_ORIGIN_ADDRESS).batchSafeTransferFrom(msg.sender, BURN_ADDRESS, originTokenIds, "");
+        _checkTokenPrice(_newLevel, ITokenLevels.TokenLevel.Unbound);
 
         // Rebirth in the Santuary
         _batchRebirth(_newLevel, originTokenIds);
+
+        // Burn San Origin
+        ISanOriginNFT(SAN_ORIGIN_ADDRESS).batchSafeTransferFrom(msg.sender, BURN_ADDRESS, originTokenIds, "");
 
         // Mint MusicBox NFT
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(msg.sender, _musicBoxLevel);
@@ -195,10 +197,10 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
         TokenLevel _currentLevel,
         IMusicBox.MusicBoxLevel _musicBoxLevel
     ) private {
+        _checkTokenPrice(_newLevel, _currentLevel);
+
         // Rebirth in the Santuary
         _rebirth(_newLevel, _currentLevel, originTokenId, _getTokenIdAndIncrement());
-
-        _checkTokenPrice(_newLevel, _currentLevel);
 
         // Mint MusicBox NFT
         IMusicBox(MUSIC_BOX_ADDRESS).mintFromSantuary(msg.sender, _musicBoxLevel);
@@ -206,7 +208,6 @@ contract Sanctuary is TokenLevels, IRebirth, Base721 {
 
     function _batchRebirth(TokenLevel _newLevel, uint256[] calldata originTokenIds) private {
         uint256 currentId = totalSupply;
-        _checkTokenPrice(_newLevel, ITokenLevels.TokenLevel.Unbound);
 
         unchecked {
             // Update supply once

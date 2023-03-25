@@ -6,9 +6,8 @@ import {ISanctuary} from "src/interfaces/Sanctuary/ISanctuary.sol";
 
 import {IBase721} from "src/interfaces/ERC721/IBase721.sol";
 import {Ownable} from "src/utils/Ownable.sol";
-import {Test} from "lib/forge-std/src/Test.sol";
 
-abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
+abstract contract TokenLevels is ITokenLevels, Ownable, IBase721 {
     uint256 public constant NUM_OF_LEVELS = 6;
 
     mapping(TokenLevel tokenLevel => uint256 price) public levelPrice;
@@ -85,8 +84,7 @@ abstract contract TokenLevels is ITokenLevels, Ownable, IBase721, Test {
     /// @param _currentLevel current level
     function _checkTokenPrice(TokenLevel _newLevel, TokenLevel _currentLevel) internal {
         unchecked {
-            uint256 price = levelPrice[_newLevel] - levelPrice[_currentLevel];
-            if (msg.value != price) revert IncorrectPaymentAmount();
+            if (msg.value != levelPrice[_newLevel] - levelPrice[_currentLevel]) revert IncorrectPaymentAmount();
         }
     }
 }

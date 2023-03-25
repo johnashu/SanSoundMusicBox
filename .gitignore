@@ -16,3 +16,6 @@ docs/
 remix.sol
 _play.py
 *.txt
+
+manti/
+slither/
