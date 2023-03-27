@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {IBase721} from "src/interfaces/ERC721/IBase721.sol";
 import {ERC721, IERC721, Strings} from "src/token/ERC721/ERC721.sol";
@@ -12,14 +12,17 @@ import {Ownable} from "src/utils/Ownable.sol";
  */
 
 abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
-    /// The maximum number of mints per address - Santuary dictates maximum for both as MusicBox cannot mint!
-    uint256 public constant MAX_MINT_PER_ADDRESS = 3;
+    /// The maximum token supply.  We do not use it as this is set in San Origin but we leave it for reading from external..
+    uint256 public constant MAX_SUPPLY = 10000;
     /// The base URI for token metadata.
     string public baseURI;
+    /// The contract URI for contract-level metadata.
+    string public contractURI;
 
-    constructor(string memory _name, string memory _symbol, string memory _baseURI)
-        ERC721(_name, _symbol, uint256(1))
+    constructor(string memory _name, string memory _symbol, string memory _baseURI, string memory _contractURI)
+        ERC721(_name, _symbol, 1)
     {
+        contractURI = _contractURI;
         baseURI = _baseURI;
     }
 
@@ -27,17 +30,34 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
         return ++totalSupply;
     }
 
+    /**
+     * @notice (only owner) Sets the base URI for token metadata.
+     * @param _newBaseURI The new base URI.
+     */
+
+    function setBaseURI(string calldata _newBaseURI) external onlyOwner {
+        baseURI = _newBaseURI;
+    }
+
+    /**
+     * @notice (only owner) Sets the contract URI for contract metadata.
+     * @param _newContractURI The new contract URI.
+     */
+    function setContractURI(string calldata _newContractURI) external onlyOwner {
+        contractURI = _newContractURI;
+    }
+
     /*//////////////////////////////////////////////////////////////
                               ERC721Enumerable LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual returns (uint256 tokenId) {
-        if (index > balanceOf(owner)) revert IndexGreaterThanBalance();
+    function tokenOfOwnerByIndex(address _tokenOwner, uint256 index) public view virtual returns (uint256 tokenId) {
+        if (index > balanceOf(_tokenOwner)) revert IndexGreaterThanBalance();
 
         uint256 count;
         unchecked {
-            for (uint256 i = 1; i < totalSupply + 1; i++) {
-                if (owner == ownerOf(i)) {
+            for (uint256 i; i <= totalSupply; i++) {
+                if (_tokenOwner == _ownerOf[i]) {
                     if (count == index) return i;
                     else count++;
                 }
@@ -55,10 +75,10 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
      */
     function isOwnerOf(address _account, uint256[] calldata tokenIds) public view returns (bool) {
         uint256 len = tokenIds.length;
-        if (len > totalSupply) revert AmountExceedsMaxSupply();
+        if (len > totalSupply) revert AmountExceedsSupply();
         unchecked {
-            for (uint256 i; i < len; ++i) {
-                if (ownerOf(tokenIds[i]) != _account) {
+            for (uint256 i; i < len; i++) {
+                if (_ownerOf[tokenIds[i]] != _account) {
                     return false;
                 }
             }
@@ -67,29 +87,21 @@ abstract contract Base721 is IERC721, ERC721, TokenRescuer, IBase721 {
     }
 
     /**
-     * @notice Returns an array of all token IDs owned by `_owner`.
-     * @param _owner The address for which to return all owned token IDs.
-     * @return An array of all token IDs owned by `_owner`.
+     * @notice Returns an array of all token IDs owned by `_tokenOwner`.
+     * @param _tokenOwner The address for which to return all owned token IDs.
+     * @return An array of all token IDs owned by `_tokenOwner`.
      */
-    function walletOfOwner(address _owner) public view returns (uint256[] memory) {
-        uint256 tokenCount = balanceOf(_owner);
+    function walletOfOwner(address _tokenOwner) public view returns (uint256[] memory) {
+        uint256 tokenCount = balanceOf(_tokenOwner);
         if (tokenCount == 0) return new uint256[](0);
 
         uint256[] memory tokenIds = new uint256[](tokenCount);
         unchecked {
             for (uint256 i; i < tokenCount; i++) {
-                tokenIds[i] = tokenOfOwnerByIndex(_owner, i);
+                tokenIds[i] = tokenOfOwnerByIndex(_tokenOwner, i);
             }
         }
         return tokenIds;
-    }
-
-    /**
-     * @notice (only owner) Sets the base URI for token metadata.
-     * @param _newBaseURI The new base URI.
-     */
-    function setBaseURI(string calldata _newBaseURI) external onlyOwner {
-        baseURI = _newBaseURI;
     }
 
     /**

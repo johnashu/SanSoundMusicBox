@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {
     MintWithThreeUnboundedOrigin,
@@ -15,7 +15,7 @@ contract TestMintWithThreeUnboundedOrigin is MintWithThreeUnboundedOrigin {
     function setUp() public {
         user = makeAddr("ThreeUnboundedUser");
         users.push(user);
-        _setUp(users);
+        _setUp(users, true);
         vm.stopPrank();
         vm.startPrank(user);
     }

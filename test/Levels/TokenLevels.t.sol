@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {MintWithBoundedOrigin, IMusicBox, MusicBox} from "test/Sanctuary/_MintWithBoundedOrigin.t.sol";
 import {ITokenLevels} from "src/interfaces/Levels/ITokenLevels.sol";
@@ -14,7 +14,7 @@ contract TestLevels is MintWithBoundedOrigin {
     function setUp() public {
         user = makeAddr("TokensLevelUser");
         users.push(user);
-        _setUp(users);
+        _setUp(users, true);
         vm.stopPrank();
         vm.startPrank(user);
     }

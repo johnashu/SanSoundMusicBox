@@ -5,16 +5,11 @@
 
 // LOCKUP AND CHANGE BASEURI
 
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {Base721, IERC721, ERC721, Strings} from "src/token/ERC721/Base721.sol";
 import {IMusicBox} from "src/interfaces/MusicBox/IMusicBox.sol";
-import {
-    ERC2981ContractWideRoyalties,
-    ERC2981Base,
-    ERC165,
-    IERC165
-} from "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
+import {ERC2981ContractWideRoyalties, ERC2981Base} from "src/token/ERC2981/ERC2981ContractWideRoyalties.sol";
 
 import {ERC721TokenReceiver} from "src/token/ERC721/ERC721.sol";
 
@@ -23,14 +18,19 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
     uint256 public constant MAX_ROYALTIES_PCT = 930; // 9.3%
 
     address public immutable SANCTUARY_ADDRESS;
-    address private charactersAddress;
+    address public charactersAddress;
 
     mapping(uint256 tokenId => uint256 lockupTime) public lockupTime;
     mapping(uint256 tokenId => MusicBoxLevel) public tokenLevel;
 
-    constructor(string memory _name, string memory _symbol, string memory _baseURI, address _SANCTUARY_ADDRESS)
-        Base721(_name, _symbol, _baseURI)
-    {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        string memory _baseURI,
+        string memory _contractURI,
+        address _SANCTUARY_ADDRESS
+    ) Base721(_name, _symbol, _baseURI, _contractURI) {
+        if (_SANCTUARY_ADDRESS == address(0)) revert ZeroAddress();
         SANCTUARY_ADDRESS = _SANCTUARY_ADDRESS;
     }
 
@@ -41,26 +41,34 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
 
     /// @notice Locks up a MusicBox token for a specific time period
     /// @dev musicBoxLevel will be set to 'Locked' and this level will prevent any transfers.
-    /// @param _lockupTime a parameter just like in doxygen (must be followed by parameter name)
-    /// @param tokenId the return variables of a contract’s function state variable
-    function setLockupTime(uint256 _lockupTime, uint256 tokenId) external {
+    /// @param _lockupTime Lockup time to Soulbind for.
+    /// @param tokenId Token Id to Lock.
+    /// @param tokenOwner Owner of the token to check.
+    function setLockupTime(uint256 _lockupTime, uint256 tokenId, address tokenOwner) external {
         if (msg.sender != charactersAddress) revert WrongCallingAddress();
         if (_lockupTime == 0) revert LockupTimeZero();
-        if (ownerOf(tokenId) == address(0)) revert TokenNotMinted();
+        if (ownerOf(tokenId) != tokenOwner) revert NotOwner();
 
         lockupTime[tokenId] = _lockupTime;
         tokenLevel[tokenId] = MusicBoxLevel.Locked;
+        emit TokenLockedUp(tokenOwner, tokenId, _lockupTime);
     }
 
-    /// @notice Mints a new token received from the Sanctuary Contract.
+    /// @notice Mints a new token received from the Sanctuary Contract.  Sanctuary will perform checks.
     /// @dev The Sanctuary Contract deploys and sets its address in this contract.  Only that address can mint to it.
     /// @param _to Address to send the minted Token to.
     /// @param musicBoxLevel MusicBox level Common, Rare, Epic as sent by the Sanctuary.
     function mintFromSantuary(address _to, MusicBoxLevel musicBoxLevel) external {
         if (msg.sender != SANCTUARY_ADDRESS) revert OnlySanctuaryAllowedToMint();
+        if (_to == address(0)) revert ZeroAddress();
+
         uint256 newId = _getTokenIdAndIncrement();
+        if (_ownerOf[newId] != address(0)) revert TokenAlreadyMinted();
+
+        _ownerOf[newId] = _to;
         tokenLevel[newId] = musicBoxLevel;
-        _safeMint(_to, newId);
+
+        emit MintMusicBox(address(0), _to, newId, musicBoxLevel);
     }
 
     /**
@@ -80,39 +88,12 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
      * @param _tokenIds An array of token IDs to transfer.
      */
     function batchTransferFrom(address _from, address _to, uint256[] calldata _tokenIds) public {
-        if (_to == address(0)) revert ZeroAddress();
-        uint256 _amount = _tokenIds.length;
-
+        uint256 len = _tokenIds.length;
         unchecked {
-            for (uint256 i; i < _amount; i++) {
-                _canTransfer(_tokenIds[i]);
-
-                if (_from != _ownerOf[_tokenIds[i]]) revert NotOwner();
-
-                if (
-                    !(
-                        msg.sender == _from || !isApprovedForAll[_from][msg.sender]
-                            || msg.sender == getApproved[_tokenIds[i]]
-                    )
-                ) {
-                    revert NotAuthorised();
-                }
-
-                _ownerOf[_tokenIds[i]] = _to;
-
-                delete getApproved[_tokenIds[i]];
+            for (uint256 i; i < len; i++) {
+                transferFrom(_from, _to, _tokenIds[i]);
             }
         }
-
-        // Underflow of the sender's balance is impossible because we check for
-        // ownership above and the recipient's balance can't realistically overflow.
-        // We can save some gas here by updating all in one go.
-        unchecked {
-            _balanceOf[_from] -= _amount;
-            _balanceOf[_to] += _amount;
-        }
-
-        emit BatchTransfer(_from, _to, _tokenIds);
     }
 
     /**
@@ -124,53 +105,16 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
     function batchSafeTransferFrom(address _from, address _to, uint256[] calldata _tokenIds, bytes calldata _data)
         public
     {
-        if (_to == address(0)) revert ZeroAddress();
-        uint256 _amount = _tokenIds.length;
-
+        uint256 len = _tokenIds.length;
         unchecked {
-            for (uint256 i; i < _amount; i++) {
-                _canTransfer(_tokenIds[i]);
-
-                if (_from != _ownerOf[_tokenIds[i]]) revert NotOwner();
-
-                if (
-                    !(
-                        msg.sender == _from || !isApprovedForAll[_from][msg.sender]
-                            || msg.sender == getApproved[_tokenIds[i]]
-                    )
-                ) {
-                    revert NotAuthorised();
-                }
-
-                _ownerOf[_tokenIds[i]] = _to;
-
-                delete getApproved[_tokenIds[i]];
-
-                if (
-                    !(
-                        _to.code.length == 0
-                            || ERC721TokenReceiver(_to).onERC721Received(msg.sender, _from, _tokenIds[i], _data)
-                                == ERC721TokenReceiver.onERC721Received.selector
-                    )
-                ) {
-                    revert UnSafeRecipient();
-                }
+            for (uint256 i; i < len; i++) {
+                safeTransferFrom(_from, _to, _tokenIds[i]);
             }
         }
-
-        // Underflow of the sender's balance is impossible because we check for
-        // ownership above and the recipient's balance can't realistically overflow.
-        // We can save some gas here by updating all in one go.
-        unchecked {
-            _balanceOf[_from] -= _amount;
-            _balanceOf[_to] += _amount;
-        }
-
-        emit BatchTransfer(_from, _to, _tokenIds);
     }
 
     function _canTransfer(uint256 tokenId) internal view override {
-        if (block.timestamp > lockupTime[tokenId]) revert TokenLocked();
+        if (block.timestamp < lockupTime[tokenId]) revert TokenLocked();
     }
 
     // Overrides.
@@ -183,7 +127,7 @@ contract MusicBox is Base721, IMusicBox, ERC2981ContractWideRoyalties {
         );
     }
 
-    function supportsInterface(bytes4 _interfaceId) public view override(IERC165, ERC2981Base, ERC721) returns (bool) {
+    function supportsInterface(bytes4 _interfaceId) public view override(ERC2981Base, ERC721) returns (bool) {
         return super.supportsInterface(_interfaceId);
     }
 }

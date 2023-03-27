@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 /**
  * @title SanSound Sanctuary
@@ -7,11 +7,5 @@ pragma solidity ^0.8.18;
  */
 
 interface IRebirth {
-    event Rebirth(address indexed TokenOwnerAddress, uint256 OriginTokenId, uint256 RebirthTokenId);
-    event Rebirth(
-        address indexed TokenOwnerAddress,
-        uint256[] OriginTokenIds,
-        uint256 startRebirthTokenId,
-        uint256 endRebirthTokenId
-    );
+    event Rebirth(address indexed TokenOwnerAddress, uint256 indexed OriginTokenId, uint256 indexed RebirthTokenId);
 }

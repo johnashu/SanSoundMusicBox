@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {TestBase, ITokenLevels, IERC721} from "test/TestBase.sol";
-import {Base721} from "src/token/ERC721/Base721.sol";
+import {Strings, Base721} from "src/token/ERC721/Base721.sol";
 import {MintWithBoundedOrigin} from "test/Sanctuary/_MintWithBoundedOrigin.t.sol";
 import {MintWithThreeUnboundedOrigin} from "test/Sanctuary/_MintWithThreeUnboundedOrigin.t.sol";
 import {MintWithPartnerTokens} from "test/Sanctuary/_MintWithPartnerTokens.t.sol";
@@ -22,9 +22,84 @@ abstract contract TestERC721Base is
     uint256[] public expected = [1];
     uint256[] public notExpected = [10009];
 
+    // function _runAllScenarios() public {
+    //     _mintWithMultiSanOrigin(notBoundTokens, user);
+    //     _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
+    //     _mintWithSanSoundBound(isBoundSingleToken, user);
+    // }
+
     function testFailSendNftToErc721ContractWithNoERC721Receiver() public {
         IERC721(mockERC721SingleAddress).approve(erc721ContractAddress, 1);
         IERC721(mockERC721SingleAddress).safeTransferFrom(user, erc721ContractAddress, 1);
+    }
+
+    function testSetBaseURI() public {
+        assertEq(erc721Contract.baseURI(), startBaseURI);
+
+        vm.stopPrank();
+        vm.prank(OWNER);
+        erc721Contract.setBaseURI(newBaseURI);
+        assertEq(erc721Contract.baseURI(), newBaseURI);
+    }
+
+    function testSetContractURI() public {
+        assertEq(erc721Contract.contractURI(), startContractURI);
+
+        vm.stopPrank();
+        vm.prank(OWNER);
+        erc721Contract.setContractURI(newContractURI);
+        assertEq(erc721Contract.contractURI(), newContractURI);
+    }
+
+    function testTokenOfOwnerByIndex() public {
+        _mintWithMultiSanOrigin(notBoundTokens, user);
+        uint256 tokenId = erc721Contract.tokenOfOwnerByIndex(user, 0);
+        uint256 expected = 1;
+        // emit log_uint(musicBo)
+        assertEq(tokenId, expected);
+    }
+
+    function testFailTokenOfOwnerByIndex_IndexGreaterThanBalance() public {
+        _mintWithMultiSanOrigin(notBoundTokens, user);
+        erc721Contract.tokenOfOwnerByIndex(user, 100);
+    }
+
+    function testFailTokenOfOwnerByIndex_OwnerIndexOutOfBounds() public {
+        _mintWithMultiSanOrigin(notBoundTokens, user);
+        erc721Contract.tokenOfOwnerByIndex(noTokensUser, 100);
+    }
+
+    function testIsOwnerOf() public virtual {
+        _mintWithMultiSanOrigin(notBoundTokens, user);
+        assertTrue(erc721Contract.isOwnerOf(user, expected));
+    }
+
+    function testFailIsOwnerOf() public virtual {
+        _mintWithSanSoundBound(isBoundSingleToken, user);
+        assertTrue(erc721Contract.isOwnerOf(user, notExpected));
+    }
+
+    function testFailIsOwnerOf_AmountExceedsSupply() public virtual {
+        _mintWithMultiSanOrigin(notBoundTokens, user);
+        assertTrue(erc721Contract.isOwnerOf(user, tooManyIsBoundTokens));
+    }
+
+    function testWalletOfOwner() public virtual {
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
+        uint256[] memory tokenIds = erc721Contract.walletOfOwner(user);
+        assertEq(tokenIds, expected);
+    }
+
+    function testWalletOfOwnerZeroOwned() public virtual {
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
+        uint256[] memory tokenIds = erc721Contract.walletOfOwner(noTokensUser);
+        assertEq(tokenIds, noTokens);
+    }
+
+    function testFailWalletOfOwner() public virtual {
+        _mintWithSanSoundBound(isBoundSingleToken, user);
+        uint256[] memory tokenIds = erc721Contract.walletOfOwner(address(0));
+        assertEq(tokenIds, expected);
     }
 
     function testWithdraw() public payable {
@@ -58,39 +133,15 @@ abstract contract TestERC721Base is
         assertEq(ownerBalance, OWNER.balance);
     }
 
-    function testSetBaseURI() public {
-        string memory _newURI = "Test String";
-        vm.stopPrank();
-        vm.prank(OWNER);
-        erc721Contract.setBaseURI(_newURI);
-        assertEq(erc721Contract.baseURI(), _newURI);
-    }
+    function _getBaseURI(uint256 tokenId, uint256 tokenIdStr, uint256 tokenLevel) internal {
+        string memory _expectedURI = string(
+            abi.encodePacked(startBaseURI, Strings.toString(tokenLevel), "/", Strings.toString(tokenIdStr), ".json")
+        );
 
-    function testWalletOfOwner() public virtual {
-        _mintWithSanSoundBound(isBoundSingleToken, user);
-        uint256[] memory tokenIds = erc721Contract.walletOfOwner(user);
-        assertEq(tokenIds, expected);
-    }
+        string memory _receivedUri = erc721Contract.tokenURI(tokenId);
 
-    function testFailWalletOfOwner() public virtual {
-        _mintWithSanSoundBound(isBoundSingleToken, user);
-        uint256[] memory tokenIds = erc721Contract.walletOfOwner(address(0));
-        assertEq(tokenIds, expected);
-    }
-
-    function testIsOwnerOf() public virtual {
-        _mintWithSanSoundBound(isBoundSingleToken, user);
-        assertTrue(erc721Contract.isOwnerOf(user, expected));
-    }
-
-    function testFailIsOwnerOf() public virtual {
-        _mintWithSanSoundBound(isBoundSingleToken, user);
-        assertTrue(erc721Contract.isOwnerOf(user, notExpected));
-    }
-
-    function _runAllScenarios() public {
-        _mintWithMultiSanOrigin(notBoundTokens, user);
-        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, user);
-        _mintWithSanSoundBound(isBoundSingleToken, user);
+        emit log_string(_expectedURI);
+        emit log_string(_receivedUri);
+        assertEq(_receivedUri, _expectedURI);
     }
 }

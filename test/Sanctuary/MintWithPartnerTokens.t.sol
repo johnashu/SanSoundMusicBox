@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {MintWithPartnerTokens, ITokenLevels, IMusicBox, MusicBox} from "test/Sanctuary/_MintWithPartnerTokens.t.sol";
 
@@ -10,7 +10,7 @@ contract TestMintWithPartnerTokens is MintWithPartnerTokens {
     function setUp() public {
         user = makeAddr("PartnerTokensUser");
         users.push(user);
-        _setUp(users);
+        _setUp(users, true);
         vm.stopPrank();
         vm.startPrank(user);
     }
@@ -25,11 +25,11 @@ contract TestMintWithPartnerTokens is MintWithPartnerTokens {
     }
 
     function testFailMintIsBound() public {
-        _mintWithPartner(mockERC721MultiAddress, partnerToken, isBoundSingleToken, user);
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, isBoundSingleToken, user);
     }
 
     function testFailMintNotOwnedOrigin() public {
-        _mintWithPartner(mockERC721MultiAddress, partnerToken, notBoundSingleToken, makeAddr("PartnerNoTokensOwned"));
+        _mintWithPartner(mockERC721SingleAddress, partnerToken, notBoundSingleToken, makeAddr("PartnerNoTokensOwned"));
     }
 
     function testUnableToApproveOrTransfersWhenSoulBound() public {

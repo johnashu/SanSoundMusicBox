@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity 0.8.18;
 
 import {SafeERC20, IStuckERC20, IStuckERC721} from "src/token/rescue/SafeERC20.sol";
 import {Ownable} from "src/utils/Ownable.sol";

@@ -1,9 +1,13 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity 0.8.18;
 
-import "src/interfaces/ERC721/IERC721.sol";
-import "src/utils/Strings.sol";
-import "src/utils/Address.sol";
+/// @notice Modern, minimalist, and gas efficient ERC-721 implementation.
+/// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC721.sol)
+/// Maffaz - totalSupply / Custom Errors / Strings & Address Imports..
+
+import {IERC721} from "src/interfaces/ERC721/IERC721.sol";
+import {Strings} from "src/utils/Strings.sol";
+import {Address} from "src/utils/Address.sol";
 
 abstract contract ERC721 is IERC721 {
     using Address for address;
@@ -15,7 +19,6 @@ abstract contract ERC721 is IERC721 {
     uint256 internal immutable _startingTokenID;
 
     string public name;
-
     string public symbol;
     uint256 public totalSupply;
 
@@ -27,16 +30,19 @@ abstract contract ERC721 is IERC721 {
 
     mapping(uint256 => address) internal _ownerOf;
 
-    mapping(address => uint256) internal _balanceOf;
-
     function ownerOf(uint256 id) public view virtual returns (address owner) {
         if ((owner = _ownerOf[id]) == address(0)) revert TokenNotMinted();
     }
 
-    function balanceOf(address owner) public view virtual returns (uint256) {
+    // Use the old OZ implementation here as we are not using it internally and will save mint gas.
+    // External contracts will be querying the Soulbound levels and max supply = 10k.
+    function balanceOf(address owner) public view virtual override returns (uint256 count) {
         if (owner == address(0)) revert ZeroAddress();
-
-        return _balanceOf[owner];
+        unchecked {
+            for (uint256 i; i <= totalSupply; i++) {
+                if (owner == _ownerOf[i]) count++;
+            }
+        }
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -78,20 +84,12 @@ abstract contract ERC721 is IERC721 {
 
     function transferFrom(address from, address to, uint256 id) public virtual {
         _canTransfer(id);
-        if (from != _ownerOf[id]) revert NotOwner();
+        if (from != ownerOf(id)) revert NotOwner();
 
         if (to == address(0)) revert ZeroAddress();
 
         if (!(msg.sender == from || isApprovedForAll[from][msg.sender] || msg.sender == getApproved[id])) {
             revert NotAuthorised();
-        }
-
-        // Underflow of the sender's balance is impossible because we check for
-        // ownership above and the recipient's balance can't realistically overflow.
-        unchecked {
-            _balanceOf[from]--;
-
-            _balanceOf[to]++;
         }
 
         _ownerOf[id] = to;
@@ -140,57 +138,53 @@ abstract contract ERC721 is IERC721 {
     }
 
     /*//////////////////////////////////////////////////////////////
-                        INTERNAL MINT/BURN LOGIC
+                        INTERNAL MINT/BURN LOGIC - Mint logic is handled in the corresponding contracts..
     //////////////////////////////////////////////////////////////*/
+    //
 
-    function _mint(address to, uint256 id) internal virtual {
-        if (to == address(0)) revert ZeroAddress();
+    // function _mint(address to, uint256 id) internal virtual {
+    //     if (to == address(0)) revert ZeroAddress();
 
-        if (_ownerOf[id] != address(0)) revert TokenAlreadyMinted();
+    //     if (_ownerOf[id] != address(0)) revert TokenAlreadyMinted();
 
-        // Counter overflow is incredibly unrealistic.
-        unchecked {
-            _balanceOf[to]++;
-        }
-
-        _ownerOf[id] = to;
-        emit Transfer(address(0), to, id);
-    }
+    //     _ownerOf[id] = to;
+    //      emit Transfer(address(0), to, id);
+    // }
 
     /*//////////////////////////////////////////////////////////////
                         INTERNAL SAFE MINT LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    function _safeMint(address to, uint256 id) internal virtual {
-        _mint(to, id);
+    // function _safeMint(address to, uint256 id) internal virtual {
+    //     _mint(to, id);
 
-        if (
-            !(
-                to.code.length == 0
-                    || ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), id, "")
-                        == ERC721TokenReceiver.onERC721Received.selector
-            )
-        ) {
-            revert UnSafeRecipient();
-        }
-    }
+    //     if (
+    //         !(
+    //             to.code.length == 0
+    //                 || ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), id, "")
+    //                     == ERC721TokenReceiver.onERC721Received.selector
+    //         )
+    //     ) {
+    //         revert UnSafeRecipient();
+    //     }
+    // }
 
-    function _safeMint(address to, uint256 id, bytes memory data) internal virtual {
-        _mint(to, id);
+    // function _safeMint(address to, uint256 id, bytes memory data) internal virtual {
+    //     _mint(to, id);
 
-        if (
-            !(
-                to.code.length == 0
-                    || ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), id, data)
-                        == ERC721TokenReceiver.onERC721Received.selector
-            )
-        ) {
-            revert UnSafeRecipient();
-        }
-    }
+    //     if (
+    //         !(
+    //             to.code.length == 0
+    //                 || ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), id, data)
+    //                     == ERC721TokenReceiver.onERC721Received.selector
+    //         )
+    //     ) {
+    //         revert UnSafeRecipient();
+    //     }
+    // }
 
     /**
-     * @dev Hook that is called before any token transfer. This includes burning.
+     * @dev Hook that is called before any token transfer.
      */
     function _canTransfer(uint256 /*tokenId*/ ) internal virtual {}
 }

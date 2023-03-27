@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import {Test} from "lib/forge-std/src/Test.sol";
 import {Sanctuary} from "src/Sanctuary.sol";
@@ -16,11 +16,14 @@ abstract contract TestBase is Test {
     Sanctuary sanctuary;
     MusicBox musicBox;
     MockERC721 mockERC721Single;
-    MockERC721 mockERC721Multi;
     MockSanOrigin mockSanOrigin;
 
+    string startBaseURI = "https://base-uri.com/";
+    string newBaseURI = "https://NEW-BASE-URI.com/";
+    string startContractURI = "https://contract-uri.com/";
+    string newContractURI = "https://NEW-CONTRACT-URI.com/";
+
     address mockERC721SingleAddress;
-    address mockERC721MultiAddress;
 
     address SAN_ORIGIN_ADDRESS;
     address payable musicBoxAddress;
@@ -28,6 +31,7 @@ abstract contract TestBase is Test {
     address SANCTUARY_ADDRESS;
 
     address OWNER = makeAddr("Owner");
+    address noTokensUser = makeAddr("NoTokensUser");
 
     uint256[6] _levelPrices;
 
@@ -44,8 +48,14 @@ abstract contract TestBase is Test {
 
     uint256[] noTokens;
 
-    uint256[][] multipleNotBoundTokens =
-        [[3330, 3331, 3332], [3130, 3231, 3032], [3300, 3311, 3322], [3030, 3231, 3222]];
+    uint256[][] multipleNotBoundTokens = [
+        [3330, 3331, 3332],
+        [3130, 3231, 3032],
+        [3300, 3311, 3322],
+        [4330, 4331, 4332],
+        [4130, 4231, 4032],
+        [4300, 4311, 4322]
+    ];
 
     uint256 isBoundSingleToken = 21;
     uint256 notBoundSingleToken = 15;
@@ -54,29 +64,30 @@ abstract contract TestBase is Test {
     uint256[] expectedMultiple = [1, 2, 3];
     uint256 expectedSingle = 1;
 
-    function _setUp(address[] memory users) internal {
+    function _setUp(address[] memory users, bool bind) internal {
         _initOWNERs();
         _initUsers(users);
         _initShared();
         _deployContracts();
         _transferTokens(users);
+        if (bind) mockSanOrigin.makeBound();
     }
 
     function _initOWNERs() internal {
         vm.startPrank(OWNER); // OWNER becomes the owner of everything..
-        vm.deal(OWNER, 100 ether);
+        vm.deal(OWNER, 10000 ether);
     }
 
     function _initUsers(address[] memory users) internal {
         for (uint256 i; i < users.length; i++) {
             address user = users[i];
-            vm.deal(user, 100 ether);
+            vm.deal(user, 10000 ether);
         }
     }
 
     function _initShared() internal {
         _levelPrices[0] = 0;
-        _levelPrices[1] = 0;
+        _levelPrices[1] = 333000000000000000;
         _levelPrices[2] = 333000000000000000;
         _levelPrices[3] = 633000000000000000;
         _levelPrices[3] = 963000000000000000;
@@ -89,16 +100,17 @@ abstract contract TestBase is Test {
 
         mockERC721Single = new MockERC721();
         mockERC721SingleAddress = address(mockERC721Single);
-        mockERC721Multi = new MockERC721();
-        mockERC721MultiAddress = address(mockERC721Multi);
+
         sanctuary = new Sanctuary(
             string("TestSanctuary"),
             string("TSSS"),
-            string("https://example.com/"),
+            string(startBaseURI),
+            string(startContractURI),
            
             string("TestMusicBox"),
             string("TSSMB"),
-            string("https://example.com/"),
+            string(startBaseURI),
+            string(startContractURI),
           
               SAN_ORIGIN_ADDRESS,
             _levelPrices
@@ -118,10 +130,9 @@ abstract contract TestBase is Test {
             uint256 end = split * (i + 1);
 
             mockERC721Single.transferAll(user, start, end);
-            mockERC721Multi.transferAll(user, start, end);
 
             uint256 offset = 0;
-            uint256 split = 6666 / userLen;
+            uint256 split = 20000 / userLen;
             emit log_uint(split);
             if (userLen == 1) {
                 offset = 1;
@@ -161,9 +172,11 @@ abstract contract TestBase is Test {
     function _checkMusicBoxTokenLevel(IMusicBox.MusicBoxLevel level, uint256 token, address user) internal {
         // Check MusicBox Token is minted and Level.
         IMusicBox.MusicBoxLevel currentLevel = musicBox.tokenLevel(token);
+
         assertEq(musicBox.ownerOf(token), user);
         assertTrue(uint256(currentLevel) == uint256(level));
-        assertTrue(currentLevel == level);
+        // gas checks
+        musicBox.balanceOf(user);
     }
 
     function _checkAfterMint(
@@ -188,6 +201,9 @@ abstract contract TestBase is Test {
         assertTrue(sanctuary.usedTokens(SAN_ORIGIN_ADDRESS, originTokenId));
         assertEq(sanctuary.ownerOf(sanctuaryTokenId), user);
         _checkSanctuaryTokenLevel(level, sanctuaryTokenId);
+        // gas checks
+        sanctuary.balanceOf(user);
+        mockSanOrigin.balanceOf(user);
     }
 
     function _failTransfer() internal {
@@ -207,5 +223,25 @@ abstract contract TestBase is Test {
         ITokenLevels.TokenLevel level = ITokenLevels.TokenLevel(_new);
         sanctuary.upgradeTokenLevel{value: _getPrice(_new, _cur)}(token, level);
         _checkSanctuaryTokenLevel(level, token);
+    }
+
+    error InputOutOfRange(uint256 range, uint256 min, uint256 max);
+
+    function uint256Sequential(uint256 start, uint256 end) public returns (uint256[] memory) {
+        uint256 range = (end - start) + 1;
+        // emit log_uint(start);
+        // emit log_uint(end);
+        // emit log_uint(range);
+        if (end == 0) {
+            revert InputOutOfRange(range, 1, uint256(0xf));
+        }
+        uint256 index;
+        uint256[] memory arr = new uint256[](range);
+        unchecked {
+            for (uint256 i = start; i < end + 1; i++) {
+                arr[index++] = i;
+            }
+        }
+        return arr;
     }
 }

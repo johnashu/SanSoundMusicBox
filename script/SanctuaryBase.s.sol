@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+pragma solidity 0.8.18;
 
 import "lib/forge-std/src/Script.sol";
 import {Sanctuary} from "src/Sanctuary.sol";
@@ -10,11 +10,12 @@ contract SanctuaryScriptBase is Script {
             string("SanSoundSanctuary"),
             string("SSS"),
             string("https://example.com/"),
+            string("https://example.com/"),
            
             string("SanSoundMusicBox"),
             string("SSMB"),
             string("https://example.com/"),
-           
+            string("https://example.com/"),           
             SAN_ORIGIN_ADDRESS,
             _levelPrices
             );

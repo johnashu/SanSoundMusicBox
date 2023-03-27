@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.1;
+pragma solidity 0.8.18;
 
 library Address {
     function isContract(address account) internal view returns (bool) {
@@ -11,28 +11,21 @@ library Address {
         return functionCall(target, data, "Address: low-level call failed");
     }
 
-    function functionCall(
-        address target,
-        bytes memory data,
-        string memory errorMessage
-    ) internal returns (bytes memory) {
+    function functionCall(address target, bytes memory data, string memory errorMessage)
+        internal
+        returns (bytes memory)
+    {
         return functionCallWithValue(target, data, 0, errorMessage);
     }
 
-    function functionCallWithValue(
-        address target,
-        bytes memory data,
-        uint256 value
-    ) internal returns (bytes memory) {
+    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
         return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
     }
 
-    function functionCallWithValue(
-        address target,
-        bytes memory data,
-        uint256 value,
-        string memory errorMessage
-    ) internal returns (bytes memory) {
+    function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage)
+        internal
+        returns (bytes memory)
+    {
         require(address(this).balance >= value, "Address: insufficient balance for call");
         require(isContract(target), "Address: call to non-contract");
 
@@ -40,11 +33,11 @@ library Address {
         return verifyCallResult(success, returndata, errorMessage);
     }
 
-    function verifyCallResult(
-        bool success,
-        bytes memory returndata,
-        string memory errorMessage
-    ) internal pure returns (bytes memory) {
+    function verifyCallResult(bool success, bytes memory returndata, string memory errorMessage)
+        internal
+        pure
+        returns (bytes memory)
+    {
         if (success) {
             return returndata;
         } else {
