@@ -1,3 +1,10 @@
+# custom
+.github/
+.hypothesis/
+.vscode/
+broadcast/
+lib/
+
 # Compiler files
 cache/
 out/
